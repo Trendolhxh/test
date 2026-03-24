@@ -8,8 +8,8 @@
 | # | 工具名 | 一句话说明 | 执行侧 |
 |---|--------|-----------|--------|
 | 1 | get_health_data | 查询用户健康与行为数据 | 服务端 |
-| 2 | get_user_profile | 读取用户画像（偏好、历史反馈、基础信息） | 服务端 |
-| 3 | update_user_profile | 新增或更新用户画像中的某个字段 | 服务端 |
+| 2 | get_user_context | 加载用户画像和干预策略（两份 md） | 服务端 |
+| 3 | save_memory | 将对话中捕获的事实写入 mem0 | 服务端 |
 | 4 | send_feedback_card | 向用户发送结构化反馈卡片 | 前端渲染 |
 | 5 | render_analysis_card | 渲染数据分析图表卡片（可截图分享） | 前端渲染 |
 
@@ -88,94 +88,73 @@
 
 ---
 
-## 工具 2：get_user_profile
+## 工具 2：get_user_context
 
 ```json
 {
-  "name": "get_user_profile",
-  "description": "读取用户画像。返回完整的用户睡眠笔记，包括背景、睡眠现状、干预记录和禁忌方向。每次对话开始时应调用一次。",
+  "name": "get_user_context",
+  "description": "加载用户的画像和干预策略。返回两份 markdown 文档：用户画像（背景、作息、睡眠问题诊断）和干预策略（当前策略、历史、红线）。每次对话开始时必须调用一次。",
   "parameters": {}
 }
 ```
 
 **设计说明：**
-- 无参数，返回完整文档。文档本身足够短（~300 token），不需要分段加载。
-- 字段结构详见 [03-memory.md](./03-memory.md)。
+- 无参数，一次性返回两份 md。合计 ~800 token，无需分段。
+- 两份 md 由子 agent 维护（从 mem0 + 健康数据提炼），主 agent 只读不写。
+- 文档结构详见 [03-memory.md](./03-memory.md)。
 
 **返回示例：**
 ```json
 {
-  "background": {
-    "age": 30,
-    "chronotype": "night_owl",
-    "work": "互联网，常加班到 21-22 点",
-    "evening_routine": "下班后刷手机到入睡，基本没有 wind-down",
-    "notes": "下午必须喝咖啡（不要建议限制）"
-  },
-  "sleep_status": {
-    "avg_bedtime": "01:30",
-    "avg_deep_sleep_pct": 18,
-    "main_issues": ["入睡困难：睡前手机使用", "周末作息后移导致周一状态差"],
-    "trend": "略有改善（深睡 16% → 18%）",
-    "updated": "2026-03-23"
-  },
-  "interventions": [
-    { "method": "晚 10 点手机放客厅", "result": "有效但难坚持，加班日做不到", "period": "3.20-3.22" },
-    { "method": "限制下午咖啡", "result": "用户拒绝" },
-    { "method": "每晚 11 点闹钟提醒放手机", "result": "进行中", "started": "3.23" }
-  ],
-  "do_not_suggest": ["限制咖啡", "早起运动"]
+  "user_profile": "# 用户画像\n\n## 基本信息\n- 男，30 岁，夜猫子型\n- 互联网行业产品经理\n\n## 每周作息\n| | 工作时间 | 上床 | 起床 | 备注 |\n|---|---|---|---|---|\n| 周一 | 10-19 | ~01:30 | 08:45 | 状态最差 |\n| 周三 | 10-21 | ~02:00 | 08:45 | 固定加班 |\n| 周末 | 休息 | ~02:30 | ~10:30 | |\n\n## 睡眠问题诊断\n### 问题 1：睡眠时长不足（工作日均 6.5h）\n归因：睡前刷手机 1.5-2h 导致上床过晚\n### 问题 2：深睡占比偏低（18%）\n归因：待确认，可能与屏幕刺激有关\n### 问题 3：周末作息后移\n归因：补觉+社交晚归，导致周一生物钟紊乱\n\n## 近期趋势\n深睡 16% → 18%，略有改善",
+  "intervention_plan": "# 干预策略\n\n## 当前策略\n方向：减少睡前手机使用\n活跃干预：每晚 11 点闹钟提醒放手机（3.23 开始，待反馈）\n\n## 干预历史\n| 方法 | 效果 | 备注 |\n|---|---|---|\n| 手机放客厅 | 部分有效 | 入睡提前 45min，加班日做不到 |\n| 限制咖啡 | 拒绝 | → 红线 |\n\n## 红线\n- 限制咖啡\n- 早起运动",
+  "updated_at": "2026-03-24T05:00:00+08:00"
 }
 ```
 
 ---
 
-## 工具 3：update_user_profile
+## 工具 3：save_memory
 
 ```json
 {
-  "name": "update_user_profile",
-  "description": "更新用户画像中的信息。当用户透露新的生活细节、完成干预反馈、或需要记录新的禁忌方向时调用。",
+  "name": "save_memory",
+  "description": "将对话中捕获的用户事实写入 mem0。当用户透露生活细节、表达偏好/拒绝、反馈干预效果时调用。写入的内容会被子 agent 在下次运行时提炼进用户画像和干预策略。",
   "parameters": {
-    "field": {
+    "content": {
       "type": "string",
-      "description": "要更新的字段路径，如 'background.work'、'interventions'、'do_not_suggest'"
+      "description": "要记录的事实，用自然语言描述。如：'用户说周三固定加班到 21 点'、'闹钟提醒放手机的干预，用户反馈没有执行，原因是加班太晚'"
     },
-    "action": {
+    "category": {
       "type": "string",
-      "enum": ["set", "append"],
-      "description": "set=覆盖值，append=追加到数组"
-    },
-    "value": {
-      "type": "any",
-      "description": "要写入的值"
+      "enum": ["life_detail", "sleep_feedback", "intervention_feedback", "preference", "other"],
+      "description": "记忆类别。life_detail=生活细节，sleep_feedback=睡眠相关感受，intervention_feedback=干预反馈，preference=偏好或拒绝"
     }
   },
-  "required": ["field", "action", "value"]
+  "required": ["content", "category"]
 }
 ```
 
+**设计说明：**
+- 主 agent 只管"记下来"，不管怎么组织——组织工作交给子 agent。
+- content 用自然语言，不用结构化格式。mem0 擅长处理非结构化文本。
+- category 帮助子 agent 更快地对记忆分类和提炼。
+
 **调用示例：**
 ```
-# 记录新的干预
-update_user_profile(
-  field="interventions",
-  action="append",
-  value={ method: "每晚 11 点闹钟提醒放手机", result: "进行中", started: "3.23" }
+save_memory(
+  content="用户说最近换了遮光窗帘，感觉早上不容易被光线吵醒了",
+  category="life_detail"
 )
 
-# 记录禁忌方向
-update_user_profile(
-  field="do_not_suggest",
-  action="append",
-  value="限制咖啡"
+save_memory(
+  content="闹钟提醒放手机的干预：用户反馈昨晚执行了，感觉确实比平时早睡了半小时",
+  category="intervention_feedback"
 )
 
-# 更新工作信息
-update_user_profile(
-  field="background.work",
-  action="set",
-  value="互联网，最近转了新组，加班减少"
+save_memory(
+  content="用户明确表示不想讨论饮酒话题",
+  category="preference"
 )
 ```
 
