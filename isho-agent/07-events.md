@@ -1,115 +1,155 @@
 # 07 - 动态事件注入
 
-> 不是所有对话都由用户发消息触发。定义 agent 在什么时机、以什么方式"主动开口"。
+> 状态机决定"调不调 agent"，场景指令决定"agent 说什么"。这两层必须分开。
 
 ---
 
-## 核心问题
+## 两层分离
 
-agent 需要在特定时机主动说话——用户打开 App 但没发消息、反馈卡提交了、子 agent 发现了异常。这些时机通过**事件**驱动，事件的内容作为**场景指令**注入 04-context-assembly 的第 ④ 块。
+```
+事件发生（用户打开 App / 发消息 / 提交反馈 / 点推送）
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  状态机（orchestrator 层，确定性逻辑）     │
+│  判断：是否需要调用 agent？               │
+│  输出：INVOKE / SILENT                   │
+└──────────────────┬──────────────────────┘
+                   │ INVOKE
+                   ▼
+┌─────────────────────────────────────────┐
+│  场景指令注入（04-context-assembly ④）   │
+│  告诉 agent 当前是什么情况               │
+│  agent 决定具体说什么、怎么说            │
+└─────────────────────────────────────────┘
+```
+
+**状态机管"调不调"**：确定性的，不花 token，毫秒级判断。
+**agent 管"说什么"**：一旦被调用，agent 一定会产出回复——不存在"调了 agent 但 agent 决定不说话"的情况。
 
 ---
 
-## 事件类型
+## 状态机
 
-### 事件 1：用户主动发消息
+### 输入信号
 
-最常见的触发方式。不需要场景指令，走标准对话流程。
+orchestrator 在每次事件发生时，收集以下状态：
 
-```
-触发条件: 用户在对话框输入并发送了消息
-场景指令: 无（不注入额外指令）
-agent 行为: 正常响应
-```
+```python
+@dataclass
+class EventContext:
+    # 事件本身
+    event_type: str           # "user_message" | "app_open" | "feedback_submit" | "push_click"
+    timestamp: datetime
 
-### 事件 2：用户打开 App（无消息）
+    # 用户状态
+    minutes_since_last_conversation: int
+    last_conversation_initiator: str   # "user" | "agent"
+    last_conversation_user_replied: bool
 
-用户打开了 App 但没说话。agent 根据当前是否有值得说的事情决定是否主动发言。
-
-```
-触发条件: 用户打开 App，进入对话页面，且距离上次对话 > 30 分钟
-场景指令: 根据待处理事项注入（见下方优先级）
-agent 行为: 如果有场景指令，主动发言；如果没有，保持沉默
-```
-
-**沉默条件（不触发 agent）：**
-- 距离上次对话 ≤ 30 分钟，且没有新的待处理事项
-- 上次对话是 agent 主动发言，用户没有回复就离开了（不要追着说）
-
-### 事件 3：反馈卡提交
-
-用户在反馈卡片上点击了选项并提交。
-
-```
-触发条件: 用户提交了 send_feedback_card 的结果
-场景指令: 注入反馈内容
-agent 行为: 基于反馈推进对话（肯定/调整/追问）
+    # 待处理事项（按优先级排列）
+    has_pending_insight: bool          # 子 agent 标记的待推送洞察
+    has_unseen_sleep_data: bool        # 昨晚数据已同步 && 用户今天没看过
+    # 注意：反馈卡不在这里。反馈卡通过 UI 展示，用户主动提交后变成 feedback_submit 事件
 ```
 
-### 事件 4：提醒推送被点击
-
-用户点击了 set_reminder 产生的推送通知，进入 App。
+### 状态转移
 
 ```
-触发条件: 用户点击推送通知进入 App
-场景指令: 注入提醒上下文
-agent 行为: 顺着提醒的内容接话
+                        ┌──────────────┐
+                        │  事件到达     │
+                        └──────┬───────┘
+                               │
+               ┌───────────────┼───────────────┐──────────────┐
+               │               │               │              │
+               ▼               ▼               ▼              ▼
+        user_message      app_open      feedback_submit  push_click
+               │               │               │              │
+               │               ▼               │              │
+               │     ┌─── 沉默检查 ───┐        │              │
+               │     │                │        │              │
+               │   SILENT          通过        │              │
+               │     │                │        │              │
+               │     ▼                ▼        │              │
+               │   不调用       选择场景指令    │              │
+               │                      │        │              │
+               ▼                      ▼        ▼              ▼
+           ┌──────────────────────────────────────────────────┐
+           │              INVOKE agent + 注入场景指令          │
+           └──────────────────────────────────────────────────┘
 ```
 
-### 事件 5：子 agent 发现异常
+### 判定规则（伪代码）
 
-子 agent（每天 05:00 运行）更新画像/策略时，发现了值得主动提及的变化。
+```python
+def decide(ctx: EventContext) -> tuple[str, dict | None]:
+    """
+    返回 ("INVOKE", scene_data) 或 ("SILENT", None)
+    """
 
+    # ── 用户主动行为：一律调用，无需检查 ──
+
+    if ctx.event_type == "user_message":
+        return ("INVOKE", None)  # 无场景指令，走标准对话
+
+    if ctx.event_type == "feedback_submit":
+        return ("INVOKE", ctx.feedback_data)
+
+    if ctx.event_type == "push_click":
+        return ("INVOKE", ctx.reminder_data)
+
+    # ── app_open：需要沉默检查 ──
+
+    assert ctx.event_type == "app_open"
+
+    # 规则 1：上次 agent 主动说了，用户没回——不追
+    if (ctx.last_conversation_initiator == "agent"
+            and not ctx.last_conversation_user_replied):
+        return ("SILENT", None)
+
+    # 规则 2：30 分钟内无新事项——不打扰
+    if ctx.minutes_since_last_conversation <= 30:
+        if not ctx.has_pending_insight:
+            return ("SILENT", None)
+        # 有紧急洞察，即使 30 分钟内也说
+
+    # 规则 3：有待处理事项——按优先级取一个
+    if ctx.has_pending_insight:
+        return ("INVOKE", {"scene": "agent_insight", **ctx.insight_data})
+
+    if ctx.has_unseen_sleep_data:
+        return ("INVOKE", {"scene": "new_sleep_data", **ctx.sleep_summary})
+
+    # 规则 4：什么都没有——沉默
+    return ("SILENT", None)
 ```
-触发条件: 子 agent 标记了一条"待推送洞察"
-场景指令: 在下次用户打开 App 时注入
-agent 行为: 主动分享发现
-```
+
+### 判定规则汇总表
+
+| 事件 | 沉默检查 | 结果 |
+|------|---------|------|
+| user_message | 不检查 | 一律 INVOKE，无场景指令 |
+| feedback_submit | 不检查 | 一律 INVOKE，注入反馈数据 |
+| push_click | 不检查 | 一律 INVOKE，注入提醒上下文 |
+| app_open + agent 上次说了用户没回 | 检查 | SILENT |
+| app_open + 30 分钟内 + 无紧急洞察 | 检查 | SILENT |
+| app_open + 有待推送洞察 | 检查通过 | INVOKE，注入洞察 |
+| app_open + 有未看睡眠数据 | 检查通过 | INVOKE，注入数据摘要 |
+| app_open + 什么都没有 | 检查通过 | SILENT |
 
 ---
 
-## 事件优先级
+## 场景指令
 
-用户打开 App 时可能同时存在多个待处理事项。不能全塞给 agent——同时处理多件事会让输出混乱。
+状态机决定 INVOKE 之后，根据 scene 类型生成一段短文本，注入 04-context-assembly 的第 ④ 块。
 
-**优先级排序（高到低）：**
+**agent 被调用后一定会产出回复**，场景指令的作用是告诉 agent "当前是什么情况"，agent 决定具体说什么。
 
-```
-1. 用户主动发消息          ← 用户有明确意图，最高优先
-2. 提醒推送被点击          ← 用户从推送入口进来，意图明确
-3. 子 agent 发现异常       ← 我们发现了值得说的事
-4. 反馈卡待收集            ← 之前建议的反馈，最不紧急
-```
+### 指令 1：用户发消息（无注入）
 
-**规则：**
-- 每次只注入一个场景指令，按优先级取最高的
-- 被跳过的低优先级事项保留，下次触发时再处理
-- 如果用户主动发消息（优先级 1），其他事项全部延后——用户想聊什么就聊什么
+用户主动发消息时，不注入场景指令。agent 直接响应用户消息。
 
-**为什么反馈卡收集优先级最低：**
-
-反馈卡有 scheduled_after 控制展示时机，本身就是"不着急"的。而且如果 agent 一开口就问"昨晚那个建议你做到了吗？"，用户会觉得被追责。不如等用户自己提交反馈卡，或者在自然对话中顺便聊到。
-
----
-
-## 场景指令模板
-
-每个事件对应一段短文本，注入 system prompt 末尾（04-context-assembly 的第 ④ 块）。
-
-### 打开 App + 有新数据
-
-```
-## 当前场景
-
-用户刚打开 App。以下是他最新的睡眠数据摘要：
-{sleep_summary}
-
-如果数据中有值得关注的变化（好的或坏的），主动和用户聊聊。
-如果没什么特别的，简短打个招呼或保持沉默。
-不要像报告一样列数据，像朋友一样聊。
-```
-
-### 反馈卡提交
+### 指令 2：反馈卡提交
 
 ```
 ## 当前场景
@@ -117,144 +157,189 @@ agent 行为: 主动分享发现
 用户刚提交了一张反馈卡：
 - 关联建议：{suggestion_description}
 - 用户选择：{completion_value}
-- 用户补充：{follow_up_text}
+- 用户补充：{follow_up_text | "无"}
 
 基于反馈推进对话：
-- 做到了 → 肯定 + 考虑是否固化或推进
-- 没做到 → 理解原因 + 考虑调整方法
-- 部分做到 → 肯定已做到的部分 + 了解困难点
+- 做到了 → 具体肯定，考虑固化或推进下一步
+- 没做到 → 理解原因，考虑调整方法或降低难度
+- 部分做到 → 肯定已做到的，了解困难点
 ```
 
-### 提醒推送被点击
+### 指令 3：提醒推送被点击
 
 ```
 ## 当前场景
 
 用户点击了一条提醒推送进入 App：
 - 提醒内容：{reminder_message}
-- 提醒时间：{reminder_time}
 - 关联干预：{intervention_description}
 
-用户可能想聊聊这个提醒，也可能只是顺手点进来。
-不要假设用户一定想讨论提醒内容——如果用户另有话题，跟随用户。
+顺着提醒的上下文和用户聊。如果用户接着说了别的话题，跟随用户。
 ```
 
-### 子 agent 发现异常
+### 指令 4：子 agent 洞察
 
 ```
 ## 当前场景
 
-系统检测到以下值得关注的变化：
+以下是最近发现的一个值得关注的变化：
 {insight_description}
 
-在合适的时机和用户聊聊这个发现。
-如果用户主动聊了其他话题，可以在话题自然结束后再提。
-不要用"系统检测到"这种话，用你自己的话说。
+用你自己的话和用户聊这个发现。不要说"系统检测到"。
+```
+
+### 指令 5：新的睡眠数据
+
+```
+## 当前场景
+
+用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：
+{sleep_summary}
+
+像朋友一样聊昨晚的睡眠，不要像报告一样列数据。
+如果数据和干预策略中的当前干预相关，可以关联起来聊。
 ```
 
 ---
 
-## 沉默机制
+## 关键状态的精确定义
 
-agent 不应该每次用户打开 App 都说话。**没有值得说的事，就不说。**
-
-### 判断流程
-
-```
-用户打开 App
-    │
-    ├─ 距离上次对话 ≤ 30 分钟？
-    │       │
-    │       ├─ 有新的待处理事项？ ─→ 注入场景指令，agent 发言
-    │       │
-    │       └─ 没有 ─→ 沉默（不调用 agent）
-    │
-    ├─ 距离上次对话 > 30 分钟？
-    │       │
-    │       ├─ 有待处理事项？ ─→ 注入场景指令，agent 发言
-    │       │
-    │       └─ 有新睡眠数据（如早上首次打开）？ ─→ 注入数据摘要，agent 可选发言
-    │       │
-    │       └─ 都没有 ─→ 沉默
-    │
-    └─ 上次是 agent 主动发言，用户未回复就离开？
-            │
-            └─ 沉默（不追着说）
-```
-
-### "有值得说的事"的定义
-
-| 条件 | 示例 | 是否发言 |
-|------|------|---------|
-| 有待收集的反馈 | 昨晚的建议到了反馈时间 | 不主动开口，等用户提交卡片 |
-| 有新的睡眠数据 | 早上首次打开，昨晚数据已同步 | 可以聊（注入数据摘要） |
-| 子 agent 标记了异常 | 连续 3 天深睡下降 | 应该聊（注入异常发现） |
-| 用户点了提醒推送进来 | 22:30 的放手机提醒 | 应该聊（注入提醒上下文） |
-| 用户几分钟前刚聊过，又打开了 | 没有新事项 | 沉默 |
-
----
-
-## 注入时序
-
-事件注入发生在 04-context-assembly 的组装阶段，在调用 Claude API 之前。
+### has_unseen_sleep_data
 
 ```python
-def handle_app_open(user_id, entry_point):
-    """用户打开 App 时的事件处理"""
+has_unseen_sleep_data = (
+    sleep_data_synced_today                    # 设备数据已同步（通常早上 6-8 点）
+    and not user_has_seen_sleep_today          # 用户今天没有触发过包含睡眠数据的对话
+)
 
-    # 1. 检查沉默条件
-    last_conversation = get_last_conversation(user_id)
-    if should_stay_silent(last_conversation, entry_point):
-        return None  # 不调用 agent
+# 用户"看过"的判定：agent 回复中调用了 get_health_data 且 metrics 包含 sleep 相关指标
+# 一旦看过，当天不再重复推送
+```
 
-    # 2. 收集待处理事项，按优先级排序
-    pending_events = []
+### has_pending_insight
 
-    if entry_point == "push_notification":
-        reminder = get_clicked_reminder(user_id)
-        pending_events.append(("reminder_clicked", reminder))
+```python
+has_pending_insight = (
+    sub_agent_flagged_insight                  # 子 agent 运行后标记了待推送
+    and not insight_already_delivered           # 还没推送过
+)
 
-    insight = get_pending_insight(user_id)
-    if insight:
-        pending_events.append(("agent_insight", insight))
+# 子 agent 标记洞察的条件（在子 agent 的 prompt 中定义）：
+# - 连续 N 天某指标持续恶化
+# - 某个干预产生了显著效果（数据印证）
+# - 用户画像发生了重大变化（如作息模式改变）
+#
+# 日常小波动不标记。标记意味着"值得专门和用户聊一次"。
+```
 
-    pending_feedback = get_pending_feedback(user_id)
-    if pending_feedback:
-        pending_events.append(("feedback_pending", pending_feedback))
+### last_conversation_user_replied
 
-    # 如果没有待处理事项，检查是否有新数据可聊
-    if not pending_events:
-        sleep_data = get_latest_sleep_summary(user_id)
-        if sleep_data and sleep_data.is_new:
-            pending_events.append(("new_sleep_data", sleep_data))
+```python
+last_conversation_user_replied = (
+    last_conversation.initiator == "agent"     # 上次是 agent 主动开口
+    and last_conversation.has_user_message     # 用户在那轮对话中回复了至少一条消息
+)
 
-    if not pending_events:
-        return None  # 没什么好说的，沉默
+# 如果 agent 说了"昨晚睡得不错"，用户看了但没回复就走了
+# → last_conversation_user_replied = False
+# → 下次 app_open 时不追着说
+```
 
-    # 3. 取最高优先级事件，生成场景指令
-    event_type, event_data = pending_events[0]
-    scene_instruction = render_scene_instruction(event_type, event_data)
+---
 
-    # 4. 组装上下文并调用 agent
-    context = assemble_context(
-        user_id=user_id,
-        trigger_event=scene_instruction,
-        conversation_history=[]  # agent 主动发言，无用户消息
-    )
-    return call_agent(context)
+## 反馈卡的完整生命周期
 
+上一版把"反馈卡提交"和"反馈卡待收集"混在了一起。这里理清：
 
-def handle_feedback_submit(user_id, feedback_result):
-    """用户提交反馈卡时的事件处理"""
+```
+agent 给出建议
+    │
+    ▼
+调用 send_feedback_card(scheduled_after=明早 8:00)
+    │
+    ▼
+卡片存入数据库，状态: PENDING
+    │
+    │                    ...到了 scheduled_after...
+    ▼
+用户打开 App
+    │
+    ▼
+前端检查是否有 PENDING 且已到时间的卡片
+    │
+    ├─ 有 → 在对话页顶部展示卡片 UI（不调用 agent）
+    │
+    └─ 没有 → 不展示
+    │
+    │              ...用户看到卡片...
+    ▼
+用户点击选项 + 提交
+    │
+    ▼
+卡片状态: SUBMITTED
+    │
+    ▼
+触发 feedback_submit 事件 → 状态机判定 INVOKE → 注入反馈数据 → agent 回复
+```
 
-    scene_instruction = render_scene_instruction("feedback_submitted", feedback_result)
+**关键区分：**
+- **卡片展示**：前端行为，不涉及 agent，不涉及状态机
+- **卡片提交**：用户主动行为，触发 feedback_submit 事件，一律调用 agent
 
-    context = assemble_context(
-        user_id=user_id,
-        trigger_event=scene_instruction,
-        conversation_history=get_conversation_history(user_id)
-    )
-    return call_agent(context)
+agent 不会主动问"你反馈卡填了吗"——反馈卡是 UI 层的收集手段，用户提交后才进入对话流。
+
+---
+
+## orchestrator 实现
+
+```python
+class EventOrchestrator:
+
+    def handle_event(self, user_id: str, event: EventContext):
+        """事件入口，所有事件从这里进入"""
+
+        decision, scene_data = self.state_machine.decide(event)
+
+        if decision == "SILENT":
+            return None
+
+        # 生成场景指令
+        scene_instruction = None
+        if scene_data:
+            scene_instruction = self.render_scene_instruction(
+                scene_data["scene"], scene_data
+            )
+
+        # 组装上下文
+        context = assemble_context(
+            user_id=user_id,
+            trigger_event=scene_instruction,
+            conversation_history=self.get_history(user_id, event)
+        )
+
+        # 调用 agent
+        response = call_agent(context)
+
+        # 更新状态（用于下次沉默判定）
+        self.update_conversation_state(
+            user_id=user_id,
+            initiator="user" if event.event_type == "user_message" else "agent",
+            timestamp=event.timestamp
+        )
+
+        # 消费已处理的事项
+        if scene_data:
+            self.mark_delivered(user_id, scene_data)
+
+        return response
+
+    def get_history(self, user_id, event):
+        """根据事件类型决定是否携带对话历史"""
+        if event.event_type in ("user_message", "feedback_submit"):
+            return get_conversation_history(user_id)
+        else:
+            # app_open / push_click：agent 主动开口，开启新对话
+            return []
 ```
 
 ---
@@ -263,9 +348,11 @@ def handle_feedback_submit(user_id, feedback_result):
 
 | 设计决策 | 理由 |
 |---------|------|
-| 每次只注入一个场景指令 | 多个指令会让 agent 输出混乱，试图一次处理太多事情 |
-| 反馈卡收集优先级最低 | 避免"追责感"，反馈卡本身有延迟展示机制 |
-| 沉默是默认状态 | 宁可不说，也不要硬凑一句"早上好"式的废话 |
-| 30 分钟冷却期 | 短时间内反复打开 App 是正常使用行为，不应每次都被 agent 搭话 |
-| 场景指令是建议不是命令 | 模板中用"如果...可以..."而非"你必须..."，给 agent 判断空间 |
-| 子 agent 异常高于反馈收集 | 我们发现的问题比回收历史建议更有时效性 |
+| 状态机和 agent 两层分离 | "调不调"是确定性逻辑，不该花 token 让 LLM 判断 |
+| 用户主动行为一律 INVOKE | 用户发消息、提交反馈、点推送都是明确意图，不需要犹豫 |
+| 只有 app_open 需要沉默检查 | 其他事件都有明确的用户意图驱动 |
+| agent 被调用后一定产出回复 | 消除"调了但不说话"的浪费，沉默在状态机层解决 |
+| 反馈卡展示是前端行为 | 不涉及 agent，避免 agent 追着用户要反馈 |
+| 每次只注入一个场景指令 | 多个指令会让 agent 输出混乱 |
+| 30 分钟冷却 + 不追着说 | 短时间重复打开是正常行为；agent 主动说了用户没回就别追 |
+| has_unseen_sleep_data 当天只触发一次 | 看过就标记为 seen，避免反复推送同一天的数据 |
