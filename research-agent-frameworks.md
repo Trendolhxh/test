@@ -98,7 +98,98 @@
 
 Claude Code 只用了 4 个核心工具。Manus 重构了 5 次框架，每次迭代都更简单、更好。
 
-## 五、市场数据
+## 五、实战参考：完整提示词 & 工具定义 & 上下文组装
+
+### 5.1 Manus 完整架构（泄露版）
+
+Manus 的内部实现已被完整提取，是学习 agent 产品设计的最佳参考。
+
+**核心文件结构：**
+
+| 文件 | 作用 |
+|------|------|
+| `Prompt.txt` | 主系统提示词：角色定义、核心能力、行为规则 |
+| `Modules.txt` | 模块说明：写作规则、浏览器规则、编码规则 |
+| `AgentLoop.txt` | Agent 循环：分析事件→选工具→等执行→迭代→提交 |
+| `tools.json` | 29 个工具的 JSON Schema 定义 |
+
+**关键设计模式：**
+- 规划与执行分离：Planner 生成编号伪代码步骤，用 `todo.md` 实时追踪
+- 纯工具调用：响应必须使用 function calling，禁止纯文本回复
+- 工具名不暴露给用户
+- 输出风格：禁止纯列表/bullet points，要求段落式散文
+
+**查看地址：**
+- [Manus tools and prompts (Gist)](https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9)
+- [x1xhlol/system-prompts - Manus](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools/tree/main/Manus%20Agent%20Tools%20&%20Prompt)
+- [Manus 架构深度分析 (Gist)](https://gist.github.com/renschni/4fbc70b31bad8dd57f3370239dccd58f)
+- [Manus Unveiled (Medium)](https://medium.com/@joycebirkins/manus-unveiled-dive-into-internal-prompts-workflows-and-tool-configurations-6ee9a7e0e708)
+
+### 5.2 Claude Code 完整系统提示词 & 18 个工具
+
+从 npm 编译源码中直接提取，保证与实际运行一致。
+
+**架构亮点：**
+- 系统提示词仅 2,300-3,600 tokens（占 200K 上下文的 ~1.6%）
+- 工具定义 ~11,600 tokens，每个工具定义是一个"小手册"
+- 子 agent（Plan/Explore/Task）独立上下文窗口
+- Tool Search Tool 按需发现工具，节省 85% token
+
+**查看地址：**
+- [Piebald-AI/claude-code-system-prompts](https://github.com/Piebald-AI/claude-code-system-prompts)
+- [x1xhlol/system-prompts - Claude Code](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools/blob/main/Anthropic/Claude%20Code/Prompt.txt)
+- [Inside Claude Code's System Prompt](https://www.claudecodecamp.com/p/inside-claude-code-s-system-prompt)
+
+### 5.3 OpenManus 代码结构（可运行的 Manus 复刻）
+
+```
+OpenManus/
+├── app/agent/
+│   ├── manus.py          # 主 Agent，继承 PlanningAgent
+│   ├── base.py           # ReActAgent 基类（Think→Act→Observe）
+│   └── toolcall.py       # ToolCallAgent，工具调用逻辑
+├── app/prompt/
+│   └── manus.py          # 系统提示词模板
+└── app/tool/
+    ├── browser_use.py    # 浏览器工具（Playwright）
+    ├── file_saver.py     # 文件操作工具
+    └── python_execute.py # Python 执行工具
+```
+
+继承链：`ReActAgent → ToolCallAgent → PlanningAgent → Manus`
+
+**查看地址：**
+- [FoundationAgents/OpenManus](https://github.com/FoundationAgents/OpenManus)
+- [OpenManus 代码解析](https://dev.to/foxgem/openmanus-an-autonomous-agent-platform-8nl)
+
+### 5.4 OWL/CAMEL-AI 上下文组装
+
+**核心流程：**
+1. `construct_society()` 创建 `OwlRolePlaying` 环境
+2. 为 UserAgent/AssistantAgent 生成角色系统消息
+3. Inception Prompting：只需初始概念，对话自然演化
+4. 子 agent 维护隔离上下文（WebAgent 浏览器历史独立于主 agent）
+
+**关键源码：**
+- [camel/societies/role_playing.py](https://github.com/camel-ai/camel/blob/master/camel/societies/role_playing.py)
+- [camel-ai/owl](https://github.com/camel-ai/owl)
+
+### 5.5 万能参考仓库
+
+- [x1xhlol/system-prompts-and-models-of-ai-tools](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools)（132K Stars）— Cursor、Devin、Lovable、Windsurf、Replit、v0、Perplexity 等所有主流 AI 产品的完整提示词和工具定义
+- [dontriskit/awesome-ai-system-prompts](https://github.com/dontriskit/awesome-ai-system-prompts) — 分类整理的提示词集合
+- [jujumilk3/leaked-system-prompts](https://github.com/jujumilk3/leaked-system-prompts) — 泄露提示词存档
+
+### 5.6 构建类 Manus 产品需要关注的 4 个层面
+
+| 层面 | 学什么 | 参考项目 |
+|------|--------|----------|
+| 系统提示词 | 角色定义、行为约束、输出风格 | Manus Prompt.txt, Claude Code Prompt |
+| 工具定义 | JSON Schema 参数、使用场景描述 | Manus tools.json, Claude Code 18 tools |
+| 上下文组装 | 状态管理、多轮记忆、子 agent 隔离 | OWL/CAMEL RolePlaying, Claude Code subagents |
+| Agent 循环 | ReAct、规划-执行分离、todo 清单 | OpenManus agent/, Manus AgentLoop.txt |
+
+## 六、市场数据
 
 - 全球 agent 市场 2025 年达 78.4 亿美元，预计 2030 年达 526.2 亿美元（CAGR 46.3%）
 - Gartner 预测 2026 年底 40% 企业应用将集成 AI agent（2025 年不到 5%）
