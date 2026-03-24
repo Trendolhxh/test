@@ -6,39 +6,22 @@
 
 ## 全局视角
 
-```
-事件到达
-  │
-  ▼
-07-events 状态机 ──→ SILENT → 结束
-  │
-  INVOKE
-  │
-  ▼
-03-memory 加载画像 + 策略
-  │
-  ▼
-04-context 组装 system / tools / messages
-  │
-  ▼
-Claude API 调用
-  │
-  ▼
-05-loop 执行循环（推理 → 工具 → 观察 → ...）
-  │                          │
-  │                    工具路由
-  │               ┌──────┴──────┐
-  │           服务端工具      前端工具
-  │          get_health_data   show_status
-  │          save_memory       render_analysis_card
-  │          set_reminder      send_feedback_card
-  │                            suggest_replies
-  │
-  ▼
-06-style 约束下的最终输出
-  │
-  ▼
-响应投递给前端
+```mermaid
+flowchart TD
+    A[事件到达] --> B{"07-events\n状态机判定"}
+    B -->|SILENT| C[结束]
+    B -->|INVOKE| D["03-memory\n加载画像 + 策略"]
+    D --> E["04-context\n组装 system / tools / messages"]
+    E --> F[Claude API 调用]
+    F --> G{"05-loop\n执行循环"}
+    G -->|工具调用| H{工具路由}
+    H -->|服务端工具| I["get_health_data\nsave_memory\nset_reminder"]
+    H -->|前端工具| J["show_status\nrender_analysis_card\nsend_feedback_card\nsuggest_replies"]
+    I --> K[工具结果返回模型]
+    J --> K
+    K --> G
+    G -->|纯文本回复| L["06-style 约束下的最终输出"]
+    L --> M[响应投递给前端]
 ```
 
 ---
@@ -218,21 +201,15 @@ def execute_tool(call: ToolCall) -> ToolResult:
 
 ### 触发时机
 
+```mermaid
+flowchart TD
+    T1["每天 05:00 定时任务"] --> S["对每个活跃用户执行子 agent"]
+    T2["主 agent 对话结束\n且本轮调用了 save_memory"] -->|异步| S
+    S --> U["子 agent 更新\n画像.md + 策略.md"]
+    U --> V{发现异常?}
+    V -->|是| W["标记 pending_insight"]
+    V -->|否| X["仅更新文档"]
 ```
-每天 05:00（定时任务）
-    │
-    ▼
-对每个活跃用户执行子 agent
-    │
-    ▼
-子 agent 更新画像.md + 策略.md
-    │
-    ├─ 发现异常 → 标记 pending_insight
-    │
-    └─ 无异常 → 仅更新文档
-```
-
-另外，每次主 agent 对话结束后，如果本轮调用了 save_memory，异步触发子 agent 增量更新。
 
 ### 子 Agent 的 API 调用
 
@@ -312,41 +289,40 @@ except ToolExecutionError as e:
 
 从用户打开 App 到看到完整回复的全流程。
 
-```
-用户                    前端                   Orchestrator              Claude API            服务端
- │                       │                         │                        │                    │
- │──打开 App────────────→│                         │                        │                    │
- │                       │──app_open 事件─────────→│                        │                    │
- │                       │                         │                        │                    │
- │                       │                         │──状态机判定              │                    │
- │                       │                         │  has_unseen_sleep_data  │                    │
- │                       │                         │  → INVOKE              │                    │
- │                       │                         │                        │                    │
- │                       │                         │──加载 user_context─────→│                    │
- │                       │                         │←─画像 + 策略───────────│                    │
- │                       │                         │                        │                    │
- │                       │                         │──组装 context           │                    │
- │                       │                         │──create_message───────→│                    │
- │                       │                         │                        │                    │
- │                       │                         │←─tool_call:            │                    │
- │                       │                         │  show_status +         │                    │
- │                       │                         │  get_health_data       │                    │
- │                       │                         │                        │                    │
- │                       │←─show_status────────────│                        │                    │
- │←─"正在看你的数据..."──│                         │──get_health_data──────→│───────────────────→│
- │                       │                         │←─sleep data────────────│←───────────────────│
- │                       │                         │                        │                    │
- │                       │                         │──tool_results─────────→│                    │
- │                       │                         │                        │──第 2 轮推理        │
- │                       │                         │←─text + tool_calls:    │                    │
- │                       │                         │  suggest_replies       │                    │
- │                       │                         │                        │                    │
- │                       │←─响应投递────────────────│                        │                    │
- │←─文本 + 快捷按钮──────│                         │                        │                    │
- │                       │                         │                        │                    │
- │                       │                         │──更新状态               │                    │
- │                       │                         │  initiator=agent       │                    │
- │                       │                         │  mark_sleep_seen       │                    │
+```mermaid
+sequenceDiagram
+    actor 用户
+    participant 前端
+    participant Orch as Orchestrator
+    participant Claude as Claude API
+    participant DB as 服务端/DB
+
+    用户->>前端: 打开 App
+    前端->>Orch: app_open 事件
+
+    Note over Orch: 状态机判定<br/>has_unseen_sleep_data<br/>→ INVOKE
+
+    Orch->>DB: 加载 user_context
+    DB-->>Orch: 画像 + 策略
+
+    Note over Orch: 组装 context
+
+    Orch->>Claude: create_message (第 1 轮)
+    Claude-->>Orch: tool_call: show_status + get_health_data
+
+    Orch->>前端: show_status (即时投递)
+    前端->>用户: "正在看你的数据..."
+
+    Orch->>DB: get_health_data
+    DB-->>Orch: sleep data
+
+    Orch->>Claude: tool_results (第 2 轮)
+    Claude-->>Orch: text + tool_call: suggest_replies
+
+    Orch->>前端: 响应投递 (文本 + 快捷按钮)
+    前端->>用户: 文本 + 快捷按钮
+
+    Note over Orch: 更新状态<br/>initiator=agent<br/>mark_sleep_seen
 ```
 
 ---
@@ -355,38 +331,55 @@ except ToolExecutionError as e:
 
 从建议→提醒→反馈→调整的全链路。
 
-```
-Day 1 对话中
-─────────────────
-Agent 回复: "要不设个 11 点闹钟，响了把手机放客厅？"
-    + set_reminder(today 23:00, "该放下手机了")      → 注册推送
-    + send_feedback_card(scheduled_after=明早 8:00)  → 存入待展示队列
-    + suggest_replies(["好", "今天不方便"])           → 展示按钮
+```mermaid
+sequenceDiagram
+    actor 用户
+    participant 前端
+    participant Orch as Orchestrator
+    participant Claude as Claude API
+    participant DB as 服务端/DB
 
-Day 1 23:00
-─────────────────
-系统推送: "该放下手机了，把它放到客厅充电吧"
-    用户看到推送（可能点击进 App，可能忽略）
+    rect rgb(240, 248, 255)
+        Note over 用户, DB: Day 1 对话中
+        Claude-->>Orch: "要不设个 11 点闹钟，响了把手机放客厅？"
+        Orch->>DB: set_reminder(23:00, "该放下手机了")
+        Orch->>DB: send_feedback_card(scheduled_after=明早 8:00)
+        Orch->>前端: text + suggest_replies(["好", "今天不方便"])
+        前端->>用户: 文本 + 快捷按钮
+    end
 
-    如果用户点击推送:
-        event_type = push_click
-        状态机 → INVOKE
-        注入提醒上下文
-        Agent: "提醒到了，手机放过去了吗？"
+    rect rgb(255, 248, 240)
+        Note over 用户, DB: Day 1 23:00
+        DB->>前端: 系统推送: "该放下手机了"
+        前端->>用户: 推送通知
 
-Day 2 早上打开 App
-─────────────────
-前端检查: 有 PENDING 反馈卡 && 已过 scheduled_after
-    → 在对话页顶部展示反馈卡 UI（不调用 agent）
+        alt 用户点击推送
+            用户->>前端: 点击推送
+            前端->>Orch: push_click 事件
+            Note over Orch: 状态机 → INVOKE<br/>注入提醒上下文
+            Orch->>Claude: create_message
+            Claude-->>Orch: "提醒到了，手机放过去了吗？"
+            Orch->>前端: 响应投递
+        end
+    end
 
-用户填写反馈卡: "做到了" + "但 11 点有点早"
-    → event_type = feedback_submit
-    → 状态机 → INVOKE（用户主动行为，一律调用）
-    → 注入反馈数据
-    → Agent: "做到了，不错。那把提醒调到 12 点？"
-        + save_memory("闹钟放手机干预：做到了，11 点太早想调到 12 点")
-        + set_reminder(today 24:00, "该放下手机了", repeat=daily)
-        + suggest_replies(["行", "再想想"])
+    rect rgb(240, 255, 240)
+        Note over 用户, DB: Day 2 早上打开 App
+        用户->>前端: 打开 App
+        Note over 前端: 检查: PENDING 反馈卡<br/>且已过 scheduled_after
+        前端->>用户: 展示反馈卡 UI（不调用 agent）
+
+        用户->>前端: 填写: "做到了" + "但 11 点有点早"
+        前端->>Orch: feedback_submit 事件
+        Note over Orch: 状态机 → INVOKE<br/>注入反馈数据
+
+        Orch->>Claude: create_message
+        Claude-->>Orch: "做到了，不错。那把提醒调到 12 点？"
+        Orch->>DB: save_memory("闹钟放手机干预：做到了，11 点太早想调到 12 点")
+        Orch->>DB: set_reminder(24:00, "该放下手机了", repeat=daily)
+        Orch->>前端: text + suggest_replies(["行", "再想想"])
+        前端->>用户: 文本 + 快捷按钮
+    end
 ```
 
 ---
