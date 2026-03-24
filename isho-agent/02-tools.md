@@ -93,19 +93,17 @@
 ```json
 {
   "name": "get_user_profile",
-  "description": "读取用户画像。不传 section 时返回 Layer 1 摘要（~500 token，每次对话开始时应调用一次）。传 section 时返回 Layer 2 完整画像中对应段落的详细数据。",
+  "description": "读取用户的睡眠改善知识库。不传 section 时返回 Layer 1 摘要（~500 token，每次对话开始时应调用一次）。传 section 时返回 Layer 2 中对应段落的详细数据。",
   "parameters": {
     "section": {
       "type": "string",
       "enum": [
-        "basic_info",
-        "lifestyle",
-        "sleep_patterns",
-        "preferences",
-        "active_suggestions",
-        "suggestion_archive"
+        "context",
+        "sleep_impact_model",
+        "interventions",
+        "trend_journal"
       ],
-      "description": "可选。要查询的完整画像段落。不传则返回摘要。"
+      "description": "可选。要查询的详细数据段落。context=事实层（基础信息+生活场景+交互偏好），sleep_impact_model=睡眠影响因子图，interventions=干预追踪，trend_journal=趋势日志。不传则返回摘要。"
     }
   },
   "required": []
@@ -114,40 +112,37 @@
 
 **设计说明：**
 - 两层结构：无参数返回子 agent 生成的摘要（类似 CLAUDE.md），传 section 返回完整数据（类似 Read 具体文件）。
-- section 用枚举限制，防止模型编造不存在的段落名。
-- 对话开始时调 `get_user_profile()` 加载摘要；对话中需要深入某方向时调 `get_user_profile(section="lifestyle")` 按需加载。
-- 完整的画像字段结构和摘要格式详见 [03-memory.md](./03-memory.md)。
+- 4 个 section 对应 Layer 2 的核心结构：1 个事实层 + 3 个分析层。
+- 对话开始时调 `get_user_profile()` 加载摘要；对话中需要深入某方向时按需加载，如 `get_user_profile(section="sleep_impact_model")`。
+- 完整的字段结构和摘要格式详见 [03-memory.md](./03-memory.md)。
 
 **返回示例 — 无参数（Layer 1 摘要）：**
 ```json
 {
   "type": "summary",
-  "content": "## 用户概况\n男，30 岁，互联网从业者，典型夜猫子。工作日常加班，晚餐偏晚（~20:30）。\n\n## 当前睡眠状态\n- 工作日平均入睡 01:30，起床 08:45，深睡占比 18%（偏低）\n- 睡眠一致性 42/100，主要问题是周末作息大幅后移\n- 近期趋势：略有改善\n\n## 关键洞察\n- 睡前刷手机是入睡困难的核心因素\n- \"手机放客厅\"策略有部分效果，加班日难坚持\n- 下午咖啡是用户的硬边界，不要建议限制\n\n## 活跃建议\n- [sug_003] 今晚 11 点手机放客厅（待反馈）\n\n## 对话注意事项\n- 偏好直接沟通，建议频率低\n- 已拒绝：限制咖啡、早起运动",
+  "content": "## 这个人的睡眠故事\n男，30 岁，互联网从业者，典型夜猫子。使用 2 周。\n核心问题：睡前手机 + 周末作息后移。首个有效方向：手机放客厅（加班日是障碍）。\n\n## 当前状态\n- 睡眠评分趋势：52 → 56（略有改善）\n- 工作日入睡 01:30，深睡 18%（偏低）\n\n## Agent 当前认知\n- [高确信] 睡前手机是入睡困难的核心因素\n- [中确信] 周末作息后移导致周一睡眠质量下降\n- [低确信] 周末饮酒可能影响深睡（样本不足）\n\n## 当前干预\n- [int_003] 每晚 11 点手机放客厅 — 待反馈\n\n## 硬约束\n- 不建议：限制咖啡、早起运动\n- 沟通风格：直接，少铺垫",
   "last_updated": "2026-03-24T05:00:00+08:00"
 }
 ```
 
-**返回示例 — section="preferences"（Layer 2 详细数据）：**
+**返回示例 — section="sleep_impact_model"（分析层详细数据）：**
 ```json
 {
   "type": "full_section",
-  "section": "preferences",
+  "section": "sleep_impact_model",
   "data": {
-    "communication_style": "direct",
-    "suggestion_frequency": "low",
-    "rejected_directions": [
+    "factors": [
       {
-        "direction": "限制咖啡",
-        "reason": "下午必须靠咖啡撑着",
-        "date": "2026-03-18"
-      }
-    ],
-    "effective_methods": [
-      {
-        "method": "睡前把手机放客厅",
-        "effectiveness": "partial",
-        "note": "做到的那两天确实睡得早了",
-        "date": "2026-03-20"
+        "id": "factor_01",
+        "name": "睡前手机使用",
+        "category": "behavior",
+        "impact": "negative",
+        "strength": "strong",
+        "confidence": "high",
+        "evidence": [
+          { "type": "self_report", "detail": "用户自述刷手机是入睡困难的主因", "date": "2026-03-15" },
+          { "type": "data_correlation", "detail": "手机放客厅的两天，入睡提前 45min，深睡 +3%", "date": "2026-03-22" }
+        ]
       }
     ]
   }
@@ -161,29 +156,67 @@
 ```json
 {
   "name": "update_user_profile",
-  "description": "新增或更新用户画像中的信息。当用户在对话中透露了新的生活习惯、偏好或背景信息时调用。",
+  "description": "写入用户的睡眠改善知识库。当发现新的睡眠影响因素、记录干预结果、或捕获用户生活细节时调用。",
   "parameters": {
-    "field": {
+    "section": {
       "type": "string",
-      "description": "要更新的字段路径，如 'lifestyle_tags' 或 'basic_info.weight_kg'"
+      "enum": ["context", "sleep_impact_model", "interventions", "trend_journal"],
+      "description": "要写入的段落"
     },
     "action": {
       "type": "string",
-      "enum": ["set", "append", "remove"],
-      "description": "set=覆盖值，append=追加到数组，remove=从数组移除"
+      "enum": ["set", "append", "remove", "update_item"],
+      "description": "set=覆盖整个段落或子字段，append=追加条目到数组，remove=移除数组条目，update_item=更新数组中的特定条目（需配合 item_id）"
+    },
+    "path": {
+      "type": "string",
+      "description": "段落内的字段路径。如 'factors'、'active'、'life_context.work'、'interaction.boundaries'"
     },
     "value": {
       "type": "any",
       "description": "要写入的值"
+    },
+    "item_id": {
+      "type": "string",
+      "description": "update_item 操作时，指定要更新的条目 id（如 factor_01、int_003）"
     }
   },
-  "required": ["field", "action", "value"]
+  "required": ["section", "action", "path", "value"]
 }
 ```
 
 **设计说明：**
-- 对标 Claude Code 的 Edit 工具——精确修改而非全量覆写，避免丢失已有数据。
-- append/remove 操作适用于 lifestyle_tags 这类数组字段。
+- section + path 两级定位，比旧版的扁平 field 更清晰，对应新的层级结构。
+- `update_item` 操作支持按 id 更新数组中的特定条目（如更新某个影响因子的 confidence）。
+- 对标 Claude Code 的 Edit 工具——精确修改而非全量覆写。
+
+**调用示例：**
+```
+# 发现新的睡眠影响因素
+update_user_profile(
+  section="sleep_impact_model",
+  action="append",
+  path="factors",
+  value={ id: "factor_05", name: "新窗帘改善遮光", category: "environment", ... }
+)
+
+# 更新已有因子的置信度
+update_user_profile(
+  section="sleep_impact_model",
+  action="update_item",
+  path="factors",
+  item_id="factor_01",
+  value={ confidence: "high", strength: "strong" }
+)
+
+# 记录用户拒绝的方向
+update_user_profile(
+  section="context",
+  action="append",
+  path="interaction.boundaries",
+  value={ direction: "限制咖啡", reason: "下午必须靠咖啡撑着", since: "2026-03-18" }
+)
+```
 
 ---
 
