@@ -93,46 +93,64 @@
 ```json
 {
   "name": "get_user_profile",
-  "description": "读取用户画像，包括基础信息（年龄、性别、身高、体重）、生活习惯标签、历史建议及其反馈结果。每次对话开始时应调用一次，以了解用户背景。",
-  "parameters": {}
+  "description": "读取用户画像。不传 section 时返回 Layer 1 摘要（~500 token，每次对话开始时应调用一次）。传 section 时返回 Layer 2 完整画像中对应段落的详细数据。",
+  "parameters": {
+    "section": {
+      "type": "string",
+      "enum": [
+        "basic_info",
+        "lifestyle",
+        "sleep_patterns",
+        "preferences",
+        "active_suggestions",
+        "suggestion_archive"
+      ],
+      "description": "可选。要查询的完整画像段落。不传则返回摘要。"
+    }
+  },
+  "required": []
 }
 ```
 
 **设计说明：**
-- 无参数，返回完整画像。画像体量可控（不是海量数据），一次性读取比分字段查询更简单。
-- 对标 Claude Code 在对话开始时读取 CLAUDE.md 的模式——先全量了解上下文，再开始工作。
+- 两层结构：无参数返回子 agent 生成的摘要（类似 CLAUDE.md），传 section 返回完整数据（类似 Read 具体文件）。
+- section 用枚举限制，防止模型编造不存在的段落名。
+- 对话开始时调 `get_user_profile()` 加载摘要；对话中需要深入某方向时调 `get_user_profile(section="lifestyle")` 按需加载。
+- 完整的画像字段结构和摘要格式详见 [03-memory.md](./03-memory.md)。
 
-**返回结构示例：**
+**返回示例 — 无参数（Layer 1 摘要）：**
 ```json
 {
-  "basic_info": {
-    "birth_date": "1995-06-15",
-    "gender": "male",
-    "height_cm": 175,
-    "weight_kg": 72
-  },
-  "lifestyle_tags": ["久坐办公", "晚餐偏晚", "周末作息不规律"],
-  "suggestion_history": [
-    {
-      "id": "sug_001",
-      "date": "2026-03-20",
-      "content": "晚上 10 点后把手机放到客厅充电",
-      "feedback": {
-        "status": "tried",
-        "outcome": "partially_effective",
-        "user_note": "做到了两天，第三天加班没做到"
+  "type": "summary",
+  "content": "## 用户概况\n男，30 岁，互联网从业者，典型夜猫子。工作日常加班，晚餐偏晚（~20:30）。\n\n## 当前睡眠状态\n- 工作日平均入睡 01:30，起床 08:45，深睡占比 18%（偏低）\n- 睡眠一致性 42/100，主要问题是周末作息大幅后移\n- 近期趋势：略有改善\n\n## 关键洞察\n- 睡前刷手机是入睡困难的核心因素\n- \"手机放客厅\"策略有部分效果，加班日难坚持\n- 下午咖啡是用户的硬边界，不要建议限制\n\n## 活跃建议\n- [sug_003] 今晚 11 点手机放客厅（待反馈）\n\n## 对话注意事项\n- 偏好直接沟通，建议频率低\n- 已拒绝：限制咖啡、早起运动",
+  "last_updated": "2026-03-24T05:00:00+08:00"
+}
+```
+
+**返回示例 — section="preferences"（Layer 2 详细数据）：**
+```json
+{
+  "type": "full_section",
+  "section": "preferences",
+  "data": {
+    "communication_style": "direct",
+    "suggestion_frequency": "low",
+    "rejected_directions": [
+      {
+        "direction": "限制咖啡",
+        "reason": "下午必须靠咖啡撑着",
+        "date": "2026-03-18"
       }
-    },
-    {
-      "id": "sug_002",
-      "date": "2026-03-18",
-      "content": "下午 2 点后不喝咖啡",
-      "feedback": {
-        "status": "rejected",
-        "reason": "下午必须靠咖啡撑着"
+    ],
+    "effective_methods": [
+      {
+        "method": "睡前把手机放客厅",
+        "effectiveness": "partial",
+        "note": "做到的那两天确实睡得早了",
+        "date": "2026-03-20"
       }
-    }
-  ]
+    ]
+  }
 }
 ```
 
