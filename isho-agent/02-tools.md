@@ -8,7 +8,7 @@
 | # | 工具名 | 一句话说明 | 执行侧 |
 |---|--------|-----------|--------|
 | 1 | get_health_data | 查询用户健康与行为数据 | 服务端 |
-| 2 | get_user_context | 加载用户画像和干预策略（两份 md） | 服务端 |
+| 2 | get_user_context | 加载用户画像和干预策略（两份 md） | 服务端（orchestrator 自动执行，不在工具列表中） |
 | 3 | save_memory | 将对话中捕获的事实写入 mem0 | 服务端 |
 | 4 | send_feedback_card | 向用户发送结构化反馈卡片 | 前端渲染 |
 | 5 | render_analysis_card | 渲染数据分析图表卡片（可截图分享） | 前端渲染 |
