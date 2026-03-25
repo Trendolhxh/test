@@ -23,7 +23,7 @@ sequenceDiagram
     participant Events as 07-events<br/>状态机
     participant Memory as 03-memory<br/>记忆加载
     participant Context as 04-context<br/>上下文组装
-    participant Loop as 05-agent-loop<br/>执行循环
+    participant AgentLoop as 05-agent-loop<br/>执行循环
     participant Style as 06-output-style<br/>组合输出
 
     用户->>Events: 打开 App / 收到推送 / 提交反馈卡
@@ -35,10 +35,10 @@ sequenceDiagram
     Memory->>Context: 画像 + 策略
     Note over Context: 拼装 prompt<br/>system: 身份层(01) + 画像 + 策略 + 场景指令<br/>tools: 7 个工具定义 (~800 tk)<br/>messages: 对话历史<br/>总预算 ~8K tk，无需压缩
 
-    Context->>Loop: system / tools / messages
-    Note over Loop: 执行循环（最大 3 轮）<br/>模型推理 → 调用工具 → 观察结果 → 继续/停止<br/>大部分轮次 0-2 次工具调用<br/>身份与原则 ← 01-system-prompt<br/>工具定义 ← 02-tools
+    Context->>AgentLoop: system / tools / messages
+    Note over AgentLoop: 执行循环（最大 3 轮）<br/>模型推理 → 调用工具 → 观察结果 → 继续/停止<br/>大部分轮次 0-2 次工具调用<br/>身份与原则 ← 01-system-prompt<br/>工具定义 ← 02-tools
 
-    Loop->>Style: 文本 + 工具调用结果
+    AgentLoop->>Style: 文本 + 工具调用结果
     Note over Style: 组合输出<br/>文本 + show_status + 图表卡片<br/>+ 反馈卡片 + 快捷回复按钮<br/>+ 定时提醒推送
 
     Style->>用户: 完整体验（不是单条文本）
