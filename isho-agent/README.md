@@ -18,17 +18,30 @@
 ## 架构概览
 
 ```mermaid
-flowchart TD
-    A["用户打开 App / 收到推送 / 提交反馈卡"] --> B["07-events: 判断触发场景\n首次打开？有待收集的反馈？用户主动发消息？"]
-    B --> C["03-memory: 加载记忆\n用户画像.md + 干预策略.md，由子 agent 提炼"]
-    C --> D["04-context-assembly: 拼装 prompt\nsystem: 身份层 + 画像 + 策略 + 场景指令\ntools: 7 个工具定义 (~800 tk)\nmessages: 对话历史\n总预算 ~8K tk，无需压缩"]
-    D --> E["05-agent-loop: 执行循环（最大 3 轮）\n模型推理 → 调用工具 → 观察结果 → 继续/停止\n大部分轮次 0-2 次工具调用"]
-    E --> F["06-output-style: 组合输出\n文本 + show_status + 图表卡片 + 反馈卡片\n+ 快捷回复按钮 + 定时提醒推送"]
-    F --> G["响应用户"]
+sequenceDiagram
+    actor 用户
+    participant Events as 07-events<br/>状态机
+    participant Memory as 03-memory<br/>记忆加载
+    participant Context as 04-context<br/>上下文组装
+    participant Loop as 05-agent-loop<br/>执行循环
+    participant Style as 06-output-style<br/>组合输出
 
-    E -.- E1["身份与原则 → 01-system-prompt"]
-    E -.- E2["工具定义 → 02-tools"]
-    E -.- E3["输出规范 → 06-output-style"]
+    用户->>Events: 打开 App / 收到推送 / 提交反馈卡
+    Note over Events: 判断触发场景<br/>首次打开？有待收集的反馈？<br/>用户主动发消息？
+
+    Events->>Memory: INVOKE
+    Note over Memory: 加载用户画像.md + 干预策略.md<br/>（由子 agent 从 mem0 提炼）
+
+    Memory->>Context: 画像 + 策略
+    Note over Context: 拼装 prompt<br/>system: 身份层(01) + 画像 + 策略 + 场景指令<br/>tools: 7 个工具定义 (~800 tk)<br/>messages: 对话历史<br/>总预算 ~8K tk，无需压缩
+
+    Context->>Loop: system / tools / messages
+    Note over Loop: 执行循环（最大 3 轮）<br/>模型推理 → 调用工具 → 观察结果 → 继续/停止<br/>大部分轮次 0-2 次工具调用<br/>身份与原则 ← 01-system-prompt<br/>工具定义 ← 02-tools
+
+    Loop->>Style: 文本 + 工具调用结果
+    Note over Style: 组合输出<br/>文本 + show_status + 图表卡片<br/>+ 反馈卡片 + 快捷回复按钮<br/>+ 定时提醒推送
+
+    Style->>用户: 完整体验（不是单条文本）
 ```
 
 ## 核心设计决策
