@@ -12,56 +12,36 @@
 | [04-context-assembly.md](./04-context-assembly.md) | 上下文组装：每次 API 调用的 prompt 拼装 + token 预算 | ✅ 已完成 |
 | [05-agent-loop.md](./05-agent-loop.md) | Agent 循环：轻工具型循环，最大 3 轮，5 种调用模式 | ✅ 已完成 |
 | [06-output-style.md](./06-output-style.md) | 输出样式：语气规范 + 工具组合输出（用户看到的完整体验） | ✅ 已完成 |
-| [07-events.md](./07-events.md) | 动态事件注入：触发场景与注入方式 | 🔲 待设计 |
-| [08-orchestration.md](./08-orchestration.md) | 完整编排：端到端调用流程汇总 | 🔲 待设计 |
+| [07-events.md](./07-events.md) | 动态事件注入：状态机 + 场景指令 + 反馈卡生命周期 | ✅ 已完成 |
+| [08-orchestration.md](./08-orchestration.md) | 完整编排：端到端调用流程 + 工具路由 + 子 agent + 时序图 | ✅ 已完成 |
 
 ## 架构概览
 
-```
-用户打开 App / 收到推送 / 提交反馈卡
-    │
-    ▼
-┌─────────────────────────────────────────────┐
-│  07-events: 判断触发场景                      │
-│  （首次打开？有待收集的反馈？用户主动发消息？）   │
-└──────────────────┬──────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────┐
-│  03-memory: 加载记忆                         │
-│  （用户画像.md + 干预策略.md，由子 agent 提炼） │
-└──────────────────┬──────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────┐
-│  04-context-assembly: 拼装 prompt            │
-│  system: 身份层 + 画像 + 策略 + 场景指令       │
-│  tools: 7 个工具定义（~800 tk）               │
-│  messages: 对话历史                           │
-│  总预算 ~8K tk，无需压缩                       │
-└──────────────────┬──────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────┐
-│  05-agent-loop: 执行循环（最大 3 轮）          │
-│  模型推理 → 调用工具 → 观察结果 → 继续/停止    │
-│  大部分轮次 0-2 次工具调用                     │
-│                                             │
-│  身份与原则 → 01-system-prompt               │
-│  工具定义 → 02-tools                         │
-│  输出规范 → 06-output-style                  │
-└──────────────────┬──────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────┐
-│  06-output-style: 组合输出                   │
-│  文本 + show_status + 图表卡片 + 反馈卡片      │
-│  + 快捷回复按钮 + 定时提醒推送                 │
-│  用户看到的是完整体验，不是单条文本              │
-└──────────────────┬──────────────────────────┘
-                   │
-                   ▼
-              响应用户
+```mermaid
+sequenceDiagram
+    actor 用户
+    participant Events as 07-events<br/>状态机
+    participant Memory as 03-memory<br/>记忆加载
+    participant Context as 04-context<br/>上下文组装
+    participant AgentLoop as 05-agent-loop<br/>执行循环
+    participant Style as 06-output-style<br/>组合输出
+
+    用户->>Events: 打开 App / 收到推送 / 提交反馈卡
+    Note over Events: 判断触发场景<br/>首次打开？有待收集的反馈？<br/>用户主动发消息？
+
+    Events->>Memory: INVOKE
+    Note over Memory: 加载用户画像.md + 干预策略.md<br/>（由子 agent 从 mem0 提炼）
+
+    Memory->>Context: 画像 + 策略
+    Note over Context: 拼装 prompt<br/>system: 身份层(01) + 画像 + 策略 + 场景指令<br/>tools: 7 个工具定义 (~800 tk)<br/>messages: 对话历史<br/>总预算 ~8K tk，无需压缩
+
+    Context->>AgentLoop: system / tools / messages
+    Note over AgentLoop: 执行循环（最大 3 轮）<br/>模型推理 → 调用工具 → 观察结果 → 继续/停止<br/>大部分轮次 0-2 次工具调用<br/>身份与原则 ← 01-system-prompt<br/>工具定义 ← 02-tools
+
+    AgentLoop->>Style: 文本 + 工具调用结果
+    Note over Style: 组合输出<br/>文本 + show_status + 图表卡片<br/>+ 反馈卡片 + 快捷回复按钮<br/>+ 定时提醒推送
+
+    Style->>用户: 完整体验（不是单条文本）
 ```
 
 ## 核心设计决策

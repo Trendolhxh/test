@@ -356,44 +356,48 @@ flowchart TB
 
 ## 八、完整调用逻辑汇总
 
-```
-会话开始
-│
-├─ 1. 组装 System Prompt (~3.2K tks)
-│   ├─ System Section (身份)
-│   ├─ Doing Tasks × 10 (行为规则)
-│   ├─ Executing Actions with Care (安全)
-│   ├─ Tool Usage × 12 (工具优先级)
-│   ├─ Tone & Style (输出风格)
-│   ├─ Output Efficiency (精简)
-│   ├─ Fork Usage Guidelines (子agent规则)
-│   └─ 条件段: Auto/Learning/Git/Plan Mode
-│
-├─ 2. 加载工具定义 (~11.6K tks)
-│   ├─ 18 个内置工具 (Read/Edit/Write/Bash/Glob/Grep/Agent/Todo...)
-│   ├─ ToolSearch (延迟加载其他工具)
-│   └─ MCP 工具 (用户配置, 0-55K tks)
-│
-├─ 3. 注入记忆文件 (~743 tks)
-│   ├─ CLAUDE.md (项目级)
-│   ├─ ~/.claude/CLAUDE.md (用户级)
-│   └─ Session Memory
-│
-├─ 4. 主 Agent 循环
-│   ├─ 接收用户消息
-│   ├─ [动态注入 System Reminders] ← 文件变化/Hook/IDE/诊断/token 用量
-│   ├─ 分析意图 → 选择工具 → 执行 → 观察结果
-│   ├─ 需要深度搜索? → 启动 Explore 子 agent (独立上下文)
-│   ├─ 需要规划? → 启动 Plan 子 agent (5阶段流程)
-│   ├─ 需要并行执行? → 启动 Worker 子 agent
-│   ├─ 用户问 API/SDK? → 启动 claude-code-guide (按需加载数据模板)
-│   ├─ 用户输入 /slash? → Skill Tool 展开并执行
-│   ├─ 上下文快满? → 触发压缩 (摘要化早期对话)
-│   └─ 循环直到任务完成
-│
-└─ 会话结束
-    ├─ Session Memory 更新
-    └─ Dream Memory Consolidation (706 tks, 如果启用)
+```mermaid
+flowchart TD
+    START["会话开始"] --> SP["1. 组装 System Prompt (~3.2K tks)"]
+
+    SP --> SP1["System Section (身份)"]
+    SP --> SP2["Doing Tasks × 10 (行为规则)"]
+    SP --> SP3["Executing Actions with Care (安全)"]
+    SP --> SP4["Tool Usage × 12 (工具优先级)"]
+    SP --> SP5["Tone & Style (输出风格)"]
+    SP --> SP6["Output Efficiency (精简)"]
+    SP --> SP7["Fork Usage Guidelines (子agent规则)"]
+    SP --> SP8["条件段: Auto/Learning/Git/Plan Mode"]
+
+    SP --> TOOLS["2. 加载工具定义 (~11.6K tks)"]
+    TOOLS --> T1["18 个内置工具\nRead/Edit/Write/Bash/Glob/Grep/Agent/Todo..."]
+    TOOLS --> T2["ToolSearch (延迟加载其他工具)"]
+    TOOLS --> T3["MCP 工具 (用户配置, 0-55K tks)"]
+
+    TOOLS --> MEM["3. 注入记忆文件 (~743 tks)"]
+    MEM --> M1["CLAUDE.md (项目级)"]
+    MEM --> M2["~/.claude/CLAUDE.md (用户级)"]
+    MEM --> M3["Session Memory"]
+
+    MEM --> LOOP["4. 主 Agent 循环"]
+    LOOP --> L1["接收用户消息"]
+    L1 --> L2["动态注入 System Reminders\n← 文件变化/Hook/IDE/诊断/token 用量"]
+    L2 --> L3["分析意图 → 选择工具 → 执行 → 观察结果"]
+    L3 --> L4{"需要子 agent?"}
+    L4 -->|"深度搜索"| L4a["Explore 子 agent (独立上下文)"]
+    L4 -->|"规划"| L4b["Plan 子 agent (5阶段流程)"]
+    L4 -->|"并行执行"| L4c["Worker 子 agent"]
+    L4 -->|"API/SDK 问题"| L4d["claude-code-guide (按需加载数据模板)"]
+    L3 --> L5{"/slash 命令?"}
+    L5 -->|"是"| L5a["Skill Tool 展开并执行"]
+    L3 --> L6{"上下文快满?"}
+    L6 -->|"是"| L6a["触发压缩 (摘要化早期对话)"]
+    L3 --> L7{"任务完成?"}
+    L7 -->|"否"| L1
+    L7 -->|"是"| END["会话结束"]
+
+    END --> E1["Session Memory 更新"]
+    END --> E2["Dream Memory Consolidation\n(706 tks, 如果启用)"]
 ```
 
 ---
