@@ -6,17 +6,24 @@
 
 ## 组装结构
 
-```
-┌─ system ──────────────────────────────────────────┐
-│ ① 身份层（01-system-prompt）             ~200 tk  │
-│ ② 用户画像.md（get_user_context 返回）    ~400 tk  │
-│ ③ 干预策略.md（get_user_context 返回）    ~400 tk  │
-│ ④ 场景指令（07-events 根据触发场景注入）   ~100 tk  │
-├─ tools ───────────────────────────────────────────┤
-│ ⑤ 7 个工具定义（JSON schema）             ~800 tk  │
-├─ messages ────────────────────────────────────────┤
-│ ⑥ 对话历史                              剩余空间   │
-└───────────────────────────────────────────────────┘
+```mermaid
+block-beta
+    columns 1
+    block:system["system"]
+        columns 2
+        s1["① 身份层（01-system-prompt）"] s1t["~200 tk"]
+        s2["② 用户画像.md（get_user_context 返回）"] s2t["~400 tk"]
+        s3["③ 干预策略.md（get_user_context 返回）"] s3t["~400 tk"]
+        s4["④ 场景指令（07-events 根据触发场景注入）"] s4t["~100 tk"]
+    end
+    block:tools["tools"]
+        columns 2
+        t1["⑤ 7 个工具定义（JSON schema）"] t1t["~800 tk"]
+    end
+    block:messages["messages"]
+        columns 2
+        m1["⑥ 对话历史"] m1t["剩余空间"]
+    end
 ```
 
 ### 为什么用户画像和干预策略放在 system 里

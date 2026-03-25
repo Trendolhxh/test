@@ -6,22 +6,11 @@
 
 ## 两层分离
 
-```
-事件发生（用户打开 App / 发消息 / 提交反馈 / 点推送）
-    │
-    ▼
-┌─────────────────────────────────────────┐
-│  状态机（orchestrator 层，确定性逻辑）     │
-│  判断：是否需要调用 agent？               │
-│  输出：INVOKE / SILENT                   │
-└──────────────────┬──────────────────────┘
-                   │ INVOKE
-                   ▼
-┌─────────────────────────────────────────┐
-│  场景指令注入（04-context-assembly ④）   │
-│  告诉 agent 当前是什么情况               │
-│  agent 决定具体说什么、怎么说            │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["事件发生\n用户打开 App / 发消息 / 提交反馈 / 点推送"] --> B["状态机（orchestrator 层，确定性逻辑）\n判断：是否需要调用 agent？"]
+    B -->|"SILENT"| C["不调用 agent"]
+    B -->|"INVOKE"| D["场景指令注入（04-context-assembly ④）\n告诉 agent 当前是什么情况\nagent 决定具体说什么、怎么说"]
 ```
 
 **状态机管"调不调"**：确定性的，不花 token，毫秒级判断。
@@ -55,28 +44,21 @@ class EventContext:
 
 ### 状态转移
 
-```
-                        ┌──────────────┐
-                        │  事件到达     │
-                        └──────┬───────┘
-                               │
-               ┌───────────────┼───────────────┐──────────────┐
-               │               │               │              │
-               ▼               ▼               ▼              ▼
-        user_message      app_open      feedback_submit  push_click
-               │               │               │              │
-               │               ▼               │              │
-               │     ┌─── 沉默检查 ───┐        │              │
-               │     │                │        │              │
-               │   SILENT          通过        │              │
-               │     │                │        │              │
-               │     ▼                ▼        │              │
-               │   不调用       选择场景指令    │              │
-               │                      │        │              │
-               ▼                      ▼        ▼              ▼
-           ┌──────────────────────────────────────────────────┐
-           │              INVOKE agent + 注入场景指令          │
-           └──────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    START["事件到达"] --> UM["user_message"]
+    START --> AO["app_open"]
+    START --> FS["feedback_submit"]
+    START --> PC["push_click"]
+
+    AO --> CHECK{"沉默检查"}
+    CHECK -->|"SILENT"| NOOP["不调用"]
+    CHECK -->|"通过"| SCENE["选择场景指令"]
+
+    UM --> INVOKE["INVOKE agent + 注入场景指令"]
+    SCENE --> INVOKE
+    FS --> INVOKE
+    PC --> INVOKE
 ```
 
 ### 判定规则（伪代码）
@@ -251,35 +233,17 @@ last_conversation_user_replied = (
 
 上一版把"反馈卡提交"和"反馈卡待收集"混在了一起。这里理清：
 
-```
-agent 给出建议
-    │
-    ▼
-调用 send_feedback_card(scheduled_after=明早 8:00)
-    │
-    ▼
-卡片存入数据库，状态: PENDING
-    │
-    │                    ...到了 scheduled_after...
-    ▼
-用户打开 App
-    │
-    ▼
-前端检查是否有 PENDING 且已到时间的卡片
-    │
-    ├─ 有 → 在对话页顶部展示卡片 UI（不调用 agent）
-    │
-    └─ 没有 → 不展示
-    │
-    │              ...用户看到卡片...
-    ▼
-用户点击选项 + 提交
-    │
-    ▼
-卡片状态: SUBMITTED
-    │
-    ▼
-触发 feedback_submit 事件 → 状态机判定 INVOKE → 注入反馈数据 → agent 回复
+```mermaid
+flowchart TD
+    A["agent 给出建议"] --> B["调用 send_feedback_card\nscheduled_after=明早 8:00"]
+    B --> C["卡片存入数据库\n状态: PENDING"]
+    C -->|"...到了 scheduled_after..."| D["用户打开 App"]
+    D --> E{"前端检查:\nPENDING 且已到时间的卡片?"}
+    E -->|"有"| F["在对话页顶部展示卡片 UI\n（不调用 agent）"]
+    E -->|"没有"| G["不展示"]
+    F -->|"用户看到卡片"| H["用户点击选项 + 提交"]
+    H --> I["卡片状态: SUBMITTED"]
+    I --> J["触发 feedback_submit 事件\n→ 状态机判定 INVOKE\n→ 注入反馈数据\n→ agent 回复"]
 ```
 
 **关键区分：**
