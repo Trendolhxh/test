@@ -10,12 +10,12 @@
 flowchart TD
     A[事件到达] --> B{"07-events\n状态机判定"}
     B -->|SILENT| C[结束]
-    B -->|INVOKE| D["03-memory\n加载画像 + 策略"]
+    B -->|INVOKE| D["03-memory\n加载用户速览"]
     D --> E["04-context\n组装 system / tools / messages"]
     E --> F[Claude API 调用]
     F --> G{"05-loop\n执行循环"}
     G -->|工具调用| H{工具路由}
-    H -->|服务端工具| I["get_health_data\nsave_memory\nset_reminder"]
+    H -->|服务端工具| I["get_health_data\nget_user_profile\nget_strategy\nsave_memory\nset_reminder"]
     H -->|前端工具| J["show_status\nrender_analysis_card\nsend_feedback_card\nsuggest_replies"]
     I --> K[工具结果返回模型]
     J --> K
@@ -48,18 +48,15 @@ decision, scene_data = state_machine.decide(event)
 
 详见 [07-events.md](./07-events.md)。SILENT 直接结束，INVOKE 继续。
 
-### 阶段 2：加载记忆
+### 阶段 2：加载速览
 
 ```python
-user_context = db.get_user_context(user_id)
-# → {
-#     user_profile: "# 用户画像\n...",       ~400 tk
-#     intervention_plan: "# 干预策略\n...",   ~400 tk
-#     updated_at: "2026-03-24T05:00:00+08:00"
-#   }
+# 从用户上下文文档中提取 [summary] section（~80 tk）
+user_summary = db.get_user_summary(user_id)
+# → "30岁男/产品经理/晚型人/独居 | 核心问题:睡前手机→上床晚→时长不足 | ..."
 ```
 
-get_user_context 由 orchestrator 自动执行，不在模型的工具列表中。结果注入 system。
+速览注入 system prompt，让模型在不调工具时也能做基本判断。详细的画像和策略信息由模型通过 `get_user_profile` / `get_strategy` 按需加载。
 
 详见 [03-memory.md](./03-memory.md)。
 
@@ -70,14 +67,13 @@ request = {
     "model": "claude-sonnet-4-20250514",
     "max_tokens": 2048,
     "system": "\n\n".join([
-        SYSTEM_PROMPT,                    # 01-system-prompt ~200 tk
-        user_context.user_profile,        # 03-memory        ~400 tk
-        user_context.intervention_plan,   # 03-memory        ~400 tk
-        STYLE_INSTRUCTION,                # 06-output-style  ~150 tk
-        scene_instruction or "",          # 07-events        ~100 tk
+        SYSTEM_PROMPT,                    # ① 01-system-prompt ~200 tk  ┐
+        STYLE_INSTRUCTION,                # ② 06-output-style  ~150 tk  ┘ 固定前缀，可缓存
+        f"## 用户速览\n{user_summary}",   # ③ 03-memory        ~80 tk
+        scene_instruction or "",          # ④ 07-events        ~100 tk
     ]),
-    "tools": TOOL_DEFINITIONS,            # 02-tools         ~800 tk
-    "messages": conversation_history,     #                  ≤4000 tk
+    "tools": TOOL_DEFINITIONS,            # ⑤ 02-tools         ~1000 tk（9 个工具）
+    "messages": conversation_history,     # ⑥                  ≤4000 tk
 }
 ```
 
@@ -165,15 +161,19 @@ if any_sleep_data_queried:
 ```python
 def execute_tool(call: ToolCall) -> ToolResult:
     match call.name:
-        # 服务端执行
+        # 服务端执行 — 返回实际数据，模型在下一轮推理中使用
         case "get_health_data":
             return health_service.query(call.params)
+        case "get_user_profile":
+            return user_context_service.get_profile(user_id, call.params["aspects"])
+        case "get_strategy":
+            return user_context_service.get_strategy(user_id, call.params["aspects"])
         case "save_memory":
             return mem0.add(user_id, call.params)
         case "set_reminder":
             return reminder_service.schedule(user_id, call.params)
 
-        # 前端渲染（结果暂存，随最终响应一起投递）
+        # 前端渲染 — 结果暂存，随最终响应一起投递
         case "show_status":
             frontend_outputs.append(("status", call.params))
             return {"success": True}
@@ -193,6 +193,30 @@ def execute_tool(call: ToolCall) -> ToolResult:
 **服务端工具**返回实际数据，模型在下一轮推理中可以使用。
 **前端工具**返回 `{"success": True}`，模型不需要看到渲染结果——它只需要知道"卡片已安排"。
 
+### get_user_profile / get_strategy 的服务端实现
+
+```python
+class UserContextService:
+    def get_profile(self, user_id: str, aspects: list[str]) -> dict:
+        """从用户上下文文档中提取指定 section"""
+        doc = db.get_user_context_doc(user_id)
+        result = {}
+        for aspect in aspects:
+            # aspect 名直接对应文档的 section 标记：# [routines], # [psychology] 等
+            result[aspect] = doc.extract_section(aspect)
+        return {"aspects": result}
+
+    def get_strategy(self, user_id: str, aspects: list[str]) -> dict:
+        """同上，section 名不同"""
+        doc = db.get_user_context_doc(user_id)
+        result = {}
+        for aspect in aspects:
+            result[aspect] = doc.extract_section(aspect)
+        return {"aspects": result}
+```
+
+底层是同一份文档，按 section 名提取。两个工具的区分是给模型看的语义分工，服务端实现可以共用。
+
 ---
 
 ## 子 Agent 编排
@@ -205,7 +229,7 @@ def execute_tool(call: ToolCall) -> ToolResult:
 flowchart TD
     T1["每天 05:00 定时任务"] --> S["对每个活跃用户执行子 agent"]
     T2["主 agent 对话结束\n且本轮调用了 save_memory"] -->|异步| S
-    S --> U["子 agent 更新\n画像.md + 策略.md"]
+    S --> U["子 agent 更新\n用户上下文文档（12 个 section）"]
     U --> V{发现异常?}
     V -->|是| W["标记 pending_insight"]
     V -->|否| X["仅更新文档"]
@@ -222,13 +246,10 @@ sub_agent_request = {
         {
             "role": "user",
             "content": f"""
-请更新以下用户的画像和干预策略。
+请更新以下用户的上下文文档。
 
-## 当前画像
-{current_user_profile}
-
-## 当前策略
-{current_intervention_plan}
+## 当前文档
+{current_user_context_doc}
 
 ## mem0 新增记忆（自上次更新后）
 {new_memories}
@@ -237,10 +258,9 @@ sub_agent_request = {
 {health_summary}
 
 ## 输出要求
-1. 输出更新后的完整画像.md
-2. 输出更新后的完整策略.md
-3. 如果发现值得主动推送给用户的异常，输出 insight（一句话描述）
-4. 两份 md 合计不超过 800 token
+1. 输出更新后的完整文档（12 个 section：summary, routines, sleep_strengths, sleep_issues, lifestyle, psychology, redlines, active, history, preferences, cognition, trends）
+2. 如果发现值得主动推送给用户的异常，输出 insight（一句话描述）
+3. summary 控制在一行以内（~80 tk）
 """
         }
     ]
@@ -302,19 +322,19 @@ sequenceDiagram
 
     Note over Orch: 状态机判定<br/>has_unseen_sleep_data<br/>→ INVOKE
 
-    Orch->>DB: 加载 user_context
-    DB-->>Orch: 画像 + 策略
+    Orch->>DB: 加载用户速览（summary）
+    DB-->>Orch: 速览 ~80 tk
 
-    Note over Orch: 组装 context
+    Note over Orch: 组装 context<br/>system = 身份+样式+速览+场景
 
     Orch->>Claude: create_message (第 1 轮)
-    Claude-->>Orch: tool_call: show_status + get_health_data
+    Claude-->>Orch: tool_call: show_status + get_strategy(["trends", "active"])
 
     Orch->>前端: show_status (即时投递)
     前端->>用户: "正在看你的数据..."
 
-    Orch->>DB: get_health_data
-    DB-->>Orch: sleep data
+    Orch->>DB: get_strategy → 提取 [trends] + [active] section
+    DB-->>Orch: 趋势 + 干预数据
 
     Orch->>Claude: tool_results (第 2 轮)
     Claude-->>Orch: text + tool_call: suggest_replies
@@ -373,7 +393,12 @@ sequenceDiagram
         前端->>Orch: feedback_submit 事件
         Note over Orch: 状态机 → INVOKE<br/>注入反馈数据
 
-        Orch->>Claude: create_message
+        Orch->>Claude: create_message (第 1 轮)
+        Claude-->>Orch: tool_call: get_strategy(["active"]) + get_user_profile(["sleep_strengths"])
+        Orch->>DB: 提取 [active] + [sleep_strengths]
+        DB-->>Orch: 干预详情 + 正面表现
+
+        Orch->>Claude: tool_results (第 2 轮)
         Claude-->>Orch: "做到了，不错。那把提醒调到 12 点？"
         Orch->>DB: save_memory("闹钟放手机干预：做到了，11 点太早想调到 12 点")
         Orch->>DB: set_reminder(24:00, "该放下手机了", repeat=daily)
@@ -389,9 +414,9 @@ sequenceDiagram
 | 文档 | 谁看 | 决定什么 |
 |------|------|---------|
 | 01-system-prompt | 模型 | agent 是谁、核心原则 |
-| 02-tools | 模型 | 能用什么工具、怎么用 |
-| 03-memory | 模型（读）+ 子 agent（写） | 用户是谁、当前在做什么干预 |
-| 04-context-assembly | 工程团队 | prompt 怎么拼、token 怎么分 |
+| 02-tools | 模型 | 能用什么工具、怎么用（9 个工具，含 get_user_profile / get_strategy） |
+| 03-memory | 模型（按需读）+ 子 agent（写） | 用户是谁、当前在做什么干预（一份文档 12 个 section） |
+| 04-context-assembly | 工程团队 | prompt 怎么拼、token 怎么分（固定前缀优先，优化 prompt cache） |
 | 05-agent-loop | 工程团队 | 循环怎么跑、什么时候停 |
 | 06-output-style | 模型 + 工程团队 | 文本怎么写、工具怎么配合 |
 | 07-events | 工程团队 | 什么时候调 agent、注入什么场景 |
@@ -403,9 +428,12 @@ sequenceDiagram
 
 | 设计决策 | 理由 |
 |---------|------|
+| 速览注入 system，详情通过工具按需加载 | 纯闲聊不浪费 token；模型主动判断需要什么信息 |
+| 固定部分（身份+样式）放 system prompt 前面 | 最大化 prompt cache 命中率（~350 tk 跨用户共享） |
+| get_user_profile / get_strategy 服务端共用一份文档 | 两个工具是给模型的语义分工，底层实现可以简单 |
 | 前端工具返回 success 而非渲染结果 | 模型不需要知道 UI 长什么样，只需知道"已安排" |
 | show_status 在 agent 循环中即时投递 | 不等整轮结束，用户尽早看到加载态 |
 | 子 agent 不用工具 | 纯文本输入输出，降低复杂度和成本 |
-| 对话结束后异步触发子 agent | 新写入的 mem0 尽快反映在画像/策略中，不用等每日定时 |
+| 对话结束后异步触发子 agent | 新写入的 mem0 尽快反映在文档中，不用等每日定时 |
 | 兜底回复不经过模型 | API 挂了就不该再调 API，直接返回固定文案 |
 | 时序图画两个典型场景 | 比抽象描述更直观，工程团队照着实现即可 |
