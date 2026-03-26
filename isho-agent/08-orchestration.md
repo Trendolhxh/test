@@ -59,9 +59,7 @@ user_context = db.get_user_context(user_id)
 #   }
 ```
 
-get_user_context 由 orchestrator 自动执行，不在模型的工具列表中。结果注入 system。
-
-详见 [03-memory.md](./03-memory.md)。
+get_user_context 由 orchestrator 自动执行（详见 [02-tools.md](./02-tools.md)），结果注入 system。
 
 ### 阶段 3：组装上下文
 

@@ -51,11 +51,11 @@ sequenceDiagram
 - **认知层（两份 md）**：子 agent 定期提炼，主 agent 只读
 - 主 agent 不需要"整理记忆"，只需要"记下来"和"读取结论"
 
-### 工具：8 个，扁平列表
+### 工具：7 个模型可调用 + 1 个内部工具
 | 工具 | 方向 | 用途 |
 |------|------|------|
 | get_health_data | 读数据 | 查询睡眠/运动/心率等 14 种指标 |
-| get_user_context | 读记忆 | 加载画像 + 策略（orchestrator 自动执行） |
+| get_user_context | 读记忆 | 加载画像 + 策略（orchestrator 自动执行，不在模型工具列表中） |
 | save_memory | 写记忆 | 对话中捕获的事实写入 mem0 |
 | send_feedback_card | 写→用户 | 行动建议后收集执行反馈 |
 | render_analysis_card | 写→用户 | 数据可视化图表卡片 |
