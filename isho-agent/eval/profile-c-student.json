@@ -1,0 +1,177 @@
+{
+  "profile_id": "C",
+  "profile_name": "大学生 · 作息极度混乱 · 首次干预",
+  "description": "21岁大三学生，打游戏导致日夜颠倒，周末通宵常见。没有固定作息模式，画像中等详细度。刚开始第一次干预尝试，还没有红线。问题类型和A完全不同：不是'晚睡'而是'无规律'。",
+
+  "user_profile": "# 用户画像\n# 更新于 2026-03-24 05:00\n\n基本信息:\n  男, 21岁, 大三, 计算机专业, 无固定作息型\n\n作息模式:\n  有课日(周一三五):\n    第一节课10:00, 通常9:40起床, 经常迟到\n    无课的下午打游戏到晚饭, 晚上继续打→02:00-03:00入睡\n  无课日(周二四):\n    睡到自然醒(11:00-12:00), 下午打游戏, 凌晨03:00-04:00入睡\n  周末:\n    经常通宵打游戏到早上6-7点, 然后睡到下午2-3点\n    偶尔和同学出去玩, 也是晚归\n  备注:\n    - 饮食不规律, 经常不吃早饭, 靠外卖\n    - 几乎不运动\n    - 宿舍室友作息也不规律, 环境嘈杂\n\n睡眠与精力状况:\n  做得好的:\n    - 一旦入睡, 睡眠连续性不错(年轻体质)\n    - 周末睡眠时长其实够(8-9h, 虽然时间段不对)\n    - 用户自己意识到作息有问题, 有改变的意愿\n  待改善:\n    - 完全没有固定作息\n      ← 每天入睡和起床时间波动3-4h\n      ← 有课/无课日作息差异巨大\n      ← 生物钟紊乱, 社交时差严重\n    - 有课日睡眠严重不足(平均5-6h)\n      ← 凌晨2-3点睡但9:40必须起\n      ← 入睡晚是因为打游戏停不下来\n    - 白天精力极差\n      ← 上午上课经常打瞌睡\n      ← 下午靠打游戏提神(形成恶性循环)\n\n近期变化:\n  - 期中考试临近, 用户开始有焦虑感\n  - 3天前下载App, 表示'想试试改一改'",
+
+  "intervention_plan": "# 干预策略\n# 更新于 2026-03-24 05:00\n\n红线:\n  (暂无, 首次干预)\n\n当前干预:\n  方向: 先稳定有课日的起床时间, 再逐步调整入睡\n  活跃:\n    - 有课日(一三五)设9:20起床闹钟提醒(3.24开始, 首次尝试)\n  下一步:\n    - 起床时间稳定后 → 尝试在有课日前一晚2点前停止游戏\n    - 长期 → 逐步缩小有课日和无课日的作息差\n\n干预历史:\n  (首次干预, 暂无历史)",
+
+  "cases": [
+    {
+      "id": "C01",
+      "name": "凌晨3点发消息 · 在打游戏",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T03:15:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "刚打完一把，太刺激了哈哈"}
+      ],
+      "expected_response": "凌晨3点用户在打游戏——这是用户的日常。不应该说教（'你怎么还不睡'），应该自然地聊天，可以顺着游戏话题问问（'什么游戏？赢了？'），然后自然地带一句关心（'明天有课吗？'）。简短、像朋友一样。"
+    },
+    {
+      "id": "C02",
+      "name": "有课日上午 · 新睡眠数据 · 只睡了5小时",
+      "event_context": {
+        "event_type": "app_open",
+        "timestamp": "2026-03-26T10:15:00+08:00",
+        "minutes_since_last_conversation": 420,
+        "last_conversation_initiator": "user",
+        "last_conversation_user_replied": true,
+        "has_pending_insight": false,
+        "has_unseen_sleep_data": true
+      },
+      "scene_instruction": "## 当前场景\n\n用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：\n入睡 04:10，起床 09:35，总睡眠 5h25m，深睡 21%，REM 18%\n备注：今天是周三（有课日，第一节10:00）\n\n像朋友一样聊昨晚的睡眠，不要像报告一样列数据。\n如果数据和干预策略中的当前干预相关，可以关联起来聊。",
+      "messages": [],
+      "expected_response": "入睡4:10+有课日只睡5h，但不追责。可以关注到他起来了（起床闹钟可能起了作用），简单提一下时长不太够但不深究。语气轻松（'5个半小时确实不太够，今天上课撑得住吗？'）。不要长篇说教睡眠不足的危害。"
+    },
+    {
+      "id": "C03",
+      "name": "周末通宵后 · 下午才打开App",
+      "event_context": {
+        "event_type": "app_open",
+        "timestamp": "2026-03-29T15:00:00+08:00",
+        "minutes_since_last_conversation": 960,
+        "last_conversation_initiator": "agent",
+        "last_conversation_user_replied": true,
+        "has_pending_insight": false,
+        "has_unseen_sleep_data": true
+      },
+      "scene_instruction": "## 当前场景\n\n用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：\n入睡 07:20（早上），起床 14:30，总睡眠 7h10m，深睡 19%，REM 24%\n备注：周六，通宵游戏后早上入睡\n\n像朋友一样聊昨晚的睡眠，不要像报告一样列数据。",
+      "messages": [],
+      "expected_response": "周末通宵是用户的常态，不应该大惊小怪或严厉批评。可以轻松提一句（'通宵了？不过睡了7个小时倒是够了'），不需要每次都强调'通宵不好'这种用户自己知道的事。如果要关联干预，注意当前干预目标是稳定有课日作息，周末暂时不是重点。"
+    },
+    {
+      "id": "C04",
+      "name": "反馈卡提交 · 起床闹钟有用",
+      "event_context": {
+        "event_type": "feedback_submit",
+        "timestamp": "2026-03-26T10:00:00+08:00"
+      },
+      "scene_instruction": "## 当前场景\n\n用户刚提交了一张反馈卡：\n- 关联建议：有课日设 9:20 起床闹钟\n- 用户选择：做到了\n- 用户补充：闹钟响了直接起来了，居然没迟到\n\n基于反馈推进对话：\n- 做到了 → 具体肯定，考虑固化或推进下一步",
+      "messages": [],
+      "expected_response": "应调用 save_memory 记录反馈。具体肯定'没迟到'这个成果（不是空泛的'太棒了'），可以带点幽默（'居然没迟到哈哈'）。首次干预成功是重要里程碑，可以稍微多肯定一点。但不应该立刻推进到下一步（'那今晚也试试2点前停游戏吧'）——让用户先把起床这个习惯稳定几天。"
+    },
+    {
+      "id": "C05",
+      "name": "用户问精力怎么变好 · 结合实际给建议",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-27T14:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "上课老打瞌睡怎么办啊"}
+      ],
+      "expected_response": "应该关联到核心问题——有课日只睡5-6小时当然打瞌睡。但不要说'那你就早点睡'这种废话。可以从当前干预角度聊（'你现在起床时间开始稳了，接下来如果能把入睡提前一点，上课精神会好很多'），或者给一些短期缓解建议（课间站起来走走之类的）。一个建议就好。"
+    },
+    {
+      "id": "C06",
+      "name": "期中考试焦虑 · 共情为主",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-28T23:30:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "快考试了好焦虑，根本看不进书，又想打游戏逃避"}
+      ],
+      "expected_response": "首先共情（考试焦虑很正常，打游戏逃避也可以理解），不说教。可以调用 save_memory 记录（category=other 或 life_detail）。不应该趁机说'所以你更要早睡才能高效复习'——用户需要的是被理解，不是被教育。可以简短建议（比如'先看20分钟试试，看不下去就休息'），但核心是共情。"
+    },
+    {
+      "id": "C07",
+      "name": "用户表达不想被管 · 尊重边界",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-29T02:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "你别老催我睡觉行不行，我知道该睡了就是不想睡"}
+      ],
+      "expected_response": "应调用 save_memory 记录用户偏好（category=preference，不喜欢被催睡觉）。回复要立刻退让和尊重（'好，不催了'），不要解释'我是为你好'。可以轻松一句带过（'好好好，你说了算'）。以后的对话也应该注意不要催睡觉。"
+    },
+    {
+      "id": "C08",
+      "name": "子agent洞察 · 有课日作息有改善趋势",
+      "event_context": {
+        "event_type": "app_open",
+        "timestamp": "2026-03-31T10:30:00+08:00",
+        "minutes_since_last_conversation": 480,
+        "last_conversation_initiator": "user",
+        "last_conversation_user_replied": true,
+        "has_pending_insight": true,
+        "has_unseen_sleep_data": false
+      },
+      "scene_instruction": "## 当前场景\n\n以下是最近发现的一个值得关注的变化：\n上周3个有课日中，用户有2天在9:30前起床（之前经常迟到），这2天的白天精力评分也略高。\n\n用你自己的话和用户聊这个发现。不要说\"系统检测到\"。",
+      "messages": [],
+      "expected_response": "用朋友口吻自然分享（'你上周有课那几天起得挺准的'），不说'系统检测到'。对大学生来说'2天没迟到'就值得肯定。可以关联到精力变化（'那两天是不是上课精神好一点？'）。语气轻松不夸张。"
+    },
+    {
+      "id": "C09",
+      "name": "室友环境问题 · 记录+理解",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-28T01:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "室友在打电话声音超大，我想睡都睡不着"}
+      ],
+      "expected_response": "应调用 save_memory 记录宿舍环境问题（category=life_detail）。共情（'那确实烦'），可以给实际建议（耳塞？和室友沟通？），但不要把环境因素强行关联到'你自己也该早睡'。理解外部因素不是用户能完全控制的。"
+    },
+    {
+      "id": "C10",
+      "name": "用户问能不能看游戏到几点的数据 · 灵活应对",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-28T15:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "能看看我这周每天几点放下手机的吗"}
+      ],
+      "expected_response": "可以调用 get_health_data 查 screen_time 数据。用数据说话但不做价值判断（'这周你有3天是2点后放下手机的'），让用户自己得出结论。如果用户没追问，不主动说'所以你应该早点放下手机'。"
+    },
+    {
+      "id": "C11",
+      "name": "有课前一晚 · 主动给轻推",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-30T23:45:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "明天有课但我还不想睡"},
+        {"role": "assistant", "content": "几点的课？"},
+        {"role": "user", "content": "10点"}
+      ],
+      "expected_response": "可以轻推但不催（注意用户之前说过'别催我睡觉'）。可以算一下'现在睡的话还能睡10个小时呢'之类的正面框架，或者'那至少2点前吧？'这种协商而非命令。尊重用户自主权。"
+    },
+    {
+      "id": "C12",
+      "name": "用户主动分享进步 · 具体肯定",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-31T22:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "今天居然上了一整天课都没打瞌睡！"}
+      ],
+      "expected_response": "应调用 save_memory 记录（category=sleep_feedback）。要具体地肯定——可以关联到最近起床时间稳定、睡眠时长可能增加了。不要只说'太棒了加油'。可以用 suggest_replies 引导（比如'是因为昨晚早睡了吗？'）来进一步了解原因。"
+    }
+  ]
+}

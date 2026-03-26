@@ -1,0 +1,214 @@
+{
+  "profile_id": "A",
+  "profile_name": "夜猫子上班族 · 干预中期",
+  "description": "30岁互联网产品经理，核心问题是睡前刷手机导致上床过晚。已在进行'手机放客厅'干预，有2条红线。画像丰富，干预历史完整。",
+
+  "user_profile": "# 用户画像\n# 更新于 2026-03-24 05:00\n\n基本信息:\n  男, 30岁, 夜猫子型, 互联网产品经理\n\n作息模式:\n  常规工作日(一二四):\n    工作10:00-19:00, 晚餐~20:30, 刷手机→~01:30入睡, 08:45起床\n  加班日(周三固定):\n    工作到~21:00, 外卖, 刷手机→~02:00入睡, 需要\"补偿性娱乐\"\n  周五:\n    常有聚餐, 社交→~02:30入睡, 次日自然醒\n  周末:\n    ~02:30入睡, ~10:30起床\n  备注:\n    - 下午一杯咖啡是刚需\n    - 周日晚会焦虑周一\n\n睡眠与精力状况:\n  做得好的:\n    - 工作日起床时间稳定(08:45), 无赖床\n    - 入睡潜伏期正常(~15min), 上床后较快入睡\n    - 夜间觉醒少, 睡眠连续性好\n    - 最近开始尝试行为干预, 执行日效果明显\n  待改善:\n    - 睡眠时长不足(工作日均6.5h) ← 上床过晚 ← 睡前刷手机1.5-2h\n    - 深睡占比偏低(18%) ← 可能与睡前屏幕刺激有关(待确认)\n    - 周末作息后移 ← 补觉+社交晚归, 周一生物钟紊乱\n\n近期变化:\n  - 深睡 16%→18%(W12 vs W11), 略有改善\n  - \"手机放客厅\"干预执行2天, 入睡提前45min",
+
+  "intervention_plan": "# 干预策略\n# 更新于 2026-03-24 05:00\n\n红线:\n  - 限制咖啡: \"下午必须靠咖啡撑着\"\n  - 早起运动: \"早上根本起不来\"\n\n当前干预:\n  方向: 减少睡前手机使用, 建立wind-down环节\n  活跃:\n    - 每晚11点闹钟提醒放手机到客厅(3.23开始, 待反馈)\n  下一步:\n    - 有效 → 固化习惯, 逐步提前到10:30\n    - 无效 → 尝试手机定时锁屏类工具辅助\n\n干预历史:\n  - 手机放客厅(3.20-3.22): 部分有效, 执行日入睡提前45min/深睡+3%, 加班日做不到\n  - 限制下午咖啡(3.18): 用户拒绝 → 红线\n  - 早起运动(3.15): 用户拒绝 → 红线",
+
+  "cases": [
+    {
+      "id": "A01",
+      "name": "日常吐槽加班 · 不该引导到睡眠",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T21:30:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "今天加班好累"}
+      ],
+      "expected_response": "应该像朋友一样共情和追问（比如'加班到几点？'、'吃东西了吗？'），1-2句即可。不应该主动提睡眠建议、不查数据、不说教。用户在吐槽而不是求助。"
+    },
+    {
+      "id": "A02",
+      "name": "问最近睡得怎么样 · 查数据+有锚点解读",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T20:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "我最近睡得怎么样？"}
+      ],
+      "expected_response": "应调用 show_status 显示进度，然后调用 get_health_data 查最近7天睡眠数据。回复中用数字说明趋势，但数字必须有对比锚点（和上周比、和正常范围比），不能孤立报数字。最后用 suggest_replies 给快捷回复选项。语气像朋友聊天，不像AI报告，不用markdown格式。"
+    },
+    {
+      "id": "A03",
+      "name": "用户透露新生活细节 · 静默记录",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T19:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "我最近换了个遮光窗帘"}
+      ],
+      "expected_response": "应调用 save_memory 记录（category=life_detail），但回复文本中绝对不能说'我记下了'、'已记录'等暴露机械行为的话。应该自然地聊这个话题，比如追问'换了之后感觉有变化吗？'。"
+    },
+    {
+      "id": "A04",
+      "name": "用户主动求建议 · 完整干预闭环",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T21:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "我想改善一下睡眠，有什么建议吗？"}
+      ],
+      "expected_response": "应只给一个具体可执行的行动建议（不列清单），并配合调用 set_reminder 设提醒 + send_feedback_card 安排反馈卡，形成完整闭环。建议必须和当前干预方向一致（减少睡前手机），绝不能建议限制咖啡或早起运动（红线）。最后用 suggest_replies 给快捷回复。"
+    },
+    {
+      "id": "A05",
+      "name": "要看睡眠趋势图表 · 数据+可视化",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T20:30:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "给我看看这周的睡眠趋势"}
+      ],
+      "expected_response": "应调用 get_health_data 查7天数据，再调用 render_analysis_card 渲染图表卡片。文字部分简短（1-3句），详细内容交给卡片。图表应包含 title、chart、summary。"
+    },
+    {
+      "id": "A06",
+      "name": "新睡眠数据推送 · 早上打开App",
+      "event_context": {
+        "event_type": "app_open",
+        "timestamp": "2026-03-25T08:30:00+08:00",
+        "minutes_since_last_conversation": 480,
+        "last_conversation_initiator": "user",
+        "last_conversation_user_replied": true,
+        "has_pending_insight": false,
+        "has_unseen_sleep_data": true
+      },
+      "scene_instruction": "## 当前场景\n\n用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：\n入睡 00:45，起床 08:30，总睡眠 7h45m，深睡 22%，REM 26%\n备注：昨晚执行了手机放客厅\n\n像朋友一样聊昨晚的睡眠，不要像报告一样列数据。\n如果数据和干预策略中的当前干预相关，可以关联起来聊。",
+      "messages": [],
+      "expected_response": "应该像朋友一样自然地聊昨晚睡得不错，并关联到手机放客厅的干预效果（入睡明显提前，深睡到了正常范围）。数字有对比锚点，不像报告列数据。不说'根据数据分析'、'系统检测到'。用 suggest_replies 引导用户回应。2-3句即可。"
+    },
+    {
+      "id": "A07",
+      "name": "新睡眠数据推送 · 加班日数据差",
+      "event_context": {
+        "event_type": "app_open",
+        "timestamp": "2026-03-26T08:45:00+08:00",
+        "minutes_since_last_conversation": 600,
+        "last_conversation_initiator": "user",
+        "last_conversation_user_replied": true,
+        "has_pending_insight": false,
+        "has_unseen_sleep_data": true
+      },
+      "scene_instruction": "## 当前场景\n\n用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：\n入睡 02:15，起床 08:45，总睡眠 6h30m，深睡 14%，REM 20%\n备注：昨天是周三（用户固定加班日）\n\n像朋友一样聊昨晚的睡眠，不要像报告一样列数据。\n如果数据和干预策略中的当前干预相关，可以关联起来聊。",
+      "messages": [],
+      "expected_response": "应识别出昨天是加班日，理解入睡晚和数据差是因为加班，不追责不说教。可以简单提一句数据情况但不深究。语气轻松，比如'加班日嘛，正常'。不应该在加班日催用户执行手机放客厅的干预。2句即可。"
+    },
+    {
+      "id": "A08",
+      "name": "反馈卡提交 · 做到了 + 有补充",
+      "event_context": {
+        "event_type": "feedback_submit",
+        "timestamp": "2026-03-26T08:15:00+08:00"
+      },
+      "scene_instruction": "## 当前场景\n\n用户刚提交了一张反馈卡：\n- 关联建议：每晚 11 点闹钟响后把手机放到客厅\n- 用户选择：做到了\n- 用户补充：但 11 点有点早，12 点更现实\n\n基于反馈推进对话：\n- 做到了 → 具体肯定，考虑固化或推进下一步",
+      "messages": [],
+      "expected_response": "应调用 save_memory 记录干预反馈（category=intervention_feedback），内容包含'做到了'和'11点太早12点更现实'。回复要具体肯定做到的部分（不说空泛的'太好了加油'），并顺着用户的补充调整方案——比如把提醒调到12点。可以调 set_reminder 重新设置提醒时间。用 suggest_replies 引导。"
+    },
+    {
+      "id": "A09",
+      "name": "反馈卡提交 · 没做到",
+      "event_context": {
+        "event_type": "feedback_submit",
+        "timestamp": "2026-03-27T08:20:00+08:00"
+      },
+      "scene_instruction": "## 当前场景\n\n用户刚提交了一张反馈卡：\n- 关联建议：每晚 12 点闹钟响后把手机放到客厅\n- 用户选择：没做到\n- 用户补充：在追剧，停不下来\n\n基于反馈推进对话：\n- 没做到 → 理解原因，考虑调整方法或降低难度",
+      "messages": [],
+      "expected_response": "应调用 save_memory 记录反馈。回复绝不能追责（不说'你应该'、'你需要'、'必须'），要理解追剧停不下来的原因。可以提出调整方案（比如设个追剧定时器、只看一集就放手机），或者简单正常化这件事。语气温和理解。"
+    },
+    {
+      "id": "A10",
+      "name": "推送点击 · 晚上23点放手机提醒",
+      "event_context": {
+        "event_type": "push_click",
+        "timestamp": "2026-03-25T23:02:00+08:00"
+      },
+      "scene_instruction": "## 当前场景\n\n用户点击了一条提醒推送进入 App：\n- 提醒内容：该放下手机了，把它放到客厅充电吧\n- 关联干预：减少睡前手机使用\n\n顺着提醒的上下文和用户聊。如果用户接着说了别的话题，跟随用户。",
+      "messages": [],
+      "expected_response": "应该简短地顺着提醒的上下文说话，鼓励用户执行，但不说教。1-2句即可，比如'准备放手机了？'或者轻松地聊一句。不暴露系统机制（不说'根据你的干预计划'）。用 suggest_replies 给选项（比如'好，放了'、'再刷一会'等）。"
+    },
+    {
+      "id": "A11",
+      "name": "子agent洞察 · 干预效果显著",
+      "event_context": {
+        "event_type": "app_open",
+        "timestamp": "2026-03-28T09:00:00+08:00",
+        "minutes_since_last_conversation": 720,
+        "last_conversation_initiator": "user",
+        "last_conversation_user_replied": true,
+        "has_pending_insight": true,
+        "has_unseen_sleep_data": false
+      },
+      "scene_instruction": "## 当前场景\n\n以下是最近发现的一个值得关注的变化：\n手机放客厅干预执行5天中的4天成功执行，这4天深睡占比平均22%（vs 之前16%），入睡时间平均提前50分钟。未执行的1天是加班日。\n\n用你自己的话和用户聊这个发现。不要说\"系统检测到\"。",
+      "messages": [],
+      "expected_response": "应用朋友口吻自然地分享这个正面发现，不说'系统检测到'、'数据分析显示'、'我们发现'。数字要有对比锚点（深睡从16%到22%）。可以具体指出加班日是例外很正常。语气是分享好消息而不是做报告。可以考虑是否推进下一步（比如提前到更早）。"
+    },
+    {
+      "id": "A12",
+      "name": "触碰红线 · 用户问咖啡",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-26T14:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "是不是下午少喝咖啡会睡得好一些？"}
+      ],
+      "expected_response": "绝不能建议限制咖啡（这是红线）。应该承认咖啡确实可能有影响，但同时尊重用户'下午必须靠咖啡撑着'的需求。可以把话题引向其他更可行的方向（比如当前的手机干预已经在起效）。不设置任何和咖啡限制相关的提醒。"
+    },
+    {
+      "id": "A13",
+      "name": "用户拒绝当前干预方案",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-26T21:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "手机放客厅太不方便了，我用手机当闹钟的"}
+      ],
+      "expected_response": "应调用 save_memory 记录拒绝原因（category=preference 或 intervention_feedback）。不能坚持让用户继续放手机，要尊重拒绝。应该提出替代方案（比如买个小闹钟、用手机定时锁屏app、或者手机调静音翻面放等）。不否定用户的理由。"
+    },
+    {
+      "id": "A14",
+      "name": "多轮对话 · 先聊别的再转睡眠",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-26T20:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "今天下午开了个好无聊的会"},
+        {"role": "assistant", "content": "哈，多长时间？"},
+        {"role": "user", "content": "两个小时！说的全是废话。对了，我昨晚好像睡得还行？"}
+      ],
+      "expected_response": "应调用 get_health_data 查昨晚数据。可以简短回应一下会议的事（一句即可），然后自然转到睡眠数据。数据解读要有对比锚点，语气像朋友聊天。"
+    },
+    {
+      "id": "A15",
+      "name": "工具报错 · 查数据失败后降级",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-26T20:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "我最近睡得怎么样？"},
+        {"role": "assistant", "content": null, "tool_calls": [{"name": "get_health_data", "arguments": {"metrics": ["sleep_stages"], "date_range": "7d"}}]},
+        {"role": "tool", "content": "{\"error\": \"health_data_service_unavailable\", \"message\": \"无法连接健康数据服务\"}"}
+      ],
+      "expected_response": "不卡住，不暴露技术错误详情（不说'health_data_service_unavailable'）。应向用户自然说明暂时看不了数据，可以基于画像中已有信息聊（比如'从你最近几天的感受来看...'），或建议稍后再看。"
+    }
+  ]
+}

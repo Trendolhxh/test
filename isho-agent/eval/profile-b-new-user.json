@@ -1,0 +1,149 @@
+{
+  "profile_id": "B",
+  "profile_name": "刚注册新用户 · 零阶段",
+  "description": "完全空白的新用户，没有画像、没有干预历史。测试agent在信息极少时的行为——是否主动提问了解用户，而不是盲目给建议或查数据。",
+
+  "user_profile": "# 用户画像\n\n暂无数据，请通过对话了解用户。",
+
+  "intervention_plan": "# 干预策略\n\n暂无干预记录。",
+
+  "cases": [
+    {
+      "id": "B01",
+      "name": "新用户打招呼 · 应主动了解",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T22:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "你好"}
+      ],
+      "expected_response": "应该友好地打招呼，然后主动提问了解用户（比如问睡眠情况、困扰是什么、日常作息等）。不应该查数据（还不了解用户）、不应该给建议（还没诊断）、不应该发反馈卡（还没给过建议）。语气温暖但不过度热情。"
+    },
+    {
+      "id": "B02",
+      "name": "新用户主动描述失眠问题 · 记录+追问",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T23:30:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "我最近老是失眠，晚上怎么都睡不着"}
+      ],
+      "expected_response": "应调用 save_memory 记录（category=sleep_feedback）。应该共情，然后追问更多细节来了解情况（比如'大概几点上床？'、'是躺在床上睡不着还是不想上床？'、'多久了？'），而不是直接给建议。画像为空时应先收集信息。"
+    },
+    {
+      "id": "B03",
+      "name": "新用户多轮对话 · 逐步了解后才给初步方向",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-25T23:35:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "我最近老是失眠，晚上怎么都睡不着"},
+        {"role": "assistant", "content": "多久了？是躺在床上翻来覆去睡不着，还是到了该睡的点不想上床？"},
+        {"role": "user", "content": "大概一两个月了吧，主要是躺下之后脑子停不下来，想东想西的"},
+        {"role": "assistant", "content": "脑子停不下来确实难受。一般几点躺下？白天有什么特别焦虑的事吗？"},
+        {"role": "user", "content": "一般12点左右躺下，但经常要1点多才睡着。工作压力挺大的，总想着明天的事"}
+      ],
+      "expected_response": "应调用 save_memory 记录关键信息（入睡困难、12点躺下1点多才睡着、工作压力焦虑）。经过几轮了解后可以给初步的方向性建议（但仍然是试探性的，不是'处方'），比如'睡前半小时试试别想工作的事'。此时可以考虑用 suggest_replies 引导进一步对话。但仍然不应该给很具体的干预方案+设提醒+发反馈卡——太早了。"
+    },
+    {
+      "id": "B04",
+      "name": "新用户问自己的数据 · 数据还很少",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-26T09:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "能看看我的睡眠数据吗？"}
+      ],
+      "expected_response": "可以调用 get_health_data 查数据。如果数据很少（比如只有1-2天），应如实告诉用户数据还不够多，需要多积累几天才能看趋势。不要基于1-2天数据给出过强的结论。"
+    },
+    {
+      "id": "B05",
+      "name": "新用户透露生活习惯 · 记录用于建立画像",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-26T20:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "我是做设计的，经常要加班赶稿，有时候凌晨两三点才下班"}
+      ],
+      "expected_response": "应调用 save_memory 记录（category=life_detail），内容包含职业和加班情况。回复应自然地回应这个信息，表示理解，可以追问更多（比如'一周大概几天要加班到那么晚？'）来丰富画像。绝不能说'我记下了'。"
+    },
+    {
+      "id": "B06",
+      "name": "新用户表达强烈偏好 · 记为约束",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-26T21:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "别跟我说什么冥想放松，我试过了完全没用"}
+      ],
+      "expected_response": "应调用 save_memory 记录（category=preference），内容明确记录用户拒绝冥想。回复要尊重这个态度，不试图说服用户'其实冥想是有效的'，不否定用户的体验。可以回应'那咱们换个方向'。"
+    },
+    {
+      "id": "B07",
+      "name": "新用户第二天 · app_open 有首夜睡眠数据",
+      "event_context": {
+        "event_type": "app_open",
+        "timestamp": "2026-03-27T08:30:00+08:00",
+        "minutes_since_last_conversation": 600,
+        "last_conversation_initiator": "user",
+        "last_conversation_user_replied": true,
+        "has_pending_insight": false,
+        "has_unseen_sleep_data": true
+      },
+      "scene_instruction": "## 当前场景\n\n用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：\n入睡 01:25，起床 08:30，总睡眠 7h05m，深睡 20%，REM 23%，入睡潜伏期 55min\n\n像朋友一样聊昨晚的睡眠，不要像报告一样列数据。",
+      "messages": [],
+      "expected_response": "第一次有数据，应以了解为主（'这是你用App后第一晚的数据'或类似语气），关注到入睡潜伏期55分钟比较长（和用户之前说的'脑子停不下来'吻合），可以关联起来聊。不要下过强的结论（只有一天数据），可以说'接下来几天看看是不是都这样'。"
+    },
+    {
+      "id": "B08",
+      "name": "新用户急着要方案 · 控制节奏不冒进",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-27T21:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "别问了，直接告诉我怎么才能睡好"}
+      ],
+      "expected_response": "应尊重用户的急迫情绪，可以给一个简单可执行的尝试方向（基于已知的信息——入睡困难、脑子停不下来）。但方案不应该太复杂或太多。语气上要平衡'尊重用户的直接'和'负责任地不随便开方子'。可以给一个建议+设一个简单的反馈卡。"
+    },
+    {
+      "id": "B09",
+      "name": "新用户闲聊 · 不强行拉回睡眠话题",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-27T12:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "你觉得周末去哪玩比较好？"}
+      ],
+      "expected_response": "可以简短地聊聊或轻松回应，不要强行转到睡眠话题（'出去玩有助于改善睡眠哦'这种就太刻意了）。但也不需要真的当旅游顾问，简单回应就好。"
+    },
+    {
+      "id": "B10",
+      "name": "新用户用活泼风格说话 · 跟随语气",
+      "event_context": {
+        "event_type": "user_message",
+        "timestamp": "2026-03-27T23:00:00+08:00"
+      },
+      "scene_instruction": null,
+      "messages": [
+        {"role": "user", "content": "天哪我居然还没睡！！！救命啊哈哈哈 😭😭😭"}
+      ],
+      "expected_response": "用户风格活泼带emoji，agent可以适度跟随（比如用一两个emoji），但不堆砌。回复简短，可以轻松调侃但不说教（不说'你应该早点睡'）。可以顺势关心一下（'怎么还没睡？'）。"
+    }
+  ]
+}
