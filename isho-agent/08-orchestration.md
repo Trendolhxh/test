@@ -10,12 +10,12 @@
 flowchart TD
     A[事件到达] --> B{"07-events\n状态机判定"}
     B -->|SILENT| C[结束]
-    B -->|INVOKE| D["03-memory\n加载画像 + 策略"]
+    B -->|INVOKE| D["03-memory\n加载速览"]
     D --> E["04-context\n组装 system / tools / messages"]
     E --> F[Claude API 调用]
-    F --> G{"05-loop\n执行循环"}
+    F --> G{"05-loop\n执行循环（最大 4 轮）"}
     G -->|工具调用| H{工具路由}
-    H -->|服务端工具| I["get_health_data\nsave_memory\nset_reminder"]
+    H -->|服务端工具| I["get_health_data\nget_user_profile\nget_strategy\nsave_memory\nset_reminder"]
     H -->|前端工具| J["show_status\nrender_analysis_card\nsend_feedback_card\nsuggest_replies"]
     I --> K[工具结果返回模型]
     J --> K
@@ -48,18 +48,16 @@ decision, scene_data = state_machine.decide(event)
 
 详见 [07-events.md](./07-events.md)。SILENT 直接结束，INVOKE 继续。
 
-### 阶段 2：加载记忆
+### 阶段 2：加载速览
 
 ```python
-user_context = db.get_user_context(user_id)
-# → {
-#     user_profile: "# 用户画像\n...",       ~400 tk
-#     intervention_plan: "# 干预策略\n...",   ~400 tk
-#     updated_at: "2026-03-24T05:00:00+08:00"
-#   }
+user_summary = db.get_user_summary(user_id)
+# → "用户速览\n30岁男/产品经理/晚型人/独居 | 核心问题:..."
+# ~80 tk，始终注入 system prompt
 ```
 
-get_user_context 由 orchestrator 自动执行（详见 [02-tools.md](./02-tools.md)），结果注入 system。
+速览由子 agent 维护，对应上下文文档的 `# [summary]` section。
+详细的用户画像和干预策略由模型在 agent 循环中通过 `get_user_profile` / `get_strategy` 工具按需拉取。
 
 ### 阶段 3：组装上下文
 
@@ -69,13 +67,12 @@ request = {
     "max_tokens": 2048,
     "system": "\n\n".join([
         SYSTEM_PROMPT,                    # 01-system-prompt ~200 tk
-        user_context.user_profile,        # 03-memory        ~400 tk
-        user_context.intervention_plan,   # 03-memory        ~400 tk
+        user_summary,                     # 03-memory [summary] ~80 tk
         STYLE_INSTRUCTION,                # 06-output-style  ~150 tk
         scene_instruction or "",          # 07-events        ~100 tk
     ]),
-    "tools": TOOL_DEFINITIONS,            # 02-tools         ~800 tk
-    "messages": conversation_history,     #                  ≤4000 tk
+    "tools": TOOL_DEFINITIONS,            # 02-tools         ~1000 tk (9 个工具)
+    "messages": conversation_history,     #                  ≤4500 tk
 }
 ```
 
@@ -84,7 +81,7 @@ request = {
 ### 阶段 4：Agent 循环
 
 ```python
-for turn in range(MAX_TURNS := 3):
+for turn in range(MAX_TURNS := 4):
     response = claude_api.create_message(**request)
 
     # 检查是否有工具调用
@@ -166,6 +163,10 @@ def execute_tool(call: ToolCall) -> ToolResult:
         # 服务端执行
         case "get_health_data":
             return health_service.query(call.params)
+        case "get_user_profile":
+            return user_context_service.get_profile(user_id, call.params["aspects"])
+        case "get_strategy":
+            return user_context_service.get_strategy(user_id, call.params["aspects"])
         case "save_memory":
             return mem0.add(user_id, call.params)
         case "set_reminder":
@@ -300,19 +301,19 @@ sequenceDiagram
 
     Note over Orch: 状态机判定<br/>has_unseen_sleep_data<br/>→ INVOKE
 
-    Orch->>DB: 加载 user_context
-    DB-->>Orch: 画像 + 策略
+    Orch->>DB: 加载速览
+    DB-->>Orch: 速览 (~80 tk)
 
-    Note over Orch: 组装 context
+    Note over Orch: 组装 context（速览注入 system）
 
     Orch->>Claude: create_message (第 1 轮)
-    Claude-->>Orch: tool_call: show_status + get_health_data
+    Claude-->>Orch: tool_call: show_status + get_strategy(["trends"]) + get_health_data
 
     Orch->>前端: show_status (即时投递)
     前端->>用户: "正在看你的数据..."
 
-    Orch->>DB: get_health_data
-    DB-->>Orch: sleep data
+    Orch->>DB: get_strategy + get_health_data
+    DB-->>Orch: strategy sections + sleep data
 
     Orch->>Claude: tool_results (第 2 轮)
     Claude-->>Orch: text + tool_call: suggest_replies

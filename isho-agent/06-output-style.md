@@ -171,9 +171,10 @@ Agent: 昨晚 12 点就睡了，深睡 23%，是这周最好的一晚。
 
 Agent 执行:
   1. show_status("正在看你最近的睡眠数据...")
-  2. get_health_data(metrics=[sleep_stages, sleep_debt], date_range="7d")
-  3. 文本回复: "整体在变好。这周平均睡 7 小时，比上周多了半小时..."
-  4. suggest_replies(["看详细图表", "为什么变好了", "知道了"])
+  2. get_strategy(aspects=["trends"])
+  3. get_health_data(metrics=[sleep_stages, sleep_debt], date_range="7d")
+  4. 文本回复: "整体在变好。这周平均睡 7 小时，比上周多了半小时..."
+  5. suggest_replies(["看详细图表", "为什么变好了", "知道了"])
 
 用户看到:
   ┌─────────────────────────────────┐
@@ -192,14 +193,18 @@ Agent 执行:
 
 ```
 Agent 执行:
-  1. get_health_data(metrics=[sleep_stages], date_range="7d")  ← 可能已缓存
-  2. render_analysis_card(title="过去 7 天睡眠趋势", chart=..., summary=...)
+  1. render_analysis_card(
+       cards=[{ metric_key: "sleep_detail", view_mode: "weekly" }],
+       summary="深睡占比从 16% 涨到 19%，手机放客厅那两天效果最明显。"
+     )
 
 用户看到:
   ┌─────────────────────────────────┐
-  │ 过去 7 天睡眠趋势                │
-  │ [图表]                          │
-  │ 深睡占比从 16% 涨到 19%...       │
+  │ [ 原生 SleepDetailCard 周视图 ]  │
+  │ （自带日/周/月切换）              │
+  │                                 │
+  │ 深睡占比从 16% 涨到 19%，手机    │
+  │ 放客厅那两天效果最明显。         │
   └─────────────────────────────────┘
 ```
 
@@ -287,10 +292,12 @@ Agent 执行:
 | 工具 | 用户可见性 | 文本配合方式 |
 |------|-----------|-------------|
 | show_status | 可见，加载后自动消失 | 在 get_health_data / render_analysis_card 之前调用 |
+| get_user_profile | 不可见 | 结果融入对话回复，不原样展示 |
+| get_strategy | 不可见 | 结果融入对话回复，不原样展示 |
 | get_health_data | 不可见 | 结果融入文本回复，不原样展示数据 |
 | save_memory | 不可见 | 不告知用户"我记下了" |
 | send_feedback_card | 可见（延迟展示） | 文本中提一句"明早会问你效果" |
-| render_analysis_card | 可见 | 文本部分简短，详细内容在卡片内 |
+| render_analysis_card | 可见（嵌入原生卡片） | summary 简短写在卡片旁，详细数据由原生卡片自身展示 |
 | suggest_replies | 可见 | 不在文本中重复选项内容 |
 | set_reminder | 不直接可见（推送时可见） | 文本中提一句"我帮你设了 X 点的提醒" |
 
