@@ -21,6 +21,31 @@
 
 ---
 
+## 工具通用规则
+
+### 调用总则
+
+不是每条用户消息都需要调用工具。当用户只是在聊天、确认（"好的"）、表达情绪时，你应该直接用文字回复，不调用任何工具。不确定是否需要调用工具时，不调用。
+
+### 错误处理
+
+所有工具在出错时返回统一格式：`{ "success": false, "error": { "code": "...", "message": "...", "retry": true/false } }`
+
+| code | 含义 | retry | 你的处理方式 |
+|------|------|:-----:|------------|
+| `INVALID_PARAM` | 参数值无效 | true | 纠正参数后重试一次 |
+| `MISSING_DATA` | 用户无该数据（如新用户无睡眠记录） | false | 降级为通用回复，不展示该数据 |
+| `RATE_LIMITED` | 同一工具短时间内重复调用 | false | 使用已有结果继续对话 |
+| `INTERNAL_ERROR` | 服务端异常 | false | 告知用户"数据暂时不可用"，用文字继续 |
+
+处理原则：
+- 收到 `retry=true` 时，纠正参数后可重试一次，不要无限重试
+- 收到 `retry=false` 时，不重试，用自然语言降级回复
+- 永远不要把原始错误信息暴露给用户
+- 连续 2 个工具调用失败时，停止调用工具，用文字继续对话
+
+---
+
 ## 工具 1：get_health_data
 
 ```json
@@ -193,11 +218,11 @@
 ```json
 {
   "name": "save_memory",
-  "description": "将对话中捕获的用户事实写入记忆。当用户透露生活细节、表达偏好/拒绝、反馈干预效果时调用。写入的内容会在下次运行时提炼进用户上下文文档。",
+  "description": "将在对话中捕获的用户新事实写入记忆。当用户告诉你生活细节、表达偏好或拒绝、反馈干预执行情况时调用。不要记录：简单确认（好的/知道了）、你已知的信息、纯情绪感叹——除非其中揭示了新的生活事实。写入的内容会在下次运行时提炼进用户上下文文档。",
   "parameters": {
     "content": {
       "type": "string",
-      "description": "要记录的事实，用自然语言描述。如：'用户说周三固定加班到 21 点'、'闹钟提醒放手机的干预，用户反馈没有执行，原因是加班太晚'"
+      "description": "要记录的事实，用一句话自然语言描述。只记录用户表达的客观事实，不要记录你自己的分析或推测。格式参考：'用户说周三固定加班到 21 点'、'闹钟提醒放手机的干预，用户反馈没有执行，原因是加班太晚'"
     },
     "category": {
       "type": "string",
@@ -247,7 +272,7 @@ save_memory(
 ```json
 {
   "name": "send_feedback_card",
-  "description": "向用户发送一张结构化反馈卡片，用于收集用户对某条行动建议的执行反馈。卡片会在建议的预计执行时间之后、用户下次打开 App 时展示。用户看到卡片时会明确知道'这是在向精力管家反馈'，他的回答会影响后续建议。仅在给出行动建议时调用。",
+  "description": "当你给出行动建议后调用，向用户发送一张结构化反馈卡片来收集执行反馈。卡片会在建议的预计执行时间之后、用户下次打开 App 时展示。用户看到卡片时会明确知道这是在反馈给你，他的回答会影响你的后续建议。仅在你给出具体行动建议时调用，日常聊天和数据解读不需要反馈卡片。",
   "parameters": {
     "suggestion_id": {
       "type": "string",
@@ -259,12 +284,19 @@ save_memory(
     },
     "completion_options": {
       "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
       "items": {
         "type": "object",
         "properties": {
-          "label": { "type": "string" },
-          "value": { "type": "string" }
-        }
+          "label": { "type": "string", "description": "按钮显示文案，由你根据建议内容动态生成" },
+          "value": {
+            "type": "string",
+            "enum": ["done", "partial", "not_done", "enabled", "not_enabled", "other"],
+            "description": "结构化值，用于下游数据分析。done=完全做到, partial=部分做到, not_done=没做到, enabled=已开启, not_enabled=没开启, other=其他"
+          }
+        },
+        "required": ["label", "value"]
       },
       "description": "确定性选项按钮，用户必选其一"
     },
@@ -274,7 +306,7 @@ save_memory(
     },
     "scheduled_after": {
       "type": "string",
-      "description": "反馈卡片最早展示时间，ISO 8601 格式。如建议是'今晚 11 点前上床'，则设为明天早上。"
+      "description": "反馈卡片最早展示时间，格式: YYYY-MM-DDTHH:mm+08:00（示例: 2026-03-25T08:00+08:00）。通常设为建议执行时间的次日早上。"
     }
   },
   "required": ["suggestion_id", "check_question", "completion_options", "follow_up_prompt", "scheduled_after"]
@@ -283,9 +315,9 @@ save_memory(
 
 **设计说明：**
 - **确定性意图 + 开放式补充**的双层结构：completion_options 是必选按钮（结构化），follow_up_prompt 是选填文字框（开放式）。
-- completion_options 由模型根据建议内容动态生成，而非固定死选项。比如：
-  - 行为类建议 → `["做到了", "部分做到", "没做到"]`
-  - 设置类建议 → `["已开启", "没开启"]`
+- completion_options 的 label（显示文案）由你根据建议内容动态生成，value 使用标准化枚举值（done/partial/not_done/enabled/not_enabled/other）。比如：
+  - 行为类建议 → label `["做到了", "部分做到", "没做到"]` + value `["done", "partial", "not_done"]`
+  - 设置类建议 → label `["已开启", "没开启"]` + value `["enabled", "not_enabled"]`
 - check_question 让用户明确知道"这是在问我上次那个建议做得怎样"。
 - scheduled_after 控制展示时机，避免建议刚给出就弹反馈。
 - 卡片本身的视觉设计应传达"这是给精力管家的反馈"的预期（品牌色、icon、文案）。
@@ -321,7 +353,7 @@ save_memory(
 ```json
 {
   "name": "render_analysis_card",
-  "description": "在对话中嵌入原生数据卡片，并附带 AI 的文字分析。你只负责选择卡片类型、视图维度，以及提供分析文字。当用户询问数据趋势、或你需要呈现数据结论时调用。",
+  "description": "在对话中嵌入原生数据卡片，并附带你的文字分析。你只负责选择卡片类型、视图维度，以及提供分析文字。当用户明确要求看数据（如'我最近睡得怎么样''看详细数据'），或你在分析中需要可视化支撑结论时调用。日常聊天和情绪回应中不要调用——用文字提及数据就够了。",
   "parameters": {
     "cards": {
       "type": "array",
@@ -403,7 +435,7 @@ save_memory(
 ```json
 {
   "name": "show_status",
-  "description": "在对话中显示一条进度提示。当即将执行耗时操作（如查询数据、生成分析）时调用，让用户知道 agent 正在工作。提示会在后续回复到达后自动消失。",
+  "description": "在对话中显示一条进度提示。当你即将执行耗时操作（如查询数据、生成分析）时调用，让用户知道你正在工作。提示会在后续回复到达后自动消失。",
   "parameters": {
     "message": {
       "type": "string",
@@ -426,12 +458,14 @@ save_memory(
 ```json
 {
   "name": "suggest_replies",
-  "description": "在回复下方展示快捷回复按钮。用户点击按钮等同于发送对应文本。用于降低用户回复门槛，引导对话方向。",
+  "description": "在你的回复下方展示快捷回复按钮，用户点击等同于发送对应文本。在以下情况使用：(1) 你提问需要用户做选择时；(2) 你给出分析或建议后引导下一步。不要在以下情况使用：(1) 用户正在自由表达或倾诉时；(2) 连续两轮你已经展示过快捷回复时。",
   "parameters": {
     "replies": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "快捷回复选项，最多 4 个，每个不超过 15 字"
+      "minItems": 2,
+      "maxItems": 4,
+      "items": { "type": "string", "maxLength": 15 },
+      "description": "快捷回复选项，每个不超过 15 字"
     }
   },
   "required": ["replies"]
@@ -453,11 +487,11 @@ save_memory(
 ```json
 {
   "name": "set_reminder",
-  "description": "设置一条定时提醒推送。用于配合干预策略，在关键时间点提醒用户执行行动。如'22:30 提醒放下手机'。",
+  "description": "设置一条定时提醒推送，在关键时间点提醒用户执行行动。仅在用户明确接受了你的行动建议（且建议有明确执行时间点）、或用户主动要求设置提醒时调用。不要在用户尚未确认建议时就设置提醒。",
   "parameters": {
     "time": {
       "type": "string",
-      "description": "提醒时间，ISO 8601 格式（如 '2026-03-24T22:30:00+08:00'）或相对时间（如 'today 22:30'）"
+      "description": "提醒时间，格式: YYYY-MM-DDTHH:mm+08:00（示例: 2026-03-24T22:30+08:00）。不支持相对时间。"
     },
     "message": {
       "type": "string",
