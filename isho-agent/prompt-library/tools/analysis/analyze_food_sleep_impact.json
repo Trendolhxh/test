@@ -1,0 +1,22 @@
+{
+  "name": "analyze_food_sleep_impact",
+  "description": "分析用户描述的食物/饮料对睡眠的影响。当用户提到吃了或喝了什么、或者问某种食物是否影响睡眠时调用。\n\n服务端会分析咖啡因、酒精、糖、辛辣等成分及其对睡眠的具体影响机制。结果包含成分分析和影响评估，你需要用自然语言向用户解读，不要原样展示结构化结果。\n\n如果知道用户的计划入睡时间（从速览或 get_user_profile 中获取），传入 planned_sleep_time 可以得到更精确的时间窗口建议（如\"距离你平时入睡还有6小时，咖啡因影响较小\"）。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "food_description": {
+        "type": "string",
+        "description": "用户描述的食物/饮料，尽量保留用户原话。如 '下午3点喝了一大杯冰美式'、'晚上吃了火锅配啤酒'"
+      },
+      "consumed_at": {
+        "type": "string",
+        "description": "摄入时间，格式: YYYY-MM-DDTHH:mm+08:00。如果用户没说具体时间，可以根据上下文推断。"
+      },
+      "planned_sleep_time": {
+        "type": "string",
+        "description": "用户计划入睡时间（可选），格式: HH:mm。传入后可提供更精确的时间窗口分析。"
+      }
+    },
+    "required": ["food_description"]
+  }
+}

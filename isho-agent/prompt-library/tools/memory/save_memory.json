@@ -1,0 +1,27 @@
+{
+  "name": "save_memory",
+  "description": "将在对话中捕获的用户新事实写入记忆。当用户告诉你生活细节、表达偏好或拒绝、反馈干预执行情况时调用。\n\n该存的：用户陈述的客观事实、生活变化、偏好表达、干预反馈、认知表达或误区、环境/设备变化。\n不该存的：简单确认（好的/知道了）、你已知的信息、纯情绪感叹（除非揭示了新的生活事实）、你自己的分析或推测。\n\n静默操作——不要说\"我记下了\"或任何类似的确认。写入的内容会在下次子 agent 运行时提炼进用户上下文文档。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "content": {
+        "type": "string",
+        "description": "要记录的事实，用一句话自然语言描述。只记录用户表达的客观事实，不要记录你自己的分析或推测。格式参考：'用户说周三固定加班到21点'、'闹钟提醒放手机的干预，用户反馈没有执行，原因是加班太晚'"
+      },
+      "category": {
+        "type": "string",
+        "enum": [
+          "routine_detail",
+          "sleep_positive",
+          "sleep_negative",
+          "intervention_feedback",
+          "preference",
+          "cognition",
+          "environment"
+        ],
+        "description": "记忆类别。routine_detail=作息/生活细节; sleep_positive=睡眠正向信息; sleep_negative=睡眠负向信息; intervention_feedback=干预执行反馈; preference=偏好或拒绝; cognition=认知表达/误区; environment=环境/设备变化"
+      }
+    },
+    "required": ["content", "category"]
+  }
+}

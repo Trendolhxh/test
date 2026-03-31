@@ -1,0 +1,25 @@
+{
+  "name": "get_strategy",
+  "description": "了解该怎么做。加载和用户合作的策略信息：什么不能碰、当前在推什么干预、用户的认知水平和误区。用于给建议、回应反馈卡、决定是否引导认知、规划下一步。\n\n重要：给任何行为建议前，必须先调此工具至少加载 redlines + active。没调就给建议 = 不允许。\n\n各 aspect 使用场景：\n- redlines：要给建议前确认边界（哪些方向绝对不能提）\n- active：涉及当前干预的任何对话（反馈卡回收、新数据关联干预效果、推送点击）\n- history：需要参考过去尝试过什么（当前干预无效需要换方向）\n- preferences：要设计新的干预方案（用户接受什么类型的方法）\n- cognition：用户说了和睡眠认知相关的话、或需要决定怎么解释（\"周末补回来就行了\"）\n- trends：需要用数据说话（聊最近变化、给用户看进步）\n\n可与 get_user_profile 并行调用。用户尚无干预方案时，active/history 返回空，此时不要凭空建议——先了解用户。",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "aspects": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "redlines",
+            "active",
+            "history",
+            "preferences",
+            "cognition",
+            "trends"
+          ]
+        },
+        "description": "要加载的方面。redlines=红线与约束（明确拒绝的方向+原话+软约束）; active=当前活跃干预（方向/具体措施/状态/阻力/下一步）; history=干预历史（最近10条，每条含结果和学习）; preferences=干预偏好（用户接受什么类型的方法）; cognition=睡眠认知（正确认知+误区及引导方向+适合的说服方式）; trends=近期趋势（周对比数据+干预日vs非干预日）"
+      }
+    },
+    "required": ["aspects"]
+  }
+}
