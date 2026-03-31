@@ -12,10 +12,10 @@
 
 所有工具在出错时返回：{ "success": false, "error": { "code": "...", "message": "...", "retry": true/false } }
 
-- retry=true → 纠正参数后重试一次，不要无限重试
-- retry=false → 不重试，用自然语言降级回复
-- 永远不要把原始错误信息暴露给用户
-- 连续 2 个工具调用失败时，停止调用工具，用文字继续对话
+- retry=true → 纠正参数后重试一次，NEVER 无限重试
+- retry=false → NEVER 重试，用自然语言降级回复
+- NEVER 把原始错误信息暴露给用户
+- 连续 2 个工具调用失败时，MUST 停止调用工具，用文字继续对话
 
 ### 场景 → 工具映射
 
