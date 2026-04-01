@@ -136,7 +136,7 @@
 | 文件 | 注入时机 | 内容 |
 |------|---------|------|
 | [get-strategy.md](tool-descriptions/tool-description-get-strategy.md) | 始终 | 6 个 aspect 选择策略、尚无方案时不凭空建议、红线冲突时说明原因 |
-| [get-strategy-mandatory-before-advice.md](tool-descriptions/tool-description-get-strategy-mandatory-before-advice.md) | 标准对话 | 硬性规则：给任何行为建议前 MUST 先调此工具加载 redlines + active |
+| [get-strategy-mandatory-before-advice.md](tool-descriptions/tool-description-get-strategy-mandatory-before-advice.md) | 标准对话 | 硬性规则：给任何行为建议前务必先调此工具加载 redlines + active |
 
 #### save_memory — 记忆写入
 
@@ -201,7 +201,7 @@
 | System Reminders | 40+ 种运行时注入 | 7 种系统提醒 + 4 种场景指令 |
 | 行为规则 | "Doing Tasks" 原子规则 | 5 条 doing-tasks 原子规则 |
 | 上下文压缩 | 有（对话摘要 + 清理） | 有（conversation-summarizer 子 agent）|
-| ALL-CAPS 标记 | NEVER/ALWAYS/MUST/IMPORTANT | 全面覆盖 |
+| 强调标记 | NEVER/ALWAYS/MUST/IMPORTANT | 统一使用中文（禁止/始终/务必/【注意】）|
 | 工具示例 | `<example>` + `<reasoning>` 块 | 待补充（细化阶段逐步添加）|
 
 精力管家更轻量，因为：
