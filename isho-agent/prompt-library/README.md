@@ -17,9 +17,10 @@
 │  04-tool-usage   工具调用总则 + 场景映射           │
 │  scenes/*        场景指令（按事件类型动态注入）      │
 └──────────────────────────────────────────────┘
-┌─ tools（~1,500 tk）──────────────────────────┐
-│  13 个 Model-Facing 工具描述（按场景拼接注入）    │
-│  orchestrator 路由到 18+ 个 Server-Side RPC    │
+┌─ tool-descriptions（~1,200 tk）───────────────┐
+│  8 个 Model-Facing 工具描述 + 2 个通用规则       │
+│  复杂工具拆独立使用域，按场景选择性注入           │
+│  orchestrator 路由到 Server-Side RPC           │
 └──────────────────────────────────────────────┘
 ┌─ messages ───────────────────────────────────┐
 │  对话历史 + 工具调用结果                        │
@@ -101,74 +102,77 @@
 
 用户主动发消息时不注入场景指令。
 
-### tools/ — Model-Facing 工具描述
+### tool-descriptions/ — 工具描述（对标 Claude Code 的 tool description + system-prompt-tool-usage 系列）
 
-每个 `.md` 文件只写 description（写给模型看的使用手册），不写调用接口（参数 schema 等由研发定义）。
+每个 `.md` 文件只写 description（写给模型看的使用手册），不写调用接口（参数 schema 等由研发定义）。扁平目录结构，文件名即用途说明。
 
-每个工具的 description 按场景拆分为多个 section，orchestrator 在运行时按当前场景拼接注入：
-- **`## base`** — 始终随工具定义注入的核心描述
-- **`## standard`** — 标准对话模式下的完整使用指南（含 example）
-- **`## scene:xxx`** — 特定触发场景的补充描述
-- **`## data_view`** / **`## onboarding`** / **`## crisis`** — 特殊技能模式下的替代描述
+复杂工具（get_health_data、get_strategy）的不同使用域拆成独立文件，orchestrator 按场景选择性注入。
 
-#### Description 注入场景及触发条件
+#### 通用工具规则
 
-| 场景 key | 触发条件 | 说明 |
-|----------|---------|------|
-| `base` | 始终注入 | 工具的核心功能说明，任何场景都需要 |
-| `standard` | 默认对话模式（无特殊技能激活） | 完整的使用时机、规则、示例 |
-| `data_view` | 用户进入"数据查看"专用技能 | 精简描述，聚焦数据展示 |
-| `onboarding` | 新用户首次对话，激活"引导"技能 | 聚焦初始画像捕获 |
-| `crisis` | 触发安全/危机支持模式 | 仅保留情绪支持相关指引 |
-| `scene:feedback_submit` | 用户提交反馈卡（做到了/没做到） | 补充反馈卡处理的 aspect 选择指引 |
-| `scene:push_click` | 用户点击推送提醒进入对话 | 补充推送上下文的处理指引 |
-| `scene:new_sleep_data` | 新睡眠数据到达 + 用户今天首次打开 | 补充新数据关联分析指引 |
-| `scene:agent_insight` | 子 agent 标记了待推送洞察 | 补充洞察与策略一致性校验指引 |
+注入 system prompt，对所有工具生效。
 
-> 拼接规则：`base` + 技能模式描述（`standard` / `data_view` / `onboarding` / `crisis`）+ 0~N 个 `scene:xxx`。一个工具在某场景下没有对应 section 则不追加。
+| 文件 | 内容 |
+|------|------|
+| [common-call-discipline.md](tool-descriptions/tool-description-common-call-discipline.md) | 不是每条消息都需要工具；不确定时不调；连续2次失败后停止；已返回数据不重复请求 |
+| [common-visibility-rules.md](tool-descriptions/tool-description-common-visibility-rules.md) | 哪些工具结果对用户可见/静默，文本如何配合每类工具输出 |
 
-#### tools/health/ — 健康数据
+#### get_health_data — 健康数据查询（拆 3 个独立使用域）
 
-| 文件 | Model Tool | 描述 sections |
-|------|-----------|---------------|
-| [get_health_data.md](tools/health/get_health_data.md) | `get_health_data` | base, standard, data_view, scene:new_sleep_data |
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [get-health-data.md](tool-descriptions/tool-description-get-health-data.md) | 始终 | 工具能力、14 种指标、4 种时间范围、按话题选指标映射表、渐进式查询策略、空数据降级 |
+| [get-health-data-do-not-call-scenarios.md](tool-descriptions/tool-description-get-health-data-do-not-call-scenarios.md) | 标准对话 | 不该调用的场景：情绪表达先回应、科普用模型知识、已拉数据不重复 |
+| [get-health-data-interpret-anomalies.md](tool-descriptions/tool-description-get-health-data-interpret-anomalies.md) | 标准对话 | 异常值处理：先查数据源/设备→关联生活事件→声明局限性 |
 
-#### tools/memory/ — 记忆系统
+#### get_user_profile — 用户画像
 
-| 文件 | Model Tool | 描述 sections |
-|------|-----------|---------------|
-| [get_user_profile.md](tools/memory/get_user_profile.md) | `get_user_profile` | base, scene:feedback_submit, scene:push_click |
-| [get_strategy.md](tools/memory/get_strategy.md) | `get_strategy` | base, standard, scene:feedback_submit, scene:agent_insight, scene:new_sleep_data |
-| [save_memory.md](tools/memory/save_memory.md) | `save_memory` | base, standard, onboarding |
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [get-user-profile.md](tool-descriptions/tool-description-get-user-profile.md) | 始终 | 5 个 aspect 选择策略、速览够用时不调、新用户档案稀疏时多提问多 save_memory |
 
-#### tools/events/ — 事件记录
+#### get_strategy — 干预策略（拆 1 个独立使用域）
 
-| 文件 | Model Tool | 描述 sections |
-|------|-----------|---------------|
-| [record_event.md](tools/events/record_event.md) | `record_event` | base, standard |
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [get-strategy.md](tool-descriptions/tool-description-get-strategy.md) | 始终 | 6 个 aspect 选择策略、尚无方案时不凭空建议、红线冲突时说明原因 |
+| [get-strategy-mandatory-before-advice.md](tool-descriptions/tool-description-get-strategy-mandatory-before-advice.md) | 标准对话 | 硬性规则：给任何行为建议前 MUST 先调此工具加载 redlines + active |
 
-#### tools/analysis/ — 分析
+#### save_memory — 记忆写入
 
-| 文件 | Model Tool | 描述 sections |
-|------|-----------|---------------|
-| [analyze_food_sleep_impact.md](tools/analysis/analyze_food_sleep_impact.md) | `analyze_food_sleep_impact` | base, standard |
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [save-memory.md](tool-descriptions/tool-description-save-memory.md) | 始终 | 该存/不该存、7 个 category、格式要求、environment 用于数据质量溯源、静默操作 |
 
-#### tools/cards/ — 卡片
+#### render_analysis_card — 分析卡片
 
-| 文件 | Model Tool | 描述 sections |
-|------|-----------|---------------|
-| [suggest_action_card.md](tools/cards/suggest_action_card.md) | `suggest_action_card` | base, standard |
-| [render_health_chart.md](tools/cards/render_health_chart.md) | `render_health_chart` | base, standard, data_view, scene:new_sleep_data |
-| [suggest_sleep_adjust.md](tools/cards/suggest_sleep_adjust.md) | `suggest_sleep_adjust` | base, scene:push_click |
-| [suggest_high_energy_window.md](tools/cards/suggest_high_energy_window.md) | `suggest_high_energy_window` | base |
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [render-analysis-card.md](tool-descriptions/tool-description-render-analysis-card.md) | 始终 | 9 种卡片按话题选择、卡片展示数据/文字负责解读、summary 带参考系、关联对比最多 3 张 |
 
-#### tools/ui/ — UI 交互
+#### suggest_replies — 快捷回复
 
-| 文件 | Model Tool | 描述 sections |
-|------|-----------|---------------|
-| [show_status.md](tools/ui/show_status.md) | `show_status` | base |
-| [suggest_replies.md](tools/ui/suggest_replies.md) | `suggest_replies` | base, crisis, onboarding |
-| [set_reminder.md](tools/ui/set_reminder.md) | `set_reminder` | base, standard |
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [suggest-replies.md](tool-descriptions/tool-description-suggest-replies.md) | 始终 | 提问/引导时用、倾诉时不用、连续两轮不用、含退出选项 |
+
+#### send_feedback_card — 反馈卡
+
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [send-feedback-card.md](tool-descriptions/tool-description-send-feedback-card.md) | 标准对话 | 仅在有执行时间点的建议后发送、check_question 关联具体行为、次日早晨回收、2+ 张未回收不新增 |
+
+#### set_reminder — 定时提醒
+
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [set-reminder.md](tool-descriptions/tool-description-set-reminder.md) | 标准对话 | 用户确认后才设、时间合理性、行动导向文案、daily 需确认 |
+
+#### show_status — 进度提示
+
+| 文件 | 注入时机 | 内容 |
+|------|---------|------|
+| [show-status.md](tool-descriptions/tool-description-show-status.md) | 始终 | 耗时操作前调用、自然语言文案、不暴露工具名 |
 
 ### sub-agents/ — 子 Agent 提示词
 
@@ -191,14 +195,14 @@
 | 维度 | Claude Code | 精力管家 |
 |------|------------|---------|
 | System Prompt | ~3,200 tk（66+ 文件拼接） | ~1,200 tk（4 固定片段 + 6 原子原则 + 5 行为规则 + 动态场景）|
-| 工具定义 | ~11,600 tk（18+ 内置工具，含 example 块） | ~2,000 tk（13 个 Model-Facing 工具，description 按场景拼接注入）|
+| 工具定义 | ~11,600 tk（18+ 内置工具，含 example 块） | ~1,200 tk（8 个 Model-Facing 工具 + 2 通用规则，复杂工具拆独立使用域按场景注入）|
 | 占上下文比例 | ~7.4%（of 200K） | ~1.6%（of 200K）|
 | 子 Agent | 4 类（Explore/Plan/Worker/Guide） | 2 个（记忆提炼 + 对话摘要）|
 | System Reminders | 40+ 种运行时注入 | 7 种系统提醒 + 4 种场景指令 |
 | 行为规则 | "Doing Tasks" 原子规则 | 5 条 doing-tasks 原子规则 |
 | 上下文压缩 | 有（对话摘要 + 清理） | 有（conversation-summarizer 子 agent）|
 | ALL-CAPS 标记 | NEVER/ALWAYS/MUST/IMPORTANT | 全面覆盖 |
-| 工具示例 | `<example>` + `<reasoning>` 块 | 关键工具含 `<example>` + `<reasoning>` 块（在 standard section 中）|
+| 工具示例 | `<example>` + `<reasoning>` 块 | 待补充（细化阶段逐步添加）|
 
 精力管家更轻量，因为：
 1. C 端短对话场景（1-4 轮），不是长编程 session
