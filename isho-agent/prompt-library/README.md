@@ -18,7 +18,7 @@
 │  scenes/*        场景指令（按事件类型动态注入）      │
 └──────────────────────────────────────────────┘
 ┌─ tools（~1,500 tk）──────────────────────────┐
-│  13 个 Model-Facing 工具定义（JSON Schema）     │
+│  13 个 Model-Facing 工具描述（按场景拼接注入）    │
 │  orchestrator 路由到 18+ 个 Server-Side RPC    │
 └──────────────────────────────────────────────┘
 ┌─ messages ───────────────────────────────────┐
@@ -101,52 +101,74 @@
 
 用户主动发消息时不注入场景指令。
 
-### tools/ — Model-Facing 工具定义
+### tools/ — Model-Facing 工具描述
 
-注入 API 的 `tools` 字段。JSON Schema 格式，`description` 是写给模型看的使用手册。
+每个 `.md` 文件只写 description（写给模型看的使用手册），不写调用接口（参数 schema 等由研发定义）。
+
+每个工具的 description 按场景拆分为多个 section，orchestrator 在运行时按当前场景拼接注入：
+- **`## base`** — 始终随工具定义注入的核心描述
+- **`## standard`** — 标准对话模式下的完整使用指南（含 example）
+- **`## scene:xxx`** — 特定触发场景的补充描述
+- **`## data_view`** / **`## onboarding`** / **`## crisis`** — 特殊技能模式下的替代描述
+
+#### Description 注入场景及触发条件
+
+| 场景 key | 触发条件 | 说明 |
+|----------|---------|------|
+| `base` | 始终注入 | 工具的核心功能说明，任何场景都需要 |
+| `standard` | 默认对话模式（无特殊技能激活） | 完整的使用时机、规则、示例 |
+| `data_view` | 用户进入"数据查看"专用技能 | 精简描述，聚焦数据展示 |
+| `onboarding` | 新用户首次对话，激活"引导"技能 | 聚焦初始画像捕获 |
+| `crisis` | 触发安全/危机支持模式 | 仅保留情绪支持相关指引 |
+| `scene:feedback_submit` | 用户提交反馈卡（做到了/没做到） | 补充反馈卡处理的 aspect 选择指引 |
+| `scene:push_click` | 用户点击推送提醒进入对话 | 补充推送上下文的处理指引 |
+| `scene:new_sleep_data` | 新睡眠数据到达 + 用户今天首次打开 | 补充新数据关联分析指引 |
+| `scene:agent_insight` | 子 agent 标记了待推送洞察 | 补充洞察与策略一致性校验指引 |
+
+> 拼接规则：`base` + 技能模式描述（`standard` / `data_view` / `onboarding` / `crisis`）+ 0~N 个 `scene:xxx`。一个工具在某场景下没有对应 section 则不追加。
 
 #### tools/health/ — 健康数据
 
-| 文件 | Model Tool | 背后的 Server Functions |
-|------|-----------|----------------------|
-| [get_health_data.json](tools/health/get_health_data.json) | `get_health_data` | `get_sleep_data`, `get_hrv_data`, `get_heart_rate`, `get_blood_oxygen`, `get_activity`, `get_workouts`, `get_daily_health_metrics` |
+| 文件 | Model Tool | 描述 sections |
+|------|-----------|---------------|
+| [get_health_data.md](tools/health/get_health_data.md) | `get_health_data` | base, standard, data_view, scene:new_sleep_data |
 
 #### tools/memory/ — 记忆系统
 
-| 文件 | Model Tool | 说明 |
-|------|-----------|------|
-| [get_user_profile.json](tools/memory/get_user_profile.json) | `get_user_profile` | 按需拉取用户画像 sections |
-| [get_strategy.json](tools/memory/get_strategy.json) | `get_strategy` | 按需拉取干预策略 sections |
-| [save_memory.json](tools/memory/save_memory.json) | `save_memory` | 写入 mem0 事实层 |
+| 文件 | Model Tool | 描述 sections |
+|------|-----------|---------------|
+| [get_user_profile.md](tools/memory/get_user_profile.md) | `get_user_profile` | base, scene:feedback_submit, scene:push_click |
+| [get_strategy.md](tools/memory/get_strategy.md) | `get_strategy` | base, standard, scene:feedback_submit, scene:agent_insight, scene:new_sleep_data |
+| [save_memory.md](tools/memory/save_memory.md) | `save_memory` | base, standard, onboarding |
 
 #### tools/events/ — 事件记录
 
-| 文件 | Model Tool | 说明 |
-|------|-----------|------|
-| [record_event.json](tools/events/record_event.json) | `record_event` | 记录行为事件（饮食/运动/小睡/吸烟）|
+| 文件 | Model Tool | 描述 sections |
+|------|-----------|---------------|
+| [record_event.md](tools/events/record_event.md) | `record_event` | base, standard |
 
 #### tools/analysis/ — 分析
 
-| 文件 | Model Tool | 说明 |
-|------|-----------|------|
-| [analyze_food_sleep_impact.json](tools/analysis/analyze_food_sleep_impact.json) | `analyze_food_sleep_impact` | 食物/饮料对睡眠的影响分析 |
+| 文件 | Model Tool | 描述 sections |
+|------|-----------|---------------|
+| [analyze_food_sleep_impact.md](tools/analysis/analyze_food_sleep_impact.md) | `analyze_food_sleep_impact` | base, standard |
 
 #### tools/cards/ — 卡片
 
-| 文件 | Model Tool | 说明 |
-|------|-----------|------|
-| [suggest_action_card.json](tools/cards/suggest_action_card.json) | `suggest_action_card` | 行动决策卡片（多选按钮）|
-| [render_health_chart.json](tools/cards/render_health_chart.json) | `render_health_chart` | 健康图表（标准/内联/一致性）|
-| [suggest_sleep_adjust.json](tools/cards/suggest_sleep_adjust.json) | `suggest_sleep_adjust` | 入睡时间调整滑块卡 |
-| [suggest_high_energy_window.json](tools/cards/suggest_high_energy_window.json) | `suggest_high_energy_window` | 高精力时段卡 |
+| 文件 | Model Tool | 描述 sections |
+|------|-----------|---------------|
+| [suggest_action_card.md](tools/cards/suggest_action_card.md) | `suggest_action_card` | base, standard |
+| [render_health_chart.md](tools/cards/render_health_chart.md) | `render_health_chart` | base, standard, data_view, scene:new_sleep_data |
+| [suggest_sleep_adjust.md](tools/cards/suggest_sleep_adjust.md) | `suggest_sleep_adjust` | base, scene:push_click |
+| [suggest_high_energy_window.md](tools/cards/suggest_high_energy_window.md) | `suggest_high_energy_window` | base |
 
 #### tools/ui/ — UI 交互
 
-| 文件 | Model Tool | 说明 |
-|------|-----------|------|
-| [show_status.json](tools/ui/show_status.json) | `show_status` | 进度提示（查数据前调用）|
-| [suggest_replies.json](tools/ui/suggest_replies.json) | `suggest_replies` | 快捷回复按钮 |
-| [set_reminder.json](tools/ui/set_reminder.json) | `set_reminder` | 定时提醒推送 |
+| 文件 | Model Tool | 描述 sections |
+|------|-----------|---------------|
+| [show_status.md](tools/ui/show_status.md) | `show_status` | base |
+| [suggest_replies.md](tools/ui/suggest_replies.md) | `suggest_replies` | base, crisis, onboarding |
+| [set_reminder.md](tools/ui/set_reminder.md) | `set_reminder` | base, standard |
 
 ### sub-agents/ — 子 Agent 提示词
 
@@ -169,14 +191,14 @@
 | 维度 | Claude Code | 精力管家 |
 |------|------------|---------|
 | System Prompt | ~3,200 tk（66+ 文件拼接） | ~1,200 tk（4 固定片段 + 6 原子原则 + 5 行为规则 + 动态场景）|
-| 工具定义 | ~11,600 tk（18+ 内置工具，含 example 块） | ~2,000 tk（13 个 Model-Facing 工具，含 example + reasoning 块）|
+| 工具定义 | ~11,600 tk（18+ 内置工具，含 example 块） | ~2,000 tk（13 个 Model-Facing 工具，description 按场景拼接注入）|
 | 占上下文比例 | ~7.4%（of 200K） | ~1.6%（of 200K）|
 | 子 Agent | 4 类（Explore/Plan/Worker/Guide） | 2 个（记忆提炼 + 对话摘要）|
 | System Reminders | 40+ 种运行时注入 | 7 种系统提醒 + 4 种场景指令 |
 | 行为规则 | "Doing Tasks" 原子规则 | 5 条 doing-tasks 原子规则 |
 | 上下文压缩 | 有（对话摘要 + 清理） | 有（conversation-summarizer 子 agent）|
 | ALL-CAPS 标记 | NEVER/ALWAYS/MUST/IMPORTANT | 全面覆盖 |
-| 工具示例 | `<example>` + `<reasoning>` 块 | 关键工具含 `<example>` + `<reasoning>` 块 |
+| 工具示例 | `<example>` + `<reasoning>` 块 | 关键工具含 `<example>` + `<reasoning>` 块（在 standard section 中）|
 
 精力管家更轻量，因为：
 1. C 端短对话场景（1-4 轮），不是长编程 session
