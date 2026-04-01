@@ -10,11 +10,11 @@
     ↓
 状态机判定（INVOKE / SILENT）
     ↓
-┌─ system prompt（~910 tk）─────────────────────┐
+┌─ system prompt（~600 tk）─────────────────────┐
 │  01-identity     身份 + 原则 + 认知纪律 + 安全边界 │
 │  02-user-summary 用户速览（动态）                 │
-│  03-style        输出样式 + 工具配合 + 禁止模式    │
-│  04-tool-usage   工具调用总则 + 场景映射           │
+│  04-tool-usage   场景→工具映射                    │
+│  doing-tasks/*   行为规则（原子文件按需加载）        │
 │  scenes/*        场景指令（按事件类型动态注入）      │
 └──────────────────────────────────────────────┘
 ┌─ tool-descriptions（~1,200 tk）───────────────┐
@@ -35,10 +35,9 @@
 
 | 文件 | 内容 | token | 加载方式 |
 |------|------|-------|---------|
-| [01-identity.md](system/01-identity.md) | 身份声明、核心原则、认知纪律、安全边界 | ~250 | 固定 |
+| [01-identity.md](system/01-identity.md) | 身份声明、核心原则、认知纪律、安全边界 | ~120 | 固定 |
 | [02-user-summary-template.md](system/02-user-summary-template.md) | 用户速览模板（含新用户空模板） | ~80 | 按用户动态 |
-| [03-style.md](system/03-style.md) | 说话方式、工具配合规则、禁止模式 | ~200 | 固定 |
-| [04-tool-usage-guidelines.md](system/04-tool-usage-guidelines.md) | 工具调用总则、错误处理、场景→工具映射 | ~300 | 固定 |
+| [04-tool-usage-guidelines.md](system/04-tool-usage-guidelines.md) | 场景→工具映射 | ~200 | 固定 |
 
 ### system/principles/ — 原则原子文件
 
@@ -194,7 +193,7 @@
 
 | 维度 | Claude Code | 精力管家 |
 |------|------------|---------|
-| System Prompt | ~3,200 tk（66+ 文件拼接） | ~1,200 tk（4 固定片段 + 6 原子原则 + 5 行为规则 + 动态场景）|
+| System Prompt | ~3,200 tk（66+ 文件拼接） | ~600 tk（身份层 + 用户速览 + 场景映射 + 行为规则按需加载 + 动态场景）|
 | 工具定义 | ~11,600 tk（18+ 内置工具，含 example 块） | ~1,200 tk（8 个 Model-Facing 工具 + 2 通用规则，复杂工具拆独立使用域按场景注入）|
 | 占上下文比例 | ~7.4%（of 200K） | ~1.6%（of 200K）|
 | 子 Agent | 4 类（Explore/Plan/Worker/Guide） | 2 个（记忆提炼 + 对话摘要）|
