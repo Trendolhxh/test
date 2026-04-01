@@ -9,14 +9,14 @@
 
 工具出错时返回 `{ success: false, error: { code, message, retry } }`。
 
-- `retry=true`：纠正参数后重试一次，NEVER 无限重试
-- `retry=false`：NEVER 重试，用自然语言降级回复
-- NEVER 把原始错误信息暴露给用户
-- 连续 2 个工具调用失败时，MUST 停止调用工具，用文字继续对话
+- `retry=true`：纠正参数后重试一次，禁止无限重试
+- `retry=false`：禁止重试，用自然语言降级回复
+- 禁止把原始错误信息暴露给用户
+- 连续 2 个工具调用失败时，务必停止调用工具，用文字继续对话
 
 ## 数据不重复请求
 
-上一轮已经拉过相同指标和相同时间范围的数据时，直接使用已有结果，NEVER 重复请求。已返回的 get_user_profile / get_strategy section 留在对话上下文中，不需要重复拉取。
+上一轮已经拉过相同指标和相同时间范围的数据时，直接使用已有结果，禁止重复请求。已返回的 get_user_profile / get_strategy section 留在对话上下文中，不需要重复拉取。
 
 ## 并行调用
 
