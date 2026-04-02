@@ -1,13 +1,13 @@
 ---
 name: sleep-profile-complete
 description: >
-  分析用户画像和干预策略的信息缺口，生成本轮追问方案。
+  分析用户画像和干预策略的信息缺口，生成问题询问用户。
   当画像或策略存在 [待确认] 字段或信息缺口时触发。档案已基本完整时不应调用。
 allowed-tools: suggest_replies
 version: 1.0.0
 ---
 
-# 睡眠档案完善
+# 询问用户生活细节，完善用户画像与干预策略
 
 ## Context
 
