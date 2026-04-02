@@ -1,14 +1,14 @@
 ---
 name: sleep-profile-init
 description: >
-  提取用户身体数据，更新用户画像 md。
-  当画像不存在、或画像最近一次更新超过 30 分钟且有新数据需要反映时触发。
+  提取用户数据，更新用户画像。
+  当画像不存在、或画像最近一次更新超过 30 分钟且有新数据需要反映时优先触发。
   画像最近更新＜30 分钟时不应调用。
 allowed-tools: show_status, get_health_data, get_user_profile, save_memory
 version: 1.0.0
 ---
 
-# 睡眠画像初始化
+# 更新用户画像
 
 ## Context
 
