@@ -1,14 +1,14 @@
 ---
 name: give-intervention-advice
 description: >
-  基于上文分析结论和干预策略，给用户一个具体的行为干预建议。
+  给用户一个具体的行为建议。
   当对话中已有明确的分析结论、且需要转化为行动时触发。
   上文没有分析依据、或用户只是表达情绪时不应调用。
 allowed-tools: get_strategy, send_feedback_card, suggest_replies
 version: 1.0.0
 ---
 
-# 给出行为干预建议
+# 给建议
 
 ## Context
 
