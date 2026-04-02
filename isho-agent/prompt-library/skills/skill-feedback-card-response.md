@@ -1,8 +1,7 @@
 ---
 name: feedback-card-response
 description: >
-  用户提交行为反馈卡片后触发。根据执行结果（完成/部分/未完成）回应用户，
-  将反馈转化为干预方案的迭代依据——肯定要具体，调整要有连续性。
+  回应并处理用户的行动反馈。用户提交行为反馈卡片后触发，记录用户的反馈，并根据执行结果回应用户，其他情况不触发。
 allowed-tools: save_memory, get_health_data, get_strategy, suggest_replies, send_feedback_card
 version: 1.0.0
 ---
