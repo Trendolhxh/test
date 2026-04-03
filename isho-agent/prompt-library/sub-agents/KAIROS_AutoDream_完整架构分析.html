@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAIROS & AutoDream 完整架构分析</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js"></script>
+<style>
+  :root { --primary: #1B3A5C; --secondary: #2E5D8A; --accent: #3A7BBF; --bg: #f8fafb; --card: #ffffff; --border: #e2e8f0; --text: #1a202c; --muted: #718096; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px 30px; }
+
+  /* Cover */
+  .cover { text-align: center; padding: 60px 20px 40px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%); color: white; margin-bottom: 40px; border-radius: 12px; }
+  .cover h1 { font-size: 2.4em; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .cover .subtitle { font-size: 1.15em; opacity: 0.9; margin-bottom: 30px; }
+  .cover .meta { font-size: 0.9em; opacity: 0.7; }
+
+  /* Sections */
+  h2 { font-size: 1.6em; color: var(--primary); margin: 50px 0 20px; padding-bottom: 8px; border-bottom: 3px solid var(--accent); }
+  h3 { font-size: 1.25em; color: var(--secondary); margin: 30px 0 14px; }
+  h4 { font-size: 1.05em; color: var(--accent); margin: 20px 0 10px; }
+  p { margin-bottom: 14px; }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 18px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .card.highlight { border-left: 4px solid var(--accent); }
+  .card.warn { border-left: 4px solid #e53e3e; }
+  .card.success { border-left: 4px solid #38a169; }
+  .card-title { font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 1.05em; }
+
+  /* Prompt blocks */
+  .prompt-block { background: #1a1a2e; color: #e2e8f0; border-radius: 10px; padding: 24px; margin: 18px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.88em; line-height: 1.8; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+  .prompt-block .comment { color: #718096; }
+  .prompt-block .keyword { color: #63b3ed; font-weight: 600; }
+  .prompt-block .highlight-text { color: #fbd38d; }
+  .prompt-block .phase { color: #68d391; font-weight: 700; }
+  .prompt-block .rule { color: #fc8181; }
+
+  /* Lists */
+  ul, ol { margin: 10px 0 14px 24px; }
+  li { margin-bottom: 6px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.95em; }
+  th { background: var(--primary); color: white; padding: 10px 14px; text-align: left; font-weight: 600; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  tr:nth-child(even) { background: #f7fafc; }
+
+  /* Mermaid */
+  .mermaid-wrapper { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 30px 20px; margin: 24px 0; overflow-x: auto; }
+  .mermaid-wrapper .caption { text-align: center; color: var(--muted); font-size: 0.9em; margin-top: 16px; font-style: italic; }
+  .mermaid { display: flex; justify-content: center; }
+
+  /* Badge */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; margin-right: 6px; }
+  .badge-red { background: #fed7d7; color: #c53030; }
+  .badge-green { background: #c6f6d5; color: #276749; }
+  .badge-blue { background: #bee3f8; color: #2b6cb0; }
+  .badge-yellow { background: #fefcbf; color: #975a16; }
+
+  /* Insight boxes */
+  .insight { background: #ebf8ff; border-left: 4px solid var(--accent); padding: 16px 20px; margin: 18px 0; border-radius: 0 8px 8px 0; }
+  .insight strong { color: var(--primary); }
+
+  /* TOC */
+  .toc { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 24px 30px; margin: 20px 0; }
+  .toc h3 { margin-top: 0; color: var(--primary); }
+  .toc ol { margin-left: 20px; }
+  .toc li { margin-bottom: 4px; }
+  .toc a { color: var(--secondary); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  @media print { .mermaid-wrapper { break-inside: avoid; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="cover">
+  <h1>KAIROS & AutoDream 完整架构分析</h1>
+  <div class="subtitle">Claude Code 泄露源码中的后台守护系统与记忆整合引擎深度拆解</div>
+  <div class="meta">数据来源：Claude Code v2.1.88 npm source map 泄露 (2026.03.31) | 多方分析整理</div>
+</div>
+
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#overview">KAIROS 模块全景概览</a></li>
+    <li><a href="#architecture">KAIROS 系统架构与核心组件</a></li>
+    <li><a href="#kairos-flow">KAIROS 主循环流程（Mermaid 时序图）</a></li>
+    <li><a href="#autodream">AutoDream 记忆整合引擎</a></li>
+    <li><a href="#autodream-flow">AutoDream 四阶段流程（Mermaid 时序图）</a></li>
+    <li><a href="#memory-arch">四层记忆架构总览（Mermaid 架构图）</a></li>
+    <li><a href="#prompts">核心提示词拆解</a></li>
+    <li><a href="#design">产品设计启示</a></li>
+  </ol>
+</div>
+
+<!-- ==================== 1. OVERVIEW ==================== -->
+<h2 id="overview">1. KAIROS 模块全景概览</h2>
+
+<p>KAIROS 这个名字来自古希腊语 καιρός，意为"恰当的时机"。在泄露的 Claude Code 源码中，KAIROS 是一个被提及超过 150 次的功能标志，代表着从"被动响应式 AI 工具"到"始终在线的自主守护进程"的范式转变。</p>
+
+<div class="card highlight">
+  <div class="card-title">KAIROS 的核心定位</div>
+  <p>KAIROS 不是一个简单的后台任务。它是一个<strong>持续运行的自主 Agent</strong>，能够：</p>
+  <ul>
+    <li>在用户不操作时持续观察工作环境</li>
+    <li>维护每日追加写入的观察日志</li>
+    <li>通过 <code>&lt;tick&gt;</code> 心跳机制定期唤醒并决定是否主动行动</li>
+    <li>在用户空闲时执行 AutoDream 记忆整合</li>
+    <li>受 15 秒阻塞预算约束，绝不打断用户工作流</li>
+  </ul>
+</div>
+
+<table>
+  <tr><th>维度</th><th>详情</th></tr>
+  <tr><td>功能标志</td><td><span class="badge badge-red">KAIROS</span> 编译时特性门控，外部版本中不存在</td></tr>
+  <tr><td>代码位置</td><td><code>assistant/</code> 目录，含 KAIROS 守护进程核心逻辑</td></tr>
+  <tr><td>关联模块</td><td><code>services/autoDream/</code> 记忆整合引擎</td></tr>
+  <tr><td>关联标志</td><td><span class="badge badge-blue">PROACTIVE</span> 主动行为模式</td></tr>
+  <tr><td>输出模式</td><td><span class="badge badge-green">Brief</span> 极简响应模式，避免刷屏终端</td></tr>
+  <tr><td>发布状态</td><td>完整构建但未发布，在编译时被 flag 屏蔽</td></tr>
+</table>
+
+<!-- ==================== 2. ARCHITECTURE ==================== -->
+<h2 id="architecture">2. KAIROS 系统架构与核心组件</h2>
+
+<h3>2.1 Tick 心跳机制</h3>
+<p>KAIROS 的核心驱动力是 <code>&lt;tick&gt;</code> 心跳提示。系统定期向 Agent 发送包含用户当前本地时间的 tick 消息，Agent 收到后决定是否需要采取行动。</p>
+
+<div class="card">
+  <div class="card-title">Tick 消息的设计要点</div>
+  <ul>
+    <li><strong>含义：</strong>每个 tick 等于 "你醒着呢，现在做什么？"</li>
+    <li><strong>时间信息：</strong>tick 中的时间是用户本地时间，用于判断时段（工作时间 vs 深夜）</li>
+    <li><strong>时区注意：</strong>外部工具（Slack、GitHub 等）的时间戳可能在不同时区</li>
+    <li><strong>行为选择：</strong>Agent 可以选择主动行动或保持安静</li>
+    <li><strong>成本意识：</strong>每次唤醒都消耗一次 API 调用</li>
+  </ul>
+</div>
+
+<h3>2.2 Sleep 工具与节奏控制</h3>
+<p>KAIROS 通过 Sleep 工具控制两次行动之间的等待时间：等待慢进程时睡久一点，主动迭代时睡短一点。关键约束是 prompt cache 在 5 分钟无活动后过期——需要在 API 调用成本和缓存命中率之间找平衡。</p>
+
+<h3>2.3 15 秒阻塞预算</h3>
+<div class="card warn">
+  <div class="card-title">阻塞预算：不打断用户的硬约束</div>
+  <p>任何会阻塞用户工作流超过 15 秒的主动行为都会被延迟执行。这是"有用但不烦人"的设计哲学的工程化实现。相当于一个安静的同事在背后默默工作，只在合适时机轻声提醒。</p>
+</div>
+
+<h3>2.4 Brief 输出模式</h3>
+<p>当 KAIROS 活跃时，会启用 Brief 输出模式——极度简洁的响应，专为持续运行的助手设计，避免在终端中产生刷屏式输出。</p>
+
+<h3>2.5 Daily Log 日志系统</h3>
+<p>KAIROS 维护追加写入（append-only）的每日日志文件，全天记录观察、决策和行动。这些日志文件随后成为 AutoDream 记忆整合的原始素材。</p>
+
+<!-- ==================== 3. KAIROS FLOW ==================== -->
+<h2 id="kairos-flow">3. KAIROS 主循环流程</h2>
+
+<div class="mermaid-wrapper">
+<pre class="mermaid">
+sequenceDiagram
+    participant System as 系统调度器
+    participant KAIROS as KAIROS 守护进程
+    participant LLM as LLM (Claude)
+    participant Tools as 工具系统
+    participant Log as Daily Log
+    participant User as 用户终端
+    participant Dream as AutoDream 引擎
+
+    Note over System,Dream: KAIROS 启动阶段
+    System->>KAIROS: 启动守护进程 (KAIROS flag = true)
+    KAIROS->>KAIROS: 初始化 Brief 输出模式
+    KAIROS->>Log: 创建/打开今日日志文件 (append-only)
+
+    Note over System,Dream: Tick 心跳循环
+    loop 定期心跳
+        System->>KAIROS: &lt;tick time="用户本地时间"&gt;
+        KAIROS->>LLM: 转发 tick + 当前上下文
+
+        alt LLM 判断：需要行动
+            LLM->>KAIROS: 返回行动计划
+
+            alt 预计耗时 ≤ 15秒
+                KAIROS->>Tools: 执行行动 (读文件/检查状态/...)
+                Tools-->>KAIROS: 返回结果
+                KAIROS->>Log: 记录观察和行动
+                KAIROS->>User: Brief 模式输出 (极简)
+            else 预计耗时 > 15秒
+                KAIROS->>KAIROS: 延迟执行 (阻塞预算超限)
+                KAIROS->>Log: 记录 "已延迟: [行动描述]"
+            end
+
+        else LLM 判断：保持安静
+            KAIROS->>Log: 记录 "tick 已收到, 无需行动"
+        end
+
+        KAIROS->>KAIROS: Sleep(动态时长)
+        Note right of KAIROS: 平衡 API 成本<br/>与 prompt cache<br/>(5分钟过期)
+    end
+
+    Note over System,Dream: 空闲检测 → 触发 AutoDream
+    KAIROS->>KAIROS: 检测用户空闲
+    KAIROS->>Dream: 检查三重门控
+
+    alt 三重门控全部通过
+        Dream->>Dream: 获取整合锁 (lock)
+        Dream->>Dream: 执行四阶段记忆整合
+        Dream-->>KAIROS: 整合完成
+        KAIROS->>Log: 记录 "Dream 完成"
+    else 门控未通过
+        Dream-->>KAIROS: 跳过本次整合
+    end
+</pre>
+<div class="caption">图 1：KAIROS 守护进程主循环时序图 —— Tick 心跳驱动 + 阻塞预算约束 + AutoDream 触发</div>
+</div>
+
+<!-- ==================== 4. AUTODREAM ==================== -->
+<h2 id="autodream">4. AutoDream 记忆整合引擎</h2>
+
+<h3>4.1 设计灵感：模拟人类 REM 睡眠</h3>
+<p>AutoDream 的命名是刻意的类比：就像人类大脑在 REM 睡眠期间将短期记忆整合为长期存储一样，AutoDream 在用户空闲时对 Agent 的记忆文件执行"反思性整理"。这不是简单的数据清理，而是一个 <strong>知识蒸馏</strong> 过程。</p>
+
+<h3>4.2 三重门控触发机制</h3>
+<div class="card success">
+  <div class="card-title">三重门控：防止过度整合和不足整合</div>
+  <table>
+    <tr><th>门控</th><th>条件</th><th>设计意图</th></tr>
+    <tr><td><span class="badge badge-blue">时间门</span></td><td>距上次 Dream ≥ 24 小时</td><td>避免频繁整合浪费资源</td></tr>
+    <tr><td><span class="badge badge-green">会话门</span></td><td>距上次 Dream ≥ 5 个会话</td><td>确保有足够新信息值得整合</td></tr>
+    <tr><td><span class="badge badge-red">锁门</span></td><td>获取整合锁 (防并发)</td><td>防止多个 Dream 进程同时运行</td></tr>
+  </table>
+  <p style="margin-top:12px"><strong>三个条件必须全部满足。</strong>例如：一个持续两天的长会话不会触发（会话数不够）；两小时内跑了 10 个快会话也不会触发（时间不够）。</p>
+</div>
+
+<h3>4.3 执行方式：Fork 子 Agent</h3>
+<p>AutoDream 作为一个 <strong>Fork 子 Agent</strong> 运行——创建父 Agent 上下文的完整副本后在独立进程中执行。这样做有两个关键好处：</p>
+<ul>
+  <li><strong>不污染主循环：</strong>记忆整合的"思维链"不会干扰主 Agent 的工作</li>
+  <li><strong>命中 Prompt Cache：</strong>复制的上下文可以利用 API 的 prompt cache，降低成本</li>
+</ul>
+
+<h3>4.4 四阶段整合流程</h3>
+
+<div class="card">
+  <div class="card-title">Phase 1 — Orient（定向扫描）</div>
+  <ul>
+    <li><code>ls</code> 记忆目录，了解当前有哪些文件</li>
+    <li>读取 <code>MEMORY.md</code>（索引文件），理解当前索引结构</li>
+    <li>浏览现有专题文件（topic files），避免后续创建重复内容</li>
+    <li>如有近期日志文件，一并审阅</li>
+  </ul>
+</div>
+
+<div class="card">
+  <div class="card-title">Phase 2 — Gather Signal（收集信号）</div>
+  <ul>
+    <li>搜索近期会话记录（JSONL 格式的 transcript 文件）</li>
+    <li><strong>使用 grep 窄搜索</strong>，而非完整读取——降低 token 消耗</li>
+    <li>重点搜索的高价值模式：
+      <ul>
+        <li>用户纠正（说明之前的记忆有误）</li>
+        <li>明确的保存请求（"记住这个"）</li>
+        <li>反复出现的主题和模式</li>
+        <li>关键决策和偏好变更</li>
+      </ul>
+    </li>
+  </ul>
+</div>
+
+<div class="card">
+  <div class="card-title">Phase 3 — Consolidate（整合写入）</div>
+  <ul>
+    <li>将新发现<strong>合并到现有专题文件</strong>中，而非创建近似重复的新文件</li>
+    <li>将<strong>相对日期转为绝对日期</strong>（"昨天" → "2026-03-30"），确保时间推移后仍可理解</li>
+    <li><strong>删除被推翻的事实</strong>——如果今天的调查推翻了旧记忆，在源头修正</li>
+    <li>移除对不存在文件的引用</li>
+    <li>合并重叠条目，消除逻辑矛盾</li>
+    <li>将模糊见解转化为确定事实</li>
+  </ul>
+</div>
+
+<div class="card">
+  <div class="card-title">Phase 4 — Prune & Index（修剪索引）</div>
+  <ul>
+    <li>重建 <code>MEMORY.md</code> 为精简索引，<strong>严格控制在 200 行以内</strong></li>
+    <li>每个索引条目一行，约 150 字符：标题 + 一句 hook</li>
+    <li><strong>绝不将记忆内容直接写入索引</strong>——索引只存指针</li>
+    <li>移除指向过时记忆的指针</li>
+    <li>将冗长条目降级到专题文件中</li>
+    <li>添加指向新重要记忆的指针</li>
+    <li>解决索引中的矛盾</li>
+  </ul>
+</div>
+
+<div class="insight">
+  <strong>性能参考：</strong>在一个观测案例中，AutoDream 在不到 9 分钟内整合了 913 个会话的记忆。
+</div>
+
+<!-- ==================== 5. AUTODREAM FLOW ==================== -->
+<h2 id="autodream-flow">5. AutoDream 四阶段流程</h2>
+
+<div class="mermaid-wrapper">
+<pre class="mermaid">
+sequenceDiagram
+    participant KAIROS as KAIROS 守护进程
+    participant Gate as 三重门控
+    participant Dream as AutoDream (Fork子Agent)
+    participant FS as 文件系统
+    participant Memory as MEMORY.md 索引
+    participant Topics as 专题文件
+    participant Sessions as 会话记录 (JSONL)
+
+    Note over KAIROS,Sessions: 触发检测
+    KAIROS->>Gate: 检查是否应触发 Dream
+    Gate->>Gate: 检查时间门 (≥24h since last dream?)
+    Gate->>Gate: 检查会话门 (≥5 sessions since last dream?)
+    Gate->>Gate: 尝试获取整合锁
+
+    alt 三重门控全部通过
+        Gate-->>KAIROS: ✅ 允许执行
+        KAIROS->>Dream: Fork 子 Agent (复制父上下文)
+
+        Note over Dream,Sessions: Phase 1 — Orient 定向扫描
+        rect rgb(235, 248, 255)
+        Dream->>FS: ls 记忆目录
+        FS-->>Dream: 返回文件列表
+        Dream->>Memory: 读取 MEMORY.md
+        Memory-->>Dream: 返回当前索引内容
+        Dream->>Topics: 浏览现有专题文件
+        Topics-->>Dream: 返回各专题摘要
+        Dream->>Dream: 构建当前记忆地图
+        end
+
+        Note over Dream,Sessions: Phase 2 — Gather Signal 收集信号
+        rect rgb(198, 246, 213)
+        Dream->>Sessions: grep 搜索近期 transcript
+        Note right of Dream: 窄搜索策略:<br/>用户纠正<br/>明确保存请求<br/>反复出现主题<br/>关键决策
+        Sessions-->>Dream: 返回匹配片段
+        Dream->>Dream: 提取高价值信号
+        end
+
+        Note over Dream,Sessions: Phase 3 — Consolidate 整合写入
+        rect rgb(254, 252, 191)
+        Dream->>Dream: 合并重叠条目
+        Dream->>Dream: 相对日期 → 绝对日期
+        Dream->>Dream: 删除被推翻的事实
+        Dream->>Dream: 消除逻辑矛盾
+        Dream->>Dream: 移除对不存在文件的引用
+        Dream->>Topics: 更新/创建专题文件
+        Topics-->>Dream: 写入确认
+        end
+
+        Note over Dream,Sessions: Phase 4 — Prune & Index 修剪索引
+        rect rgb(254, 215, 215)
+        Dream->>Memory: 重建 MEMORY.md
+        Note right of Dream: 严格 ≤200 行<br/>每行 ~150字符<br/>只存指针不存内容
+        Dream->>Dream: 移除过时指针
+        Dream->>Dream: 降级冗长条目
+        Dream->>Dream: 添加新重要指针
+        Dream->>Dream: 解决索引矛盾
+        Memory-->>Dream: 索引重建完成
+        end
+
+        Dream->>Gate: 释放整合锁
+        Dream-->>KAIROS: 整合完成报告
+
+    else 任一门控未通过
+        Gate-->>KAIROS: ❌ 跳过本次整合
+        Note right of KAIROS: 等待下次 tick<br/>重新检查门控
+    end
+</pre>
+<div class="caption">图 2：AutoDream 四阶段记忆整合时序图 —— 三重门控触发 + Orient/Gather/Consolidate/Prune 完整流程</div>
+</div>
+
+<!-- ==================== 6. MEMORY ARCH ==================== -->
+<h2 id="memory-arch">6. 四层记忆架构总览</h2>
+
+<p>泄露的代码显示 Claude Code 已经构建了完整的四层记忆架构，AutoDream 是其中的最高层——负责整合所有其他层积累的知识：</p>
+
+<div class="mermaid-wrapper">
+<pre class="mermaid">
+graph TB
+    subgraph "四层记忆架构"
+        L1["📋 Layer 1: CLAUDE.md<br/>用户手写的指令<br/><i>每次会话开始时加载</i><br/><i>每次压缩都保留</i>"]
+        L2["📝 Layer 2: Auto Memory<br/>Claude 每次会话自动记录<br/><i>自动提取对话中的关键信息</i><br/><i>写入专题文件</i>"]
+        L3["💬 Layer 3: Session Memory<br/>会话连续性<br/><i>上下文压缩时保留关键信息</i><br/><i>5种压缩策略级联</i>"]
+        L4["🌙 Layer 4: Auto Dream<br/>周期性整合所有积累<br/><i>类似REM睡眠的记忆巩固</i><br/><i>三重门控触发</i>"]
+    end
+
+    subgraph "记忆存储结构"
+        MD["MEMORY.md<br/>轻量级索引 ≤200行<br/>每行~150字符<br/>只存指针"]
+        TF["专题文件 (Topic Files)<br/>详细项目知识<br/>按主题分文件存储<br/>按需加载"]
+        DL["Daily Logs<br/>KAIROS 追加写入<br/>观察/决策/行动<br/>Dream的原始素材"]
+        TR["Session Transcripts<br/>JSONL 会话记录<br/>grep窄搜索目标<br/>信号收集来源"]
+    end
+
+    subgraph "运行时加载策略"
+        Always["始终加载<br/>MEMORY.md + CLAUDE.md"]
+        OnDemand["按需加载<br/>专题文件"]
+        Search["搜索检索<br/>会话历史"]
+    end
+
+    L1 --> MD
+    L2 --> TF
+    L3 --> TR
+    L4 -->|"整合"| MD
+    L4 -->|"整合"| TF
+
+    MD --> Always
+    TF --> OnDemand
+    TR --> Search
+    DL -->|"Dream Gather"| L4
+
+    style L1 fill:#bee3f8,stroke:#2b6cb0
+    style L2 fill:#c6f6d5,stroke:#276749
+    style L3 fill:#fefcbf,stroke:#975a16
+    style L4 fill:#fed7d7,stroke:#c53030
+    style MD fill:#e2e8f0,stroke:#4a5568
+    style TF fill:#e2e8f0,stroke:#4a5568
+    style DL fill:#e2e8f0,stroke:#4a5568
+    style TR fill:#e2e8f0,stroke:#4a5568
+</pre>
+<div class="caption">图 3：Claude Code 四层记忆架构 + 存储结构 + 运行时加载策略</div>
+</div>
+
+<!-- ==================== 7. PROMPTS ==================== -->
+<h2 id="prompts">7. 核心提示词拆解</h2>
+
+<p>以下基于 Piebald-AI 和 Leonxlnx 整理的提示词仓库，以及多方分析报告中引用的关键片段。注意：这里展示的是提示词的结构化拆解和关键指令摘要，而非完整原文照搬。</p>
+
+<h3>7.1 AutoDream 记忆整合提示词</h3>
+<p>来源文件：<code>agent-prompt-dream-memory-consolidation.md</code></p>
+
+<div class="prompt-block">
+<span class="comment">// ===== 核心身份定义 =====</span>
+
+<span class="keyword">身份：</span>
+You are performing a <span class="highlight-text">dream</span> — a reflective pass over your memory files.
+Synthesize what you've learned recently into durable, well-organized
+memories so that future sessions can orient quickly.
+
+<span class="comment">// ===== 记忆格式规范 =====</span>
+
+<span class="keyword">格式规则：</span>
+Use the memory file format and type conventions from your system prompt's
+auto-memory section — it's the <span class="highlight-text">source of truth</span> for what to save,
+how to structure it, and what NOT to save.
+
+<span class="comment">// ===== 四阶段执行流程 =====</span>
+
+<span class="phase">Phase 1 — Orient:</span>
+- ls the memory directory to see what already exists
+- Read the INDEX_FILE (MEMORY.md) to understand the current index
+- Skim existing topic files so you <span class="highlight-text">improve them rather than
+  creating near-duplicates</span>
+
+<span class="phase">Phase 2 — Gather Recent Signal:</span>
+- Find new information worth persisting from:
+  · Daily logs and drifted memories
+  · Transcript search (JSONL session files)
+- <span class="rule">grep narrowly</span> — look for high-value patterns:
+  · User corrections (意味着旧记忆有误)
+  · Explicit save requests
+  · Recurring themes and important decisions
+
+<span class="phase">Phase 3 — Consolidate:</span>
+- Merge new signal into <span class="highlight-text">existing topic files</span> (不要创建近似重复)
+- Convert <span class="highlight-text">relative dates to absolute</span>
+  ("yesterday" → "2026-03-30") so they remain interpretable
+- <span class="rule">Delete contradicted facts</span> — if today's investigation
+  disproves an old memory, fix it at the source
+- Remove references to nonexistent files
+- Merge overlapping entries
+
+<span class="phase">Phase 4 — Prune & Index:</span>
+- Rebuild MEMORY.md as a lean index
+- <span class="rule">Stay under 200 lines</span>
+- Each entry: one line, ~150 characters, title + one-line hook
+- <span class="rule">Never write memory content directly into the index</span>
+  — index is pointers only
+- Remove stale pointers
+- Demote verbose entries to topic files
+- Add pointers to newly important memories
+- Resolve contradictions in the index
+</div>
+
+<h3>7.2 KAIROS 主动模式提示词</h3>
+<p>来源文件：<code>18_proactive_mode.md</code> (Leonxlnx 整理)</p>
+
+<div class="prompt-block">
+<span class="comment">// ===== 自主工作指令 =====</span>
+
+<span class="keyword">Autonomous Work:</span>
+You are running <span class="highlight-text">autonomously</span> and will receive &lt;tick&gt; prompts
+that keep you alive between turns — just treat them as
+<span class="highlight-text">"you're awake, what now?"</span>
+<span class="rule">Never echo or repeat tick content in your response.</span>
+
+<span class="comment">// ===== 节奏控制 =====</span>
+
+<span class="keyword">Pacing:</span>
+Use the <span class="highlight-text">Sleep tool</span> to control how long you wait between actions:
+- Sleep <span class="highlight-text">longer</span> when waiting for slow processes
+- Sleep <span class="highlight-text">shorter</span> when actively iterating
+- Each wake-up costs an API call
+- <span class="rule">Prompt cache expires after 5 minutes of inactivity</span>
+  — balance accordingly
+
+<span class="comment">// ===== 时间感知 =====</span>
+
+<span class="keyword">Time Awareness:</span>
+The time in each &lt;tick&gt; is the user's <span class="highlight-text">current local time</span>.
+Use it to judge the time of day since timestamps from external
+tools (Slack, GitHub, etc.) may be in a different timezone.
+
+<span class="comment">// ===== 阻塞预算 =====</span>
+
+<span class="keyword">Blocking Budget:</span>
+<span class="rule">15-second maximum</span> — any proactive action that would block
+the user's workflow for more than 15 seconds gets deferred.
+
+<span class="comment">// ===== 输出模式 =====</span>
+
+<span class="keyword">Output Mode:</span>
+<span class="highlight-text">Brief</span> — extremely concise responses designed for a persistent
+assistant that shouldn't flood the terminal.
+
+<span class="comment">// ===== 日志系统 =====</span>
+
+<span class="keyword">Logging:</span>
+Maintain <span class="highlight-text">append-only daily log files</span>.
+Write observations, decisions, and actions throughout the day.
+These logs serve as raw material for AutoDream consolidation.
+</div>
+
+<h3>7.3 提示词中的关键设计模式</h3>
+
+<table>
+  <tr><th>模式</th><th>提示词中的体现</th><th>设计意图</th></tr>
+  <tr><td>身份锚定</td><td>"You are performing a dream"</td><td>用隐喻定义 Agent 的行为框架和心智模型</td></tr>
+  <tr><td>权威引用</td><td>"auto-memory section is the source of truth"</td><td>建立提示词内部的层级权威，避免冲突</td></tr>
+  <tr><td>反模式指令</td><td>"Never write content directly into index"</td><td>用明确的禁止规则防止常见错误</td></tr>
+  <tr><td>具体化约束</td><td>"≤200 lines", "~150 chars", "15 seconds"</td><td>用精确数字代替模糊描述，减少 LLM 的解释空间</td></tr>
+  <tr><td>操作序列</td><td>四阶段编号流程</td><td>强制 LLM 按顺序执行，避免跳步</td></tr>
+  <tr><td>成本意识嵌入</td><td>"grep narrowly", "每次唤醒消耗 API 调用"</td><td>让 Agent 在提示词层面就意识到资源约束</td></tr>
+  <tr><td>时间转换规则</td><td>"relative → absolute dates"</td><td>针对 LLM 常见的时间概念弱点做预防</td></tr>
+  <tr><td>去重优先</td><td>"improve existing rather than creating near-duplicates"</td><td>控制记忆膨胀的核心约束</td></tr>
+</table>
+
+<!-- ==================== 8. DESIGN ==================== -->
+<h2 id="design">8. 产品设计启示</h2>
+
+<h3>8.1 KAIROS 模式的核心设计智慧</h3>
+
+<div class="card highlight">
+  <div class="card-title">① "有用但不烦人"的工程化</div>
+  <p>15 秒阻塞预算 + Brief 输出模式 + Sleep 工具节奏控制 = 一个不会打扰你但始终在工作的助手。这是对"主动 Agent"最大用户体验风险（打断工作流）的精确工程化解法。</p>
+</div>
+
+<div class="card highlight">
+  <div class="card-title">② 心跳驱动 vs 事件驱动</div>
+  <p>KAIROS 选择了 tick 心跳而非事件驱动。这意味着 Agent 是"定期醒来检查"而非"等待触发"。好处是 Agent 能主动发现问题，坏处是有持续成本。通过 Sleep 工具动态调节心跳间隔来平衡。</p>
+</div>
+
+<div class="card highlight">
+  <div class="card-title">③ 记忆整合 = 离线批处理</div>
+  <p>AutoDream 本质上是一个离线批处理 ETL 任务：Extract（从 JSONL 中 grep 信号）→ Transform（合并、去重、转日期、消矛盾）→ Load（写入专题文件 + 重建索引）。这个模式可以直接复用到任何需要长期记忆的 Agent 产品中。</p>
+</div>
+
+<div class="card highlight">
+  <div class="card-title">④ 三重门控：防止资源浪费的精确控制</div>
+  <p>时间门 + 会话门 + 锁门的三重门控设计非常优雅：用最少的逻辑防止了过度整合（浪费 API）和不足整合（记忆退化）。任何需要后台定时任务的 Agent 都应该考虑类似的多条件门控。</p>
+</div>
+
+<h3>8.2 可复用的设计 Checklist</h3>
+
+<table>
+  <tr><th>维度</th><th>检查项</th></tr>
+  <tr><td>后台守护</td><td>☐ 定义心跳机制（tick 间隔 + 动态调节）</td></tr>
+  <tr><td></td><td>☐ 设定阻塞预算（可打断用户的最大时长）</td></tr>
+  <tr><td></td><td>☐ 设计简洁输出模式（后台模式不应刷屏）</td></tr>
+  <tr><td></td><td>☐ 成本感知（prompt cache 过期 vs API 调用频率）</td></tr>
+  <tr><td>记忆整合</td><td>☐ 设计多条件触发门控（时间 + 使用量 + 锁）</td></tr>
+  <tr><td></td><td>☐ 用 Fork 子 Agent 隔离执行（不污染主循环）</td></tr>
+  <tr><td></td><td>☐ 分阶段执行（定向 → 收集 → 整合 → 修剪）</td></tr>
+  <tr><td></td><td>☐ 索引严格限制大小（200 行 / 只存指针）</td></tr>
+  <tr><td>提示词工程</td><td>☐ 用隐喻定义身份（"dream" 而非 "cleanup task"）</td></tr>
+  <tr><td></td><td>☐ 用精确数字约束行为（时长、行数、字符数）</td></tr>
+  <tr><td></td><td>☐ 明确列出反模式（"never write content into index"）</td></tr>
+  <tr><td></td><td>☐ 嵌入成本意识（"grep narrowly"、"每次唤醒有成本"）</td></tr>
+</table>
+
+<div style="margin-top:50px; padding-top:20px; border-top:2px solid var(--border); color:var(--muted); font-size:0.85em; text-align:center;">
+  <p>数据来源：Claude Code v2.1.88 npm source map 泄露的多方分析报告。本文仅供 Agent 产品设计参考。</p>
+  <p>提示词来源：Piebald-AI/claude-code-system-prompts · Leonxlnx/claude-code-system-prompts · Kuberwastaken/claude-code</p>
+</div>
+
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'base',
+  themeVariables: {
+    primaryColor: '#ebf8ff',
+    primaryTextColor: '#1a202c',
+    primaryBorderColor: '#2b6cb0',
+    lineColor: '#4a5568',
+    secondaryColor: '#c6f6d5',
+    tertiaryColor: '#fefcbf',
+    noteBkgColor: '#f7fafc',
+    noteTextColor: '#1a202c',
+    noteBorderColor: '#e2e8f0',
+    actorBkg: '#1B3A5C',
+    actorTextColor: '#ffffff',
+    actorBorder: '#1B3A5C',
+    signalColor: '#4a5568',
+    signalTextColor: '#1a202c',
+    activationBkgColor: '#ebf8ff',
+    activationBorderColor: '#2b6cb0'
+  },
+  sequence: {
+    diagramMarginX: 20,
+    diagramMarginY: 20,
+    actorMargin: 60,
+    width: 180,
+    height: 50,
+    boxMargin: 10,
+    boxTextMargin: 8,
+    noteMargin: 10,
+    messageMargin: 40,
+    mirrorActors: false,
+    useMaxWidth: true,
+    wrap: true,
+    wrapPadding: 15
+  },
+  flowchart: {
+    useMaxWidth: true,
+    htmlLabels: true,
+    curve: 'basis'
+  }
+});
+</script>
+
+</body>
+</html>
