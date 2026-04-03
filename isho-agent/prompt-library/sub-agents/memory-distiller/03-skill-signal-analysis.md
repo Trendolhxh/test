@@ -1,30 +1,30 @@
-# Skill: 信号提取（Turn 2）
-
-> 在 Turn 1 数据加载完毕后，Turn 2 激活此 skill。
-> 职责：从原始数据中识别哪些信息值得写入档案，以及写入哪个 section。
-> 不修改档案，只输出结构化信号列表。
-
+---
+name: memory-distiller/signal-analysis
+description: >
+  Turn 2 skill：从 Turn 1 加载的原始数据中识别哪些信息值得写入档案。
+  Turn 1 全部工具调用返回后激活。
+  只识别信号，不修改档案——输出结构化 JSON 或 NO_CHANGES。
+allowed-tools: none
+version: 1.0.0
 ---
 
-## 激活条件
+# 信号提取
 
-Turn 1 的 4 个工具调用全部返回后，agent 进入 Turn 2，执行信号提取。
+## Context
 
----
+Turn 1 已并行拉取新增记忆、健康数据、当前档案和干预策略。Turn 2 的任务是扫描这些原始数据，判断哪些信息值得写入档案、写入哪个 section，并输出结构化信号 JSON 交给 Turn 3 处理。
 
-## 输入上下文（Turn 1 工具返回）
+此 skill 不修改档案，只做识别和分类。如果没有值得写的信号，直接输出 `NO_CHANGES`，跳过 Turn 3。
 
-此 skill 可见：
+**可见上下文：**
 - 新增记忆 KV 列表（get_memories 返回）
 - 健康数据时间序列（get_health_data 返回）
 - 当前档案中的 `[summary]`、`[active]`、`[redlines]`、`[cognition]`、`[trends]`（用于判断新旧矛盾）
-- 完整档案的其余 sections（已在 Turn 1 加载，作为背景参考）
+- 完整档案的其余 sections（Turn 1 已加载，作为背景参考）
 
----
+## Instructions
 
-## 执行步骤
-
-### Step 1：记忆信号扫描
+### 1. 记忆信号扫描
 
 遍历新增记忆列表，按 category 和内容判断每条记忆的信号价值：
 
@@ -40,7 +40,7 @@ Turn 1 的 4 个工具调用全部返回后，agent 进入 Turn 2，执行信号
 - `target_sections`：影响哪些 section（可多个）
 - `raw_quote`：用户原话（P0 必填，其他尽量保留）
 
-### Step 2：健康数据趋势分析
+### 2. 健康数据趋势分析
 
 分析健康数据时间序列，识别以下模式：
 
@@ -54,12 +54,12 @@ Turn 1 的 4 个工具调用全部返回后，agent 进入 Turn 2，执行信号
 - 变化幅度 <5% 且无趋势方向
 - 数据缺失日（穿戴设备未佩戴）
 
-**需标注洞察（insight 候选）：**
-- 连续 ≥3 天指标恶化（非单日波动）→ 标记 `insight_candidate: true`
-- 干预后指标出现显著改善（有数据印证）→ 标记 `insight_candidate: true`
-- 用户画像发生重大变化（新增红线、作息模式根本性改变）→ 标记 `insight_candidate: true`
+**需标注洞察候选（insight_candidate: true）：**
+- 连续 ≥3 天指标恶化（非单日波动）
+- 干预后指标出现显著改善（有数据印证）
+- 用户画像发生重大变化（新增红线、作息模式根本性改变）
 
-### Step 3：矛盾检测
+### 3. 矛盾检测
 
 对比新记忆/新数据与现有档案内容，逐条检查：
 
@@ -75,16 +75,14 @@ Turn 1 的 4 个工具调用全部返回后，agent 进入 Turn 2，执行信号
    - 同时写入 [redlines]
 ```
 
-### Step 4：NO_CHANGES 判断
+### 4. NO_CHANGES 判断
 
-如果满足以下全部条件，直接输出 `NO_CHANGES`，跳过 Turn 3：
+满足以下全部条件时，直接输出 `NO_CHANGES`，跳过 Turn 3：
 - 新增记忆列表为空
-- 健康数据无趋势信号（无 P1 及以上信号）
+- 健康数据无 P1 及以上信号
 - 无矛盾需要处理
 
----
-
-## 输出格式
+## Output Format
 
 ### 有信号时：结构化 JSON
 
@@ -143,11 +141,9 @@ Turn 1 的 4 个工具调用全部返回后，agent 进入 Turn 2，执行信号
 NO_CHANGES
 ```
 
----
+## Guardrails
 
-## 禁止事项
-
-- 禁止在此 skill 中修改档案内容——只识别信号，不写入
-- 禁止将单日波动标记为趋势信号
-- 禁止将健康数据中的正常范围波动（<5%）列为 P1 信号
-- 禁止省略 `raw_quote`（P0 类信号必须保留用户原话）
+- 此 skill 只识别信号，不修改档案——写入是 Turn 3 的职责
+- 单日波动不标记为趋势信号
+- 健康数据正常范围波动（<5%）不列为 P1 信号
+- P0 类信号必须保留用户原话（`raw_quote` 不可为 null）
