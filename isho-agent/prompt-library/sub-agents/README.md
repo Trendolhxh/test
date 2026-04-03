@@ -16,10 +16,10 @@
 
 ## 当前子 Agent 清单
 
-| 子 Agent | 触发时机 | 输入 | 输出 |
-|----------|----------|------|------|
-| memory-distiller | 双重门控（信息量≥3条 + 时间≥4h）/ 每日05:00兜底 | 当前用户上下文文档 + 新记忆列表 + 健康数据摘要 + current_date | 更新后的用户上下文文档 + 可选 insight |
-| conversation-summarizer | 对话上下文接近 token 上限 | 完整对话历史 + current_date | 9 区块结构化摘要 |
+| 子 Agent | 状态 | 触发时机 | 输入 | 输出 |
+|----------|------|----------|------|------|
+| memory-distiller | **启用** | 双重门控（信息量≥3条 + 时间≥4h）/ 每日05:00兜底 | 当前用户上下文文档 + 新记忆列表 + 健康数据摘要 + current_date | 差量更新（CHANGED/UNCHANGED/NO_CHANGES）+ 可选 insight |
+| conversation-summarizer | **预留（当前不启用）** | 对话上下文接近 token 上限 | 完整对话历史 + current_date | 9 区块结构化摘要 |
 
 ## 通用规则（所有子 agent 务必遵守）
 
@@ -45,9 +45,10 @@
 - 所有时间引用必须转为绝对日期（YYYY-MM-DD）或日期范围（YYYY-MM-DD~YYYY-MM-DD）
 
 ### 幂等性
-- 子 agent 对相同输入应产生相同输出
-- 如果输入中没有新信息，输出应与输入的文档/摘要保持一致
+- **语义幂等**：相同输入下，输出文档的信息内容应一致，但不要求字面相同（LLM 为非确定性模型）
+- 如果输入中没有新信息，输出 `NO_CHANGES`，不输出原文档
 - 禁止在没有新信息时"微调"或"润色"已有内容——这是 token 浪费
+- 工程建议：子 agent 调用设 `temperature=0`；不要用字符串 diff 检测变更，用 section-level 结构化比较
 
 ### 错误处理
 - 子 agent 执行失败时，orchestrator 应静默降级，禁止向用户暴露子 agent 的存在
@@ -58,8 +59,8 @@
 
 | 子 Agent | 输入预算 | 输出预算 | 说明 |
 |----------|---------|---------|------|
-| memory-distiller | ~3000 tk | ~1200 tk | 文档 1100 + insight 标记 100 |
-| conversation-summarizer | 完整对话历史 | ≤ 500 tk | 9 区块结构化摘要 |
+| memory-distiller | ~2650-3350 tk | NO_CHANGES: ~5 tk / 差量有变化: ~200-1200 tk | 差量输出大幅降低无变化时的成本 |
+| conversation-summarizer | 完整对话历史（当前不触发） | ≤ 500 tk | 9 区块结构化摘要（预留） |
 
 ### 未来扩展预留
 新增子 agent 时务必提供：
