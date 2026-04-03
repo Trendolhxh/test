@@ -16,10 +16,10 @@
 
 ## 当前子 Agent 清单
 
-| 子 Agent | 状态 | 触发时机 | 输入 | 输出 |
-|----------|------|----------|------|------|
-| memory-distiller | **启用** | 双重门控（信息量≥3条 + 时间≥4h）/ 每日05:00兜底 | 当前用户上下文文档 + 新记忆列表 + 健康数据摘要 + current_date | 差量更新（CHANGED/UNCHANGED/NO_CHANGES）+ 可选 insight |
-| conversation-summarizer | **预留（当前不启用）** | 对话上下文接近 token 上限 | 完整对话历史 + current_date | 9 区块结构化摘要 |
+| 子 Agent | 状态 | 触发时机 | 工具调用 | 输出 |
+|----------|------|----------|---------|------|
+| [memory-distiller](./memory-distiller/) | **启用** | 三重门控（信息量≥3条 + 时间≥4h + 锁门）/ 每日05:00兜底 | 有（get_memories 占位 + get_health_data + get_user_profile + get_strategy） | CHANGED/UNCHANGED diff + 可选 insight |
+| conversation-summarizer | **预留（当前不启用）** | 对话上下文接近 token 上限 | 无 | 9 区块结构化摘要 |
 
 ## 通用规则（所有子 agent 务必遵守）
 
@@ -57,10 +57,10 @@
 
 ### Token 预算
 
-| 子 Agent | 输入预算 | 输出预算 | 说明 |
-|----------|---------|---------|------|
-| memory-distiller | ~2650-3350 tk | NO_CHANGES: ~5 tk / 差量有变化: ~200-1200 tk | 差量输出大幅降低无变化时的成本 |
-| conversation-summarizer | 完整对话历史（当前不触发） | ≤ 500 tk | 9 区块结构化摘要（预留） |
+| 子 Agent | 单次总预算 | 无信号快速退出 | 说明 |
+|----------|-----------|-------------|------|
+| memory-distiller | ≤ 9500 tk（3 轮 loop） | Turn 2 输出 NO_CHANGES，节省 Turn 3 ~5K | 详见 `memory-distiller/00-overview.md` |
+| conversation-summarizer | ~5K tk | 无 | 预留（当前不触发） |
 
 ### 未来扩展预留
 新增子 agent 时务必提供：
