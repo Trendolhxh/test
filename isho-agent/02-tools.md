@@ -171,15 +171,15 @@
       "items": {
         "type": "string",
         "enum": [
-          "redlines",
-          "active",
-          "history",
-          "preferences",
+          "principles",
           "cognition",
+          "action",
+          "redlines",
+          "history",
           "trends"
         ]
       },
-      "description": "要加载的方面。redlines=红线与约束(明确拒绝的方向+原话+软约束); active=当前活跃干预(方向/具体措施/状态/数据/阻力/下一步路径); history=干预历史(最近10条,每条含结果/数据/学习); preferences=干预偏好(用户接受什么类型的方法); cognition=睡眠认知(用户已有的正确认知+误区及引导方向+适合的说服方式); trends=近期趋势(周对比数据+干预日vs非干预日)"
+      "description": "要加载的方面。principles=个性化第一性原理(用户的2-3个核心杠杆及其关联); cognition=认知维度(已建立/待建立的认知+学习路径+引导触发器); action=行动维度(当前干预+原理锚点+行动偏好+下一步路径); redlines=红线与约束(明确拒绝的方向+原话+软约束); history=干预历史(最近10条,每条含结果+原理级别学习); trends=近期趋势(周对比数据+干预日vs非干预日)"
     }
   },
   "required": ["aspects"]
@@ -203,10 +203,10 @@
 |------|------|------|
 | "今天加班好累" | 不调 或 `get_user_profile(["routines"])` | 速览已够; 想关联加班模式时查 routines |
 | "我最近睡得怎么样" | `get_strategy(["trends"])` | 需要数据趋势做解读 |
-| "有什么建议" | `get_strategy(["redlines", "active", "cognition"])` | 避红线+沿当前方向+顺认知引导 |
-| 反馈卡: 做到了 | `get_strategy(["active"])` + `get_user_profile(["sleep_strengths"])` | 干预详情+肯定用户 |
-| 反馈卡: 没做到 | `get_strategy(["active"])` + `get_user_profile(["psychology"])` | 干预详情+理解心理阻力 |
-| 新睡眠数据推送 | `get_strategy(["trends", "active"])` | 数据趋势+关联干预效果 |
+| "有什么建议" | `get_strategy(["redlines", "action", "principles"])` | 避红线+当前干预+锚定核心杠杆 |
+| 反馈卡: 做到了 | `get_strategy(["action", "cognition"])` + `get_user_profile(["sleep_strengths"])` | 干预详情+认知强化+肯定用户 |
+| 反馈卡: 没做到 | `get_strategy(["action"])` + `get_user_profile(["psychology"])` | 干预详情+理解心理阻力 |
+| 新睡眠数据推送 | `get_strategy(["trends", "action"])` | 数据趋势+关联干预效果 |
 | 用户提到咖啡 | `get_strategy(["redlines", "cognition"])` | 确认红线+看认知状态 |
 | 用户表达焦虑 | `get_user_profile(["psychology"])` | 理解压力模式，决定共情方式 |
 | 纯闲聊 | 不调 | 速览足够 |
@@ -344,7 +344,7 @@ save_memory(
 
 **反馈数据回流：**
 
-用户提交反馈后，数据自动写入记忆（category: intervention_feedback）。子 agent 下次运行时会将反馈提炼进 `# [active]` 和 `# [history]` sections。主 agent 不需要额外处理——回流由服务端 + 子 agent 自动完成。
+用户提交反馈后，数据自动写入记忆（category: intervention_feedback）。子 agent 下次运行时会将反馈提炼进 `# [action]` 和 `# [history]` sections。主 agent 不需要额外处理——回流由服务端 + 子 agent 自动完成。
 
 ---
 

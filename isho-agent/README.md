@@ -118,8 +118,8 @@ flowchart TB
         S1["[routines] 作息模式"]
         S2["[psychology] 心理特征"]
         S3["[redlines] 用户红线"]
-        S4["[active] 干预进展"]
-        S5["[cognition] 认知误区"]
+        S4["[principles] 核心杠杆"]
+        S5["[action] 干预进展"]
         S6["...共12段"]
     end
 
@@ -144,7 +144,7 @@ flowchart TB
 只有当 AI 判断需要时，才调用工具拉取对应段落。比如：
 
 - 用户表达焦虑 → AI 拉取 `[psychology]` 了解心理特征
-- 要给行动建议 → AI 拉取 `[redlines]` 确认不踩雷 + `[active]` 看当前干预进展
+- 要给行动建议 → AI 拉取 `[redlines]` 确认不踩雷 + `[action]` 看当前干预 + `[principles]` 锚定核心杠杆
 - 纯闲聊 → 只用速览，不拉任何段落
 
 这样每次对话消耗的 token 控制在 8K 以内，成本低、速度快、重点突出。
@@ -214,7 +214,7 @@ flowchart LR
     F --> |"⚠️ 部分做到"| G
     F --> |"❌ 没做到"| G
 
-    G --> H["子系统提炼\n更新 [active] 干预段落"]
+    G --> H["子系统提炼\n更新 [action] 干预段落"]
     H --> I["下次对话\nAI 知道执行结果\n自动调整策略"]
     I --> |"持续优化"| A
 ```

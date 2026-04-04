@@ -89,7 +89,7 @@ get_user_profile(
 
 ```
 get_strategy(
-  aspects=["redlines", "active", "history", "preferences", "cognition", "trends"]
+  aspects=["principles", "cognition", "action", "redlines", "history", "trends"]
 )
 ```
 

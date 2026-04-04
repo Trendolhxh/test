@@ -59,11 +59,11 @@ get_user_profile.sleep_issues    → 文档 # [sleep_issues]
 get_user_profile.lifestyle       → 文档 # [lifestyle]
 get_user_profile.psychology      → 文档 # [psychology]
 
-get_strategy.redlines            → 文档 # [redlines]
-get_strategy.active              → 文档 # [active]
-get_strategy.history             → 文档 # [history]
-get_strategy.preferences         → 文档 # [preferences]
+get_strategy.principles          → 文档 # [principles]
 get_strategy.cognition           → 文档 # [cognition]
+get_strategy.action              → 文档 # [action]
+get_strategy.redlines            → 文档 # [redlines]
+get_strategy.history             → 文档 # [history]
 get_strategy.trends              → 文档 # [trends]
 ```
 

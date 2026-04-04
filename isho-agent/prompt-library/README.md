@@ -134,8 +134,8 @@
 
 | 文件 | 注入时机 | 内容 |
 |------|---------|------|
-| [get-strategy.md](tool-descriptions/tool-description-get-strategy.md) | 始终 | 6 个 aspect 选择策略、尚无方案时不凭空建议、红线冲突时说明原因 |
-| [get-strategy-mandatory-before-advice.md](tool-descriptions/tool-description-get-strategy-mandatory-before-advice.md) | 标准对话 | 硬性规则：给任何行为建议前务必先调此工具加载 redlines + active |
+| [get-strategy.md](tool-descriptions/tool-description-get-strategy.md) | 始终 | 6 个 aspect 选择策略（principles/cognition/action/redlines/history/trends）、锚定第一性原理、红线冲突时说明原因 |
+| [get-strategy-mandatory-before-advice.md](tool-descriptions/tool-description-get-strategy-mandatory-before-advice.md) | 标准对话 | 硬性规则：给任何行为建议前务必先调此工具加载 redlines + action + principles |
 
 #### save_memory — 记忆写入
 

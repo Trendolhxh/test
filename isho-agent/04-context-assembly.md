@@ -142,7 +142,9 @@ def assemble_context(user_id, trigger_event, conversation_history):
     }
 ```
 
-> **注意**：旧方案中 `get_user_context(user_id)` 在此处自动注入画像+策略到 system。V3 不再这样做——模型在 agent 循环中按需调用 `get_user_profile` / `get_strategy`，结果作为 tool_result 进入 messages。
+> **注意**：旧方案中 `get_user_context(user_id)` 在此处自动注入画像+策略到 system。V3 不再这样做——模型在 agent 循环中按需调用 `get_user_profile` / `get_strategy`，结果作为 tool_result 进�� messages。
+>
+> **参考文档**：`references/睡眠第一性原理.md` 和 `references/干预策略-structure.md` 不注入 system prompt。它们是子 agent 和 skill 的参考文档，在需要时由 orchestrator 作为上下文提供给对应的 skill 或子 agent。
 
 ---
 

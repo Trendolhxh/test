@@ -62,9 +62,9 @@ flowchart TD
 | 纯对话 | 0 | 日常聊天、闲聊（速览已够用） |
 | 查数据后回复 | 1-2 | 用户问"最近睡得怎么样"→ get_strategy(["trends"]) + get_health_data |
 | 记录 + 回复 | 1 | 用户透露新的生活细节 → save_memory |
-| 给建议 + 反馈卡 | 2-3 | get_strategy(["redlines","active"]) + 行动建议 + send_feedback_card |
+| 给建议 + 反馈卡 | 2-3 | get_strategy(["redlines","action","principles"]) + 行动建议 + send_feedback_card |
 | 数据分析 + 原生卡片 | 2-3 | get_strategy(["trends"]) + get_health_data + render_analysis_card |
-| 反馈卡回收 | 2 | get_strategy(["active"]) + get_user_profile(["sleep_strengths"]) |
+| 反馈卡回收 | 2 | get_strategy(["action","cognition"]) + get_user_profile(["sleep_strengths"]) |
 
 每种模式下完整的工具调用链和用户侧体验，详见 [06-output-style.md](./06-output-style.md) 的"工具组合输出"章节。
 

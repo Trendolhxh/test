@@ -30,10 +30,15 @@ version: 1.0.0
 
 **消矛盾**：按 `contradictions` 的 `resolution` 指令执行。删除旧事实（直接删除，不留"（已过时）"标记），写入新事实。
 
-**干预状态流转**：当信号 `action` 包含 `move_active_to_history` 时：
-1. 从 `[active]` 中移除对应干预条目
-2. 在 `[history]` 中新增一条：`YYYY-MM-DD~YYYY-MM-DD  干预名称  结果：失败/成功/部分  学习：{一句话}`
+**干预状态流转**：当信号 `action` 包含 `move_action_to_history` 时：
+1. 从 `[action]` 的"当前干预"中移除对应条目
+2. 在 `[history]` 中新增一条：`{干预名称}({日期范围}): {结果概述}\n  学习: {对策略的启示}[{关联杠杆}]`
 3. `[history]` 超过 10 条时，删除最旧的一条
+
+**认知状态流转**：当信号 `action` 包含 `move_to_established` 时：
+1. 将对应认知点从 `[cognition]` 的"待建立"移至"已建立"
+2. 移除对应的引导触发器（目标已达成）
+3. 如有下一优先级的待建立认知，可更新引导策略
 
 **日期绝对化**：所有时间引用使用 YYYY-MM-DD，从 `current_date` 和记忆的 `recorded_at` 推算，不使用"昨天""最近"等相对表述。
 
@@ -43,7 +48,7 @@ version: 1.0.0
 
 ### 3. 重建 [summary]
 
-**最后执行**，在其他 11 个 section 更新完毕后重建：
+**最后执行**，在其他 11 个 section（6 Profile + 5 Strategy，不含 summary 本身）更新完毕后重建：
 - 格式：`{年龄}岁{性别}/{职业}/{睡眠类型}/{居住} | 核心问题:{...} | 阶段:{...} | 红线:{...} | 沟通:{...}`
 - 控制在 ~80 token
 - 只包含其他 section 中已有的信息，不添加独有内容
@@ -52,7 +57,7 @@ version: 1.0.0
 
 - `[summary]` 超过 80 token → 压缩，保留最关键信息
 - Profile 类合计超过 500 token → 裁剪密度最低的 section 中的冗余内容
-- Strategy 类合计超过 500 token → 优先保留 [redlines] 和 [active]，其余按时效性裁剪
+- Strategy 类合计超过 600 token → 优先保留 [redlines]、[principles] 和 [action]，其余按时效性裁剪
 
 ### 5. 洞察判断
 
@@ -72,7 +77,7 @@ CHANGED:
 # [redlines]
 {完整更新后的内容}
 
-# [active]
+# [action]
 {完整更新后的内容}
 
 # [history]
@@ -117,12 +122,13 @@ NO_CHANGES
 ```json
 {
   "signals": [
-    {"priority": "P0", "type": "redline", "content": "用户拒绝冥想", "raw_quote": "冥想对我没用，别再提了", "target_sections": ["redlines", "active"]},
+    {"priority": "P0", "type": "redline", "content": "用户拒绝冥想", "raw_quote": "冥想对我没用，别再提了", "target_sections": ["redlines", "action"]},
     {"priority": "P1", "type": "trend", "content": "连续3天深睡下降 22%→16%", "target_sections": ["trends", "sleep_issues"], "insight_candidate": true},
-    {"priority": "P1", "type": "intervention_feedback", "content": "手机放客厅第5天，入睡改善", "raw_quote": "确实好一点", "target_sections": ["active"]}
+    {"priority": "P1", "type": "intervention_feedback", "content": "手机放客厅第5天，入睡改善", "raw_quote": "确实好一点", "target_sections": ["action"]},
+    {"priority": "P1", "type": "cognition_change", "content": "用户主动提到社交时差", "raw_quote": "我知道周末晚睡周一会倒时差", "target_sections": ["cognition"]}
   ],
   "contradictions": [
-    {"old_fact": "[active] 包含冥想干预", "new_fact": "用户拒绝冥想", "resolution": "move_active_to_history + add_to_redlines"}
+    {"old_fact": "[action] 包含冥想干预", "new_fact": "用户拒绝冥想", "resolution": "move_action_to_history + add_to_redlines"}
   ]
 }
 ```
@@ -135,30 +141,56 @@ CHANGED:
 入睡困难 ← 睡前手机使用 ← 无 wind-down 习惯（干预中）
 深睡比例下降 ← 原因待查（可能：工作压力上升 / 干预初期睡眠结构调整）
 
-# [redlines]
-- 咖啡（下午需要提神，硬红线）
-- 早起运动（作息早起压力大，硬红线）
-- 冥想（"冥想对我没用，别再提了"，2026-04-02 新增，硬红线）
+# [cognition]
+已建立:
+  - 睡前手机影响入睡 [原理:wind-down] (认知有但行动未跟上→行动层解决)
+  - 深睡的重要性 [原理:精力公式]
+  - 社交时差概念 [原理:睡眠一致性] (2026-04-03 用户主动使用该概念)
+待建立:
+  - 酒精抑制深睡 [原理:兴奋剂管理] ← 优先级:中, 周五聚餐场景相关
+引导策略:
+  - 用他自己的数据做前后对比，不讲大道理
+  - 触发器: 周五聚餐后深睡数据明显差时 → 用当晚vs前一晚数据引入酒精与深睡的关系
 
-# [active]
-方向：减少睡前手机刺激
-措施：手机放客厅，23:00 后不拿回卧室
-状态：执行中，第5天
-数据：入睡时长从 35min → 约 20min（用户自述，待数据验证）
-下一步：继续观察 3 天后评估是否稳定
+# [action]
+当前干预:
+  名称: 手机放客厅
+  原理锚点: wind-down过渡
+  措施: 手机放客厅, 23:00后不拿回卧室
+  状态: 执行中(2026-03-23开始), 第5天
+  数据: 入睡时长从35min→约20min(用户自述, 待数据验证)
+  阻力: 加班日"补偿性娱乐"需求
+偏好:
+  接受: 环境改变、定时提醒、渐进式目标
+  不接受: 需意志力的、大幅改作息的、冥想
+  原则: 先小范围试跑, 数据证明有效再固化
+下一步:
+  有效路径: 继续观察3天→评估是否稳定→固化
+  无效路径: 尝试手机定时锁屏工具辅助
+
+# [redlines]
+硬红线(用户明确拒绝):
+  - 咖啡: "下午必须靠咖啡撑着" (2026-03-18)
+  - 早起运动: "早上根本起不来" (2026-03-15)
+  - 冥想: "冥想对我没用，别再提了" (2026-04-02)
+软约束(建议谨慎):
+  - 周五社交: 用户重视社交, 不要频繁建议减少
 
 # [history]
-2026-04-02  冥想 wind-down  结果：失败  学习：用户明确拒绝，认知与行为不匹配，需换方向
+- 冥想wind-down(04-01~04-02): 失败, 用户明确拒绝
+  学习: 用户对冥想类活动接受度为零, 不可从此方向切入[wind-down]
+- 手机放客厅(03-20~03-22): 部分有效, 入睡提前45min/深睡+3%, 加班日做不到
+  学习: 环境设计对此用户有效[wind-down], 但加班日补偿心理是独立阻力
 
 # [trends]
-2026-03-27~2026-04-02 周对比：
-深睡比例：22%（3/31）→ 19%（4/1）→ 16%（4/2），连续3天下降
-入睡时长：本周均值 28min，较上周 35min 改善（干预效果待确认）
+2026-03-27~2026-04-02 周对比:
+  深睡比例: 22%(3/31)→19%(4/1)→16%(4/2), 连续3天下降
+  入睡时长: 本周均值28min, 较上周35min改善(干预效果待确认)
 
 # [summary]
 30岁男/产品经理/晚型人/独居 | 核心问题:入睡困难+深睡下降 | 阶段:干预初期(手机放客厅有效果) | 红线:咖啡,早起运动,冥想 | 沟通:数据驱动,不喜鸡汤
 
-UNCHANGED: [routines, sleep_strengths, lifestyle, psychology, preferences, cognition]
+UNCHANGED: [routines, sleep_strengths, lifestyle, psychology, principles]
 
 insight: 连续3天深睡比例持续下降（22%→16%），与手机放客厅干预同期，原因尚不明确，建议专项跟进
 ```

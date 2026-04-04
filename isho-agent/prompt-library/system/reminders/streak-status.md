@@ -15,5 +15,5 @@
 当 STREAK_TYPE = "missed" 时：
 - 禁止追责或表达失望
 - 先了解原因——可能是干预方案本身不合理，而不是用户不够努力
-- 考虑是否需要降低难度或换方向（通过 get_strategy(["active", "history"]) 评估）
+- 考虑是否需要降低难度或换方向（通过 get_strategy(["action", "history"]) 评估）
 ```

@@ -15,7 +15,7 @@ flowchart LR
     subgraph DOC["用户上下文文档（认知层）"]
         D0["# [summary]\n速览（~80 tk）\n始终注入 system prompt"]
         D1["# [routines] / [sleep_strengths]\n# [sleep_issues] / [lifestyle]\n# [psychology]\n模型调 get_user_profile 拉取"]
-        D2["# [redlines] / [active] / [history]\n# [preferences] / [cognition] / [trends]\n模型调 get_strategy 拉取"]
+        D2["# [principles] / [cognition] / [action]\n# [redlines] / [history] / [trends]\n模型调 get_strategy 拉取"]
     end
 
     M1 -->|"子 agent\n定期提炼"| D0
@@ -69,11 +69,11 @@ flowchart LR
 # [sleep_issues]      →  get_user_profile.sleep_issues
 # [lifestyle]         →  get_user_profile.lifestyle
 # [psychology]        →  get_user_profile.psychology
-# [redlines]          →  get_strategy.redlines
-# [active]            →  get_strategy.active
-# [history]           →  get_strategy.history
-# [preferences]       →  get_strategy.preferences
+# [principles]        →  get_strategy.principles
 # [cognition]         →  get_strategy.cognition
+# [action]            →  get_strategy.action
+# [redlines]          →  get_strategy.redlines
+# [history]           →  get_strategy.history
 # [trends]            →  get_strategy.trends
 ```
 
@@ -128,47 +128,59 @@ flowchart LR
 性格: 理性, 数据导向, 不喜说教和鸡汤
 沟通偏好: 直接说重点, 偶尔自嘲, 接受用数据说话的建议
 
+# [principles]
+核心杠杆:
+  1. wind-down过渡 — 睡前刷手机1.5-2h直接入睡，大脑无缓冲，深睡占比仅18%(正常20-25%)
+  2. 睡眠一致性 — 工作日vs周末就寝差2h+，每周一节律紊乱，是可预测的精力低谷
+关联: wind-down解决深睡质量，一致性解决周初崩溃。先稳wind-down(已在推进)，再攻一致性。
+
+# [cognition]
+已建立:
+  - 睡前手机影响入睡 [原理:wind-down] (认知有但行动未跟上→行动层解决)
+  - 深睡的重要性 [原理:精力公式]
+待建立:
+  - 社交时差概念 [原理:睡眠一致性] ← 优先级:高, 直接影响周末行为决策
+  - 酒精抑制深睡 [原理:兴奋剂管理] ← 优先级:中, 周五聚餐场景相关
+引导策略:
+  - 用他自己的数据做前后对比，不讲大道理
+  - 触发器: 周末补觉数据出现时 → 用工作日vs周末深睡对比引入社交时差概念
+  - 触发器: 周五聚餐后深睡数据明显差时 → 用当晚vs前一晚数据引入酒精与深睡的关系
+
+# [action]
+当前干预:
+  名称: 手机放客厅
+  原理锚点: wind-down过渡
+  措施: 每晚23:00闹钟→手机放客厅充电
+  状态: 试跑中(2026-03-23开始), 执行日入睡提前45min/深睡+3%
+  阻力: 加班日(周三+偶发)"补偿性娱乐"需求强
+偏好:
+  接受: 环境改变、定时提醒、渐进式目标
+  不接受: 需意志力的("忍住不刷手机")、大幅改作息的
+  原则: 先小范围试跑, 数据证明有效再固化
+下一步:
+  有效路径: 固化→提前到22:30→引入轻度wind-down活动(拉伸/阅读)
+  无效路径: 尝试手机定时锁屏工具辅助
+
 # [redlines]
 硬红线(用户明确拒绝):
-  - 限制咖啡: "下午必须靠咖啡撑着"
-  - 早起运动: "早上根本起不来"
+  - 限制咖啡: "下午必须靠咖啡撑着" (2026-03-18)
+  - 早起运动: "早上根本起不来" (2026-03-15)
 软约束(建议谨慎):
   - 周五社交: 用户重视社交, 不要频繁建议减少
   - 饮酒话题: 用户表示不想讨论
 
-# [active]
-方向: 减少睡前手机使用, 建立wind-down环节
-当前措施:
-  - 每晚11点闹钟提醒放手机到客厅(3.23开始)
-状态: 试跑中, 执行日有效(入睡提前45min), 加班日难执行
-阻力: 加班日"补偿性娱乐"需求强, 11点可能太早
-下一步:
-  - 有效 → 固化习惯, 逐步提前到10:30
-  - 无效 → 尝试手机定时锁屏类工具辅助
-
 # [history]
-- 手机放客厅(3.20-3.22): 部分有效, 执行日入睡提前45min/深睡+3%, 加班日做不到
-- 限制下午咖啡(3.18): 用户拒绝 → 红线
-- 早起运动(3.15): 用户拒绝 → 红线
-
-# [preferences]
-接受的干预类型: 环境改变(如手机放客厅)、定时提醒、渐进式目标
-不接受的类型: 需要意志力的(如"忍住不刷手机")、大幅改变作息的
-偏好: 先小范围试跑, 有数据证明有效再固化
-
-# [cognition]
-已有正确认知:
-  - 知道睡前刷手机影响入睡(但做不到停下)
-  - 理解深睡的重要性
-误区:
-  - "周末补回来就行了" → 引导方向: 用社交时差概念解释, 周末补觉不等同恢复
-  - "几点睡有什么区别, 睡够时长就行" → 引导方向: 用深睡占比和入睡时间的关系来说明
-适合的说服方式: 用他自己的数据做前后对比, 不讲大道理
+- 手机放客厅(03-20~03-22): 部分有效, 执行日入睡提前45min/深睡+3%, 加班日做不到
+  学习: 环境设计对此用户有效[wind-down], 但加班日的补偿心理是独立阻力[psychology]
+- 限制咖啡(03-18): 拒绝→红线
+  学习: 咖啡是用户刚需, 兴奋剂管理杠杆不可从咖啡切入[兴奋剂管理]
+- 早起运动(03-15): 拒绝→红线
+  学习: 用户是晚型人, 早起本身逆节律, 不应从起床端施加压力[睡眠一致性]
 
 # [trends]
-本周(W12) vs 上周(W11):
+本周(W13) vs 上周(W12):
   平均入睡: 01:15 → 01:05 (提前10min)
-  平均睡眠时长: 6.5h → 6.8h (+18min)
+  平均时长: 6.5h → 6.8h (+18min)
   深睡占比: 16% → 18% (+2%)
   HRV均值: 42ms → 45ms (+3ms)
 干预日 vs 非干预日(本周):
@@ -196,14 +208,15 @@ flowchart LR
 - 需要分析问题根因 → 只拉 `sleep_issues`
 - 省 token，语义更精准
 
-### 为什么策略拆 6 个 aspect
+### 为什么策略拆 6 个 aspect（三层结构）
 
-旧方案"红线 + 当前干预 + 干预历史"只有 3 段。V3 新增：
-- `preferences`：设计新干预时需要知道用户接受什么类型
-- `cognition`：用户有认知误区时需要知道引导方向和说服方式
-- `trends`：用数据说话时需要近期的趋势对比
+策略从"红线 + 当前干预 + 历史"的扁平结构，升级为三层结构：
 
-每个 aspect 独立拉取，模型只在需要时才加载。
+- **原理层**（`principles`）：从 `睡眠第一性原理.md` 的 5 个杠杆中，定位对这个用户最重要的 2-3 个。所有认知引导和行动建议都锚定在这里。
+- **认知+行动层**（`cognition` + `action`）：分别管理"用户理解了什么"和"用户在做什么"。认知层有学习路径和引导触发器；行动层合并了原 `active` + `preferences`，每个干预锚定到具体杠杆。
+- **记录层**（`redlines` + `history` + `trends`）：边界、历史、数据，为上层决策提供依据。
+
+每个 aspect 独立拉取，模型只在需要时才加载。详细结构定义见 `references/干预策略-structure.md`。
 
 ### 归因链 ← 符号
 
@@ -240,9 +253,12 @@ flowchart LR
 **核心约束：**
 - 速览（`# [summary]`）控制在 ~80 token
 - profile 类 sections 合计控制在 ~500 token
-- strategy 类 sections 合计控制在 ~500 token
+- strategy 类 sections 合计控制在 ~600 token（详见 `references/干预策略-structure.md` 的预算分配）
 - 干预历史只保留最近 10 条
 - 描述睡眠状况时必须同时覆盖 strengths 和 issues
+- strategy 中的 `[principles]` 必须锚定到 `references/睡眠第一性原理.md` 的核心杠杆
+- `[cognition]` 的引导触发器必须具体可判断，不用模糊表述
+- `[action]` 中每个干预必须有原理锚点
 - 文档的语气是"一个了解用户的睡眠顾问给同事做交接"
 
 子 agent 的触发时机、输入输出规格、API 调用方式，详见 [08-orchestration.md](./08-orchestration.md) 的"子 Agent 编排"章节。
