@@ -6,12 +6,32 @@
 
 主 agent（精力管家）在对话中直接与用户交互。子 agent 在后台异步执行，不直接面对用户。
 
-```
-用户 ↔ 主 Agent（精力管家）
-              ↓ 触发
-         子 Agent（后台运行）
-              ↓ 输出
-         主 Agent 消费结果
+```mermaid
+flowchart TD
+    User["用户"] <-->|对话| Main["主 Agent（精力管家）"]
+    Main -->|触发| Orch["Orchestrator"]
+    Orch -->|输出 diff| Main
+
+    subgraph 子Agent工作循环
+        Orch -->|"传入 user_id, current_date, last_update_date"| Gate{"门控检查"}
+
+        Gate -->|"信息量≥3 & 时间≥4h & 获锁<br/>或 每日05:00兜底"| T1["Turn 1: 数据加载<br/>并行调用4个工具"]
+        Gate -->|"条件不满足"| Skip["跳过本次执行<br/>保留队列等下次"]
+
+        T1 -->|"get_memories<br/>get_health_data<br/>get_user_profile<br/>get_strategy"| T2["Turn 2: 信号分析<br/>(纯推理, 无工具调用)"]
+
+        T2 -->|"检测到信号"| T3["Turn 3: 档案更新<br/>(纯推理, 无工具调用)"]
+        T2 -->|"无信号"| NoChange["输出 NO_CHANGES<br/>提前结束, 节省~5K token"]
+
+        T3 -->|"CHANGED sections<br/>+ UNCHANGED 列表<br/>+ insight"| WriteBack["Orchestrator 写回数据库"]
+    end
+
+    style Gate fill:#f9f,stroke:#333
+    style NoChange fill:#fdd,stroke:#c33
+    style WriteBack fill:#dfd,stroke:#3a3
+    style T1 fill:#def,stroke:#36a
+    style T2 fill:#def,stroke:#36a
+    style T3 fill:#def,stroke:#36a
 ```
 
 ## 当前子 Agent 清单
