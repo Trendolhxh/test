@@ -46,7 +46,7 @@
 - `[psychology]`：心理画像，压力源/情绪/沟通偏好
 
 ### Strategy 类（该怎么做）——三层结构，详见 references/干预策略-structure.md
-- `[principles]`：这个用户的精力问题分析——基于 `睡眠第一性原理.md` 的三件事，找出主要问题出在哪一步
+- `[principles]`：精力全景分析+策略路线图+状态预案——基于 `睡眠第一性原理.md` 的三件事，对用户做全维度分析、规划干预路线、预设场景应对方案
 - `[cognition]`：认知维度，已建立/待建立的认知 + 学习路径 + 引导触发器
 - `[action]`：行动维度，当前干预（说清楚在解决什么问题）+ 行动偏好 + 下一步路径
 - `[redlines]`：硬红线（用户明确拒绝+原话）和软约束
@@ -61,5 +61,5 @@
 
 ## 预算约束
 
-[summary] ≤ 80 token；Profile 类合计 ≤ 500；Strategy 类合计 ≤ 600；总计 ≤ 1,180 token。超出时按时效性裁剪，[redlines]、[principles] 和 [action] 最后裁剪。
+[summary] ≤ 80 token；Profile 类合计 ≤ 500。Strategy 类 sections 不设 token 上限（get_strategy 按需动态加载，不会一次全部注入），但仍应保持紧凑，避免冗余。Profile 类超出时按时效性裁剪；[redlines]、[principles] 最后裁剪。
 ```

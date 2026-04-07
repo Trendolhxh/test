@@ -47,7 +47,7 @@
       "messages": [
         {"role": "user", "content": "我想改善一下睡眠，有什么建议吗？"}
       ],
-      "expected_tool_calls": "get_strategy([\"redlines\", \"active\", \"cognition\"]) 获取红线+当前方向+认知状态；回复中调 set_reminder + send_feedback_card + suggest_replies",
+      "expected_tool_calls": "get_strategy([\"redlines\", \"action\", \"cognition\"]) 获取红线+当前方向+认知状态；回复中调 set_reminder + send_feedback_card + suggest_replies",
       "expected_response": "只给一个具体可执行的行动建议（不列清单），和当前干预方向一致（减少睡前手机）。绝不能建议限制咖啡或早起运动（红线）。顺着用户已有认知引导，用数据而非道理说服。"
     },
     {
@@ -75,7 +75,7 @@
       },
       "scene_instruction": "## 当前场景\n\n用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：\n入睡 00:45，起床 08:30，总睡眠 7h45m，深睡 22%，REM 26%\n备注：昨晚执行了手机放客厅\n\n像朋友一样聊昨晚的睡眠，不要像报告一样列数据。\n如果数据和干预策略中的当前干预相关，可以关联起来聊。",
       "messages": [],
-      "expected_tool_calls": "get_strategy([\"active\", \"trends\"]) 关联干预效果；get_user_profile([\"sleep_strengths\"]) 用于肯定；suggest_replies",
+      "expected_tool_calls": "get_strategy([\"action\", \"trends\"]) 关联干预效果；get_user_profile([\"sleep_strengths\"]) 用于肯定；suggest_replies",
       "expected_response": "像朋友一样自然地聊昨晚睡得不错，关联到手机放客厅的效果（入睡提前，深睡到正常范围）。数字有对比锚点。不说'根据数据分析'、'系统检测到'。2-3句。"
     },
     {
@@ -92,7 +92,7 @@
       },
       "scene_instruction": "## 当前场景\n\n用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：\n入睡 02:15，起床 08:45，总睡眠 6h30m，深睡 14%，REM 20%\n备注：昨天是周三（用户固定加班日）\n\n像朋友一样聊昨晚的睡眠，不要像报告一样列数据。\n如果数据和干预策略中的当前干预相关，可以关联起来聊。",
       "messages": [],
-      "expected_tool_calls": "get_user_profile([\"routines\"]) 确认加班日模式；可选 get_strategy([\"active\"]) 了解干预在加班日的预期",
+      "expected_tool_calls": "get_user_profile([\"routines\"]) 确认加班日模式；可选 get_strategy([\"action\"]) 了解干预在加班日的预期",
       "expected_response": "应识别出昨天是加班日，理解数据差是正常的。不追责不说教。语气轻松，比如'加班日嘛，正常'。不应该在加班日催用户执行干预。2句即可。"
     },
     {
@@ -101,7 +101,7 @@
       "event_context": {"event_type": "feedback_submit", "timestamp": "2026-03-26T08:15:00+08:00"},
       "scene_instruction": "## 当前场景\n\n用户刚提交了一张反馈卡：\n- 关联建议：每晚 11 点闹钟响后把手机放到客厅\n- 用户选择：做到了\n- 用户补充：但 11 点有点早，12 点更现实\n\n基于反馈推进对话：\n- 做到了 → 具体肯定，考虑固化或推进下一步",
       "messages": [],
-      "expected_tool_calls": "get_strategy([\"active\"]) 了解当前干预详情和下一步路径；save_memory(category=intervention_feedback)；可调 set_reminder 调整时间；suggest_replies",
+      "expected_tool_calls": "get_strategy([\"action\"]) 了解当前干预详情和下一步路径；save_memory(category=intervention_feedback)；可调 set_reminder 调整时间；suggest_replies",
       "expected_response": "具体肯定做到的部分（不说空泛的'太好了加油'），顺着用户补充调整方案——把提醒调到12点。记录反馈。"
     },
     {
@@ -110,7 +110,7 @@
       "event_context": {"event_type": "feedback_submit", "timestamp": "2026-03-27T08:20:00+08:00"},
       "scene_instruction": "## 当前场景\n\n用户刚提交了一张反馈卡：\n- 关联建议：每晚 12 点闹钟响后把手机放到客厅\n- 用户选择：没做到\n- 用户补充：在追剧，停不下来\n\n基于反馈推进对话：\n- 没做到 → 理解原因，考虑调整方法或降低难度",
       "messages": [],
-      "expected_tool_calls": "get_strategy([\"active\"]) + get_user_profile([\"psychology\"]) 理解阻力背后的心理模式；save_memory(category=intervention_feedback)；suggest_replies",
+      "expected_tool_calls": "get_strategy([\"action\"]) + get_user_profile([\"psychology\"]) 理解阻力背后的心理模式；save_memory(category=intervention_feedback)；suggest_replies",
       "expected_response": "绝不追责（不说'你应该'、'必须'）。理解追剧停不下来（和psychology中的逃避型拖延一致）。可提出调整方案，语气温和。"
     },
     {
@@ -119,7 +119,7 @@
       "event_context": {"event_type": "push_click", "timestamp": "2026-03-25T23:02:00+08:00"},
       "scene_instruction": "## 当前场景\n\n用户点击了一条提醒推送进入 App：\n- 提醒内容：该放下手机了，把它放到客厅充电吧\n- 关联干预：减少睡前手机使用\n\n顺着提醒的上下文和用户聊。如果用户接着说了别的话题，跟随用户。",
       "messages": [],
-      "expected_tool_calls": "get_strategy([\"active\"]) 了解干预详情（场景指令中已有摘要，也可不调）；suggest_replies",
+      "expected_tool_calls": "get_strategy([\"action\"]) 了解干预详情（场景指令中已有摘要，也可不调）；suggest_replies",
       "expected_response": "简短顺着提醒说话，鼓励但不说教。1-2句。不暴露系统机制。给快捷回复选项（如'好，放了'、'再刷一会'）。"
     },
     {
@@ -136,7 +136,7 @@
       },
       "scene_instruction": "## 当前场景\n\n以下是最近发现的一个值得关注的变化：\n手机放客厅干预执行5天中的4天成功执行，这4天深睡占比平均22%（vs 之前16%），入睡时间平均提前50分钟。未执行的1天是加班日。\n\n用你自己的话和用户聊这个发现。不要说\"系统检测到\"。",
       "messages": [],
-      "expected_tool_calls": "get_strategy([\"trends\", \"active\"]) 补充数据细节和干预进展；suggest_replies",
+      "expected_tool_calls": "get_strategy([\"trends\", \"action\"]) 补充数据细节和干预进展；suggest_replies",
       "expected_response": "用朋友口吻分享好消息。不说'系统检测到'。数字有对比锚点（16%→22%）。加班日是例外很正常。可以考虑是否引导下一步。"
     },
     {
@@ -158,7 +158,7 @@
       "messages": [
         {"role": "user", "content": "手机放客厅太不方便了，我用手机当闹钟的"}
       ],
-      "expected_tool_calls": "get_strategy([\"active\", \"preferences\"]) 了解当前干预和偏好；save_memory(category=preference) 记录拒绝原因",
+      "expected_tool_calls": "get_strategy([\"action\"]) 了解当前干预和偏好；save_memory(category=preference) 记录拒绝原因",
       "expected_response": "不坚持让用户继续。根据 preferences（偏好物理手段）提出替代方案（如买小闹钟、定时锁屏app）。不否定用户的理由。"
     },
     {

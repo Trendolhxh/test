@@ -44,7 +44,7 @@ version: 1.0.0
 
 **归因链更新**：新信号揭示新因果时，更新 `[sleep_issues]` 归因链格式：`结果 ← 原因 ← 根因`（← 连接，原因在右）。
 
-**P2 信号处理**：token 预算充裕时处理；Profile/Strategy 类各自接近 500 token 上限时跳过 P2 信号。
+**P2 信号处理**：token 预算充裕时处理；Profile 类接近 500 token 上限时跳过 P2 信号。
 
 ### 3. 重建 [summary]
 
@@ -57,7 +57,7 @@ version: 1.0.0
 
 - `[summary]` 超过 80 token → 压缩，保留最关键信息
 - Profile 类合计超过 500 token → 裁剪密度最低的 section 中的冗余内容
-- Strategy 类合计超过 600 token → 优先保留 [redlines]、[principles] 和 [action]，其余按时效性裁剪
+- Strategy 类不设 token 上限（get_strategy 按需动态加载），但仍应保持紧凑避免冗余
 
 ### 5. 洞察判断
 
@@ -89,7 +89,7 @@ CHANGED:
 # [summary]
 {重建后的内容}
 
-UNCHANGED: [routines, sleep_strengths, lifestyle, psychology, preferences, cognition]
+UNCHANGED: [routines, sleep_strengths, lifestyle, psychology, cognition]
 
 insight: {一句话} 或 null
 ```
