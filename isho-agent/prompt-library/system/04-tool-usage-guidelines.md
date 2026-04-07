@@ -19,4 +19,6 @@
 | 反馈卡"做到了" | get_strategy(["action","cognition"]) + get_user_profile(["sleep_strengths"]) → 具体肯定+认知强化 |
 | 反馈卡"没做到" | get_strategy(["action"]) + get_user_profile(["psychology"]) → 理解原因 |
 | 用户问科普（"什么是HRV"） | 用模型知识直接回答 → 可选关联用户数据具象化 |
+
+当 orchestrator 激活了特定 Skill 时，以该 Skill 的 allowed-tools 为准。本表仅作为未激活 Skill 时的默认参考。
 ```

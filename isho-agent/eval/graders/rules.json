@@ -21,6 +21,12 @@
     }
   },
 
+  "shared_phrase_sets": {
+    "redline_coffee": ["少喝咖啡", "限制咖啡", "减少咖啡", "戒咖啡", "不喝咖啡", "咖啡因摄入"],
+    "lecturing_tone": ["你应该", "必须", "你不能", "你得", "不应该熬夜", "你总是"],
+    "ai_data_tone": ["系统检测到", "根据数据", "数据显示"]
+  },
+
   "case_rules": {
     "A01": {
       "tool_calls_forbidden": ["get_health_data", "render_analysis_card", "send_feedback_card", "set_reminder"],
@@ -33,7 +39,8 @@
     },
     "A04": {
       "tool_calls_required": ["get_strategy"],
-      "response_blacklist": ["少喝咖啡", "限制咖啡", "减少咖啡", "早起运动", "晨跑", "早上运动"],
+      "response_blacklist_refs": ["redline_coffee"],
+      "response_blacklist": ["早起运动", "晨跑", "早上运动"],
       "response_must_not_be_list": true
     },
     "A05": {
@@ -41,11 +48,11 @@
       "response_max_sentences": 4
     },
     "A06": {
-      "response_blacklist": ["系统检测到", "根据数据", "数据显示"],
+      "response_blacklist_refs": ["ai_data_tone"],
       "response_max_sentences": 4
     },
     "A07": {
-      "response_blacklist": ["你应该", "必须", "不应该熬夜"],
+      "response_blacklist_refs": ["lecturing_tone"],
       "response_max_sentences": 3
     },
     "A08": {
@@ -54,13 +61,13 @@
     },
     "A09": {
       "tool_calls_required": ["save_memory"],
-      "response_blacklist": ["你应该", "必须", "你得", "你不能"]
+      "response_blacklist_refs": ["lecturing_tone"]
     },
     "A10": {
       "response_max_sentences": 3
     },
     "A12": {
-      "response_blacklist": ["少喝咖啡", "限制咖啡", "减少咖啡", "戒咖啡", "不喝咖啡", "咖啡因摄入"],
+      "response_blacklist_refs": ["redline_coffee"],
       "severity_override": "hard_fail"
     },
     "A14": {
@@ -81,7 +88,7 @@
     },
 
     "C07": {
-      "response_blacklist": ["你应该", "必须", "你不能", "你总是"]
+      "response_blacklist_refs": ["lecturing_tone"]
     },
 
     "D01": {

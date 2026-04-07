@@ -6,6 +6,19 @@ LLM Judge — 用结构化 schema 输出多维度评分，取代单一 0-100 打
 """
 
 import json
+import re
+from pathlib import Path
+
+# ── 加载外部 Judge Prompt ─────────────────────────────────
+
+def _load_judge_prompt() -> str:
+    """从 judge-prompt.md 加载 system prompt（提取 code block 中的纯文本）。"""
+    prompt_path = Path(__file__).parent / "judge-prompt.md"
+    content = prompt_path.read_text(encoding="utf-8")
+    match = re.search(r"```text\n(.*?)```", content, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    raise FileNotFoundError(f"无法从 {prompt_path} 中提取 prompt 正文")
 
 # ── 输出 Schema（要求 LLM 严格返回此结构）───────────────────
 
@@ -54,36 +67,9 @@ JUDGE_OUTPUT_SCHEMA = {
 }
 
 
-# ── Judge Prompt 模板 ────────────────────────────────────
+# ── Judge Prompt（从外部文件加载）────────────────────────
 
-JUDGE_SYSTEM_PROMPT = """\
-你是一个评测裁判，负责评估「精力管家」Agent 的回复质量。
-
-你会收到:
-1. 用例描述（case name + expected_tool_calls + expected_response）
-2. Agent 的实际 trace（tool_calls + response_text）
-
-请从三个维度打分:
-
-## Outcome（50%权重）
-任务目标是否达成？回复内容是否满足 expected_response 中描述的行为？
-- 100: 完全符合预期
-- 70-90: 大体正确，有小偏差
-- 40-60: 部分正确，有明显遗漏
-- 0-30: 方向错误或严重违反预期
-
-## Process（20%权重）
-工具调用是否合理？是否匹配 expected_tool_calls 描述？
-- 调了不该调的工具扣分，漏调必须的工具扣分
-- 参数合理性也要考虑
-
-## Style（30%权重）
-语气是否像朋友聊天？是否避免了说教/AI腔/报告感？
-- 评估标准：自然、简短、有温度、不暴露系统机制
-- 用了 markdown 格式（加粗/列表/标题）扣分
-
-请严格按 JSON schema 输出，不要输出任何额外文字。
-"""
+JUDGE_SYSTEM_PROMPT = _load_judge_prompt()
 
 JUDGE_USER_TEMPLATE = """\
 ## 用例信息

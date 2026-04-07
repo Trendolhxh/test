@@ -130,12 +130,13 @@
 |------|---------|------|
 | [get-user-profile.md](tool-descriptions/tool-description-get-user-profile.md) | 始终 | 5 个 aspect 选择策略、速览够用时不调、新用户档案稀疏时多提问多 save_memory |
 
-#### get_strategy — 干预策略（拆 1 个独立使用域）
+#### get_strategy — 干预策略
 
 | 文件 | 注入时机 | 内容 |
 |------|---------|------|
 | [get-strategy.md](tool-descriptions/tool-description-get-strategy.md) | 始终 | 6 个 aspect 选择策略（principles/cognition/action/redlines/history/trends）、锚定第一性原理、红线冲突时说明原因 |
-| [get-strategy-mandatory-before-advice.md](tool-descriptions/tool-description-get-strategy-mandatory-before-advice.md) | 标准对话 | 硬性规则：给任何行为建议前务必先调此工具加载 redlines + action + principles |
+
+> 注：「给建议前必须先调 get_strategy」的规则已统一到 [doing-tasks/check-before-advise.md](system/doing-tasks/check-before-advise.md)，不再在工具描述中重复。
 
 #### save_memory — 记忆写入
 

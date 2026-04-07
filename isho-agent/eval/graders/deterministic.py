@@ -216,11 +216,17 @@ def grade(trace: TraceRecord) -> GradeReport:
             check_tool_calls_forbidden(trace, case_rules["tool_calls_forbidden"])
         )
 
-    if "response_blacklist" in case_rules:
+    # 展开 shared_phrase_sets 引用
+    shared_sets = rules.get("shared_phrase_sets", {})
+    all_blacklist_phrases = list(case_rules.get("response_blacklist", []))
+    for ref in case_rules.get("response_blacklist_refs", []):
+        all_blacklist_phrases.extend(shared_sets.get(ref, []))
+
+    if all_blacklist_phrases:
         report.checks.extend(
             check_blacklist_phrases(
                 trace.response_text,
-                case_rules["response_blacklist"],
+                all_blacklist_phrases,
                 severity,
             )
         )
