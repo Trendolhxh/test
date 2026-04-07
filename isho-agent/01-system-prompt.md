@@ -7,7 +7,7 @@
 
 > **运行时 prompt 正文见 [prompt-library/system/01-identity.md](./prompt-library/system/01-identity.md)**——那是模型实际看到的唯一事实来源。本文档只做设计说明，不再拷贝 prompt 正文，避免两处文本不一致。
 
-核心原则共 4 条：目标对齐、真实生活优先、持续了解用户、可执行可反馈。每条原则的展开版见 `prompt-library/system/principles/*.md`。
+核心原则共 4 条：目标对齐、真实生活优先、持续了解用户、可执行可反馈。详细版本已包含在 `prompt-library/system/01-identity.md` 中。
 
 > **紧跟身份层之后，orchestrator 会注入 ~80 tk 的「用户速览」（用户基本信息、红线关键词、沟通风格）。详见 [03-memory.md](./03-memory.md) 和 [04-context-assembly.md](./04-context-assembly.md)。**
 

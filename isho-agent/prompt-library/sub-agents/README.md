@@ -19,7 +19,6 @@
 | 子 Agent | 状态 | 触发时机 | 工具调用 | 输出 |
 |----------|------|----------|---------|------|
 | [memory-distiller](./memory-distiller/) | **启用** | 三重门控（信息量≥3条 + 时间≥4h + 锁门）/ 每日05:00兜底 | 有（get_memories 占位 + get_health_data + get_user_profile + get_strategy） | CHANGED/UNCHANGED diff + 可选 insight |
-| conversation-summarizer | **预留（当前不启用）** | 对话上下文接近 token 上限 | 无 | 9 区块结构化摘要 |
 
 ## 通用规则（所有子 agent 务必遵守）
 
@@ -53,14 +52,12 @@
 ### 错误处理
 - 子 agent 执行失败时，orchestrator 应静默降级，禁止向用户暴露子 agent 的存在
 - memory-distiller 失败 → 保留原文档不更新，新记忆保留在队列中等下次
-- conversation-summarizer 失败 → 保留原始对话历史，不压缩
 
 ### Token 预算
 
 | 子 Agent | 单次总预算 | 无信号快速退出 | 说明 |
 |----------|-----------|-------------|------|
 | memory-distiller | ≤ 9500 tk（3 轮 loop） | Turn 2 输出 NO_CHANGES，节省 Turn 3 ~5K | 详见 `memory-distiller/00-overview.md` |
-| conversation-summarizer | ~5K tk | 无 | 预留（当前不触发） |
 
 ### 未来扩展预留
 新增子 agent 时务必提供：

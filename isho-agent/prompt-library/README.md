@@ -1,6 +1,6 @@
 # 精力管家 Prompt Library
 
-> 仿照 [Claude Code 提示词架构](../claude-code-prompt-architecture.md) 构建的模块化提示词库。
+> 仿照 Claude Code 提示词架构构建的模块化提示词库。
 > 每个文件是一个可独立加载的提示词片段，由 orchestrator 在运行时按需拼接。
 
 ## 架构概览
@@ -35,34 +35,13 @@
 
 | 文件 | 内容 | token | 加载方式 |
 |------|------|-------|---------|
-| [01-identity.md](system/01-identity.md) | 身份声明、核心原则、认知纪律、安全边界 | ~120 | 固定 |
+| [01-identity.md](system/01-identity.md) | 身份声明、核心原则（详细版）、认知纪律、安全边界 | ~250 | 固定 |
 | [02-user-summary-template.md](system/02-user-summary-template.md) | 用户速览模板（含新用户空模板） | ~80 | 按用户动态 |
 | [04-tool-usage-guidelines.md](system/04-tool-usage-guidelines.md) | 场景→工具映射 | ~200 | 固定 |
 
-### system/principles/ — 原则原子文件
-
-从 01-identity.md 拆出的独立原则片段，可按需单独加载或组合。
-
-| 文件 | 内容 |
-|------|------|
-| [goal-alignment.md](system/principles/goal-alignment.md) | 核心原则 #1：目标对齐（所有建议指向睡眠质量）|
-| [reality-first.md](system/principles/reality-first.md) | 核心原则 #2：从真实生活出发 |
-| [continuous-learning.md](system/principles/continuous-learning.md) | 核心原则 #3：持续了解用户 |
-| [actionable-advice.md](system/principles/actionable-advice.md) | 核心原则 #4：可执行可反馈 |
-
-### system/cognition/ — 认知纪律
-
-| 文件 | 内容 |
-|------|------|
-| [data-discipline.md](system/cognition/data-discipline.md) | 数据使用纪律（先查后说、关注异常值、坦诚不确定性）|
-
-### system/boundaries/ — 安全边界
-
-| 文件 | 内容 |
-|------|------|
-| [medical-safety.md](system/boundaries/medical-safety.md) | 医疗安全（不诊断、不处方、红线不触碰、不编造数据）|
-
 ### system/doing-tasks/ — 行为规则（"做事原则"）
+
+> 原则、认知纪律、安全边界的详细版本已合并进 01-identity.md，不再拆分独立文件。
 
 仿照 Claude Code 的 "Doing Tasks" 模式，每个文件一条原子规则。
 
@@ -179,8 +158,7 @@
 | 文件 | 用途 | 触发时机 |
 |------|------|---------|
 | [README.md](sub-agents/README.md) | 子 agent 通用使用指南 | — |
-| [memory-distiller.md](sub-agents/memory-distiller.md) | 从 mem0 碎片提炼用户上下文文档 | 每日 05:00 + 对话结束后异步 |
-| [conversation-summarizer.md](sub-agents/conversation-summarizer.md) | 对话历史压缩为结构化摘要 | 上下文接近 token 上限 |
+| [memory-distiller/](sub-agents/memory-distiller/) | 从 mem0 碎片提炼用户上下文文档 | 每日 05:00 + 对话结束后异步 |
 
 ### assembly/ — 组装规范（面向工程团队）
 
@@ -197,10 +175,10 @@
 | System Prompt | ~3,200 tk（66+ 文件拼接） | ~600 tk（身份层 + 用户速览 + 场景映射 + 行为规则按需加载 + 动态场景）|
 | 工具定义 | ~11,600 tk（18+ 内置工具，含 example 块） | ~1,200 tk（8 个 Model-Facing 工具 + 2 通用规则，复杂工具拆独立使用域按场景注入）|
 | 占上下文比例 | ~7.4%（of 200K） | ~1.6%（of 200K）|
-| 子 Agent | 4 类（Explore/Plan/Worker/Guide） | 2 个（记忆提炼 + 对话摘要）|
+| 子 Agent | 4 类（Explore/Plan/Worker/Guide） | 1 个（记忆提炼）|
 | System Reminders | 40+ 种运行时注入 | 7 种系统提醒 + 4 种场景指令 |
 | 行为规则 | "Doing Tasks" 原子规则 | 5 条 doing-tasks 原子规则 |
-| 上下文压缩 | 有（对话摘要 + 清理） | 有（conversation-summarizer 子 agent）|
+| 上下文压缩 | 有（对话摘要 + 清理） | 暂无（短对话场景，不需要）|
 | 强调标记 | NEVER/ALWAYS/MUST/IMPORTANT | 统一使用中文（禁止/始终/务必/【注意】）|
 | 工具示例 | `<example>` + `<reasoning>` 块 | 待补充（细化阶段逐步添加）|
 

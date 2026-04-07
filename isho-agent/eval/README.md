@@ -104,11 +104,8 @@ eval/
 ├── traces/                             # 运行 trace 存档（git ignored）
 │   └── {run_id}_{case_id}.json
 ├── reports/                            # 评测报告
-│   ├── sample_report.md                # 报告样例
 │   └── {run_id}.md / {run_id}.json
-├── memory-v2-example-profile-a.yaml    # 记忆架构设计文档
-├── memory-v2-proposal.md
-└── memory-v3-tools.md
+└── memory-v3-tools.md                  # 记忆架构 v3 设计文档
 ```
 
 ## 画像列表
