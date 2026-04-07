@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iSho Onboarding Flow Prototype</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --brand-green: #34C759;
+    --brand-green-dark: #28a745;
+    --brand-green-light: #E8F5E9;
+    --agent-bg: #1C1C1E;
+    --agent-text: #FFFFFF;
+    --user-bg: #D4F5DC;
+    --user-text: #1C1C1E;
+    --system-bg: #F5F5F7;
+    --system-text: #8E8E93;
+    --bg-dark: #000000;
+    --bg-chat: #0A0A0A;
+    --text-primary: #FFFFFF;
+    --text-secondary: #8E8E93;
+    --divider: #2C2C2E;
+    --option-bg: #2C2C2E;
+    --option-hover: #3A3A3C;
+    --option-selected-bg: rgba(52, 199, 89, 0.15);
+    --option-selected-border: var(--brand-green);
+    --cta-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
+    --bubble-radius: 18px;
+    --bubble-radius-sm: 6px;
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── iPhone Frame ── */
+  .iphone-frame {
+    width: 393px;
+    height: 852px;
+    background: var(--bg-dark);
+    border-radius: 50px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow:
+      0 0 0 3px #2C2C2E,
+      0 0 0 6px #1a1a1a,
+      0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  /* ── Status Bar ── */
+  .status-bar {
+    height: 54px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 32px 8px;
+    background: var(--bg-dark);
+    position: relative;
+    z-index: 10;
+  }
+  .status-bar .time {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .status-bar .icons {
+    display: flex;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+  .dynamic-island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 126px;
+    height: 36px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 20;
+  }
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    height: 64px;
+    background: var(--bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 40px 4px;
+    position: relative;
+    z-index: 5;
+    flex-shrink: 0;
+  }
+  .progress-track {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+  }
+  .progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 2;
+  }
+  .step-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #3A3A3C;
+    border: 2px solid #3A3A3C;
+    transition: all 0.4s ease;
+    position: relative;
+  }
+  .step-dot.active {
+    background: transparent;
+    border-color: var(--brand-green);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  .step-dot.completed {
+    background: var(--brand-green);
+    border-color: var(--brand-green);
+    animation: none;
+  }
+  .step-dot.skipped {
+    background: transparent;
+    border-color: #555;
+    border-style: dashed;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(52,199,89,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(52,199,89,0); }
+  }
+  .step-label {
+    font-size: 10px;
+    color: #555;
+    margin-top: 4px;
+    transition: color 0.3s;
+    white-space: nowrap;
+  }
+  .step-label.active { color: var(--brand-green); }
+  .step-label.completed { color: var(--text-secondary); }
+  .progress-line {
+    position: absolute;
+    top: 7px;
+    left: 12.5%;
+    right: 12.5%;
+    height: 2px;
+    background: #3A3A3C;
+    z-index: 1;
+  }
+  .progress-line-fill {
+    height: 100%;
+    background: var(--brand-green);
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+
+  /* ── Chat Area ── */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--bg-chat);
+  }
+  .chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ── Message Bubbles ── */
+  .message {
+    display: flex;
+    gap: 8px;
+    max-width: 85%;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: msg-in 0.35s ease-out forwards;
+  }
+  .message.agent { align-self: flex-start; }
+  .message.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  @keyframes msg-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-green), #2AA84A);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    align-self: flex-end;
+  }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: var(--bubble-radius);
+    line-height: 1.55;
+    font-size: 15px;
+    word-break: break-word;
+  }
+  .agent .bubble {
+    background: var(--agent-bg);
+    color: var(--agent-text);
+    border-bottom-left-radius: var(--bubble-radius-sm);
+  }
+  .user .bubble {
+    background: var(--brand-green);
+    color: #fff;
+    border-bottom-right-radius: var(--bubble-radius-sm);
+  }
+
+  /* ── CTA Button (Health Auth) ── */
+  .auth-card {
+    align-self: flex-start;
+    max-width: 85%;
+    margin-left: 38px;
+    background: #1C1C1E;
+    border-radius: 16px;
+    padding: 20px;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: msg-in 0.4s ease-out forwards;
+    border: 1px solid #2C2C2E;
+  }
+  .auth-card p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .auth-card p:last-of-type {
+    margin-bottom: 0;
+    margin-top: 12px;
+    font-size: 11px;
+    color: #666;
+  }
+  .auth-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--brand-green);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    font-family: var(--font);
+    box-shadow: var(--cta-shadow);
+  }
+  .auth-btn:hover { background: var(--brand-green-dark); transform: scale(0.98); }
+  .auth-btn:active { transform: scale(0.96); }
+  .auth-btn:disabled {
+    background: #3A3A3C;
+    color: #8E8E93;
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+  }
+
+  /* ── Loading Status ── */
+  .loading-msg {
+    align-self: flex-start;
+    margin-left: 38px;
+    max-width: 75%;
+    padding: 14px 18px;
+    background: #1C1C1E;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: msg-in 0.35s ease-out forwards;
+    border: 1px solid #2C2C2E;
+  }
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #3A3A3C;
+    border-top-color: var(--brand-green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Suggest Replies ── */
+  .suggest-replies {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-self: flex-start;
+    margin-left: 38px;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: msg-in 0.35s ease-out forwards;
+  }
+  .suggest-btn {
+    padding: 10px 18px;
+    background: var(--option-bg);
+    color: var(--text-primary);
+    border: 1px solid #3A3A3C;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font);
+    white-space: nowrap;
+  }
+  .suggest-btn:hover { background: var(--option-hover); border-color: var(--brand-green); color: var(--brand-green); }
+  .suggest-btn:active { transform: scale(0.95); }
+
+  /* ── Option Cards (Step 3) ── */
+  .option-card {
+    align-self: flex-start;
+    margin-left: 38px;
+    max-width: 85%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: msg-in 0.35s ease-out forwards;
+  }
+  .option-btn {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--option-bg);
+    color: var(--text-primary);
+    border: 1px solid #3A3A3C;
+    border-radius: 12px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    font-family: var(--font);
+    line-height: 1.4;
+  }
+  .option-btn:hover { background: var(--option-hover); border-color: #555; }
+  .option-btn:active { transform: scale(0.98); }
+  .option-btn.selected {
+    background: var(--option-selected-bg);
+    border-color: var(--option-selected-border);
+    color: var(--brand-green);
+  }
+  .option-btn.selected::after {
+    content: ' ✓';
+    font-weight: 600;
+  }
+
+  /* ── Data Card (Step 2) ── */
+  .data-card {
+    align-self: flex-start;
+    margin-left: 38px;
+    max-width: 88%;
+    background: #1C1C1E;
+    border-radius: 16px;
+    padding: 16px;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: msg-in 0.4s ease-out forwards;
+    border: 1px solid #2C2C2E;
+  }
+  .data-card-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .highlight-tag {
+    padding: 4px 10px;
+    background: rgba(52,199,89,0.12);
+    color: var(--brand-green);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .highlight-tag.warn {
+    background: rgba(255,149,0,0.12);
+    color: #FF9500;
+  }
+  .chart-mock {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 8px 4px;
+    border-bottom: 1px solid #2C2C2E;
+    margin-bottom: 10px;
+  }
+  .chart-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .chart-bar {
+    width: 100%;
+    max-width: 28px;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.6s ease;
+  }
+  .bar-deep { background: #5E5CE6; }
+  .bar-rem { background: #64D2FF; }
+  .bar-light { background: #48484A; }
+  .chart-label {
+    font-size: 9px;
+    color: #666;
+  }
+  .data-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    color: #555;
+    font-size: 11px;
+  }
+
+  /* ── Feedback Card Preview ── */
+  .feedback-card {
+    align-self: flex-start;
+    margin-left: 38px;
+    max-width: 85%;
+    background: #1C1C1E;
+    border-radius: 16px;
+    padding: 16px;
+    opacity: 0;
+    transform: translateY(16px);
+    animation: msg-in 0.4s ease-out forwards;
+    border: 1px solid #2C2C2E;
+  }
+  .feedback-card .fc-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .feedback-card .fc-body {
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .feedback-card .fc-time {
+    text-align: right;
+    color: #555;
+    font-size: 11px;
+  }
+
+  /* ── Completion Overlay ── */
+  .completion-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  .completion-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .completion-emoji {
+    font-size: 64px;
+    margin-bottom: 16px;
+    animation: bounce-in 0.6s ease-out;
+  }
+  .completion-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .completion-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.5;
+    padding: 0 40px;
+    margin-bottom: 32px;
+  }
+  .completion-btn {
+    padding: 14px 48px;
+    background: var(--brand-green);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    box-shadow: var(--cta-shadow);
+    transition: transform 0.2s;
+  }
+  .completion-btn:hover { transform: scale(1.03); }
+  @keyframes bounce-in {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  /* ── iOS-like Auth Modal ── */
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-backdrop.show { opacity: 1; pointer-events: auto; }
+
+  .auth-modal {
+    width: 100%;
+    background: #2C2C2E;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 40px;
+    transform: translateY(100%);
+    transition: transform 0.35s ease-out;
+    max-height: 70%;
+    overflow-y: auto;
+  }
+  .modal-backdrop.show .auth-modal { transform: translateY(0); }
+
+  .auth-modal h3 {
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .auth-modal .modal-subtitle {
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .auth-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #3A3A3C;
+    color: var(--text-primary);
+    font-size: 15px;
+  }
+  .auth-item:last-of-type { border-bottom: none; }
+  .toggle-switch {
+    width: 48px;
+    height: 28px;
+    background: var(--brand-green);
+    border-radius: 14px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-switch::after {
+    content: '';
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    transition: transform 0.2s;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .modal-actions button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    border: none;
+    transition: all 0.2s;
+  }
+  .modal-cancel {
+    background: #3A3A3C;
+    color: var(--text-primary);
+  }
+  .modal-confirm {
+    background: var(--brand-green);
+    color: #fff;
+    box-shadow: var(--cta-shadow);
+  }
+
+  /* ── Input Bar ── */
+  .input-bar {
+    padding: 8px 16px 28px;
+    background: var(--bg-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #1C1C1E;
+    flex-shrink: 0;
+  }
+  .input-field {
+    flex: 1;
+    padding: 10px 16px;
+    background: #1C1C1E;
+    border: 1px solid #2C2C2E;
+    border-radius: 20px;
+    color: var(--text-primary);
+    font-size: 15px;
+    outline: none;
+    font-family: var(--font);
+  }
+  .input-field::placeholder { color: #555; }
+  .send-btn {
+    width: 34px;
+    height: 34px;
+    background: var(--brand-green);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.4;
+  }
+
+  /* ── Confetti ── */
+  .confetti-container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 101;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    top: -10px;
+    border-radius: 2px;
+    animation: confetti-fall linear forwards;
+  }
+  @keyframes confetti-fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(900px) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── Scrollbar ── */
+  .chat-area::-webkit-scrollbar { width: 2px; }
+  .chat-area::-webkit-scrollbar-thumb { background: #3A3A3C; border-radius: 2px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 430px) {
+    .iphone-frame {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    body { padding: 0; }
+    .dynamic-island { display: none; }
+    .status-bar { padding-top: 8px; height: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="iphone-frame" id="app">
+  <!-- Dynamic Island -->
+  <div class="dynamic-island"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">16:32</span>
+    <span class="icons">📶 🔋</span>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-track">
+      <div class="progress-line"><div class="progress-line-fill" id="progressFill"></div></div>
+      <div class="progress-step">
+        <div class="step-dot active" id="dot0"></div>
+        <span class="step-label active" id="label0">分析</span>
+      </div>
+      <div class="progress-step">
+        <div class="step-dot" id="dot1"></div>
+        <span class="step-label" id="label1">了解你</span>
+      </div>
+      <div class="progress-step">
+        <div class="step-dot" id="dot2"></div>
+        <span class="step-label" id="label2">建议</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-wrapper">
+    <div class="chat-area" id="chat"></div>
+  </div>
+
+  <!-- Input Bar -->
+  <div class="input-bar">
+    <input class="input-field" placeholder="输入消息..." readonly>
+    <button class="send-btn">↑</button>
+  </div>
+
+
+
+  <!-- Completion Overlay -->
+  <div class="completion-overlay" id="completionOverlay">
+    <div class="confetti-container" id="confetti"></div>
+    <div class="completion-emoji">🎉</div>
+    <div class="completion-title">引导完成！</div>
+    <div class="completion-subtitle">我已经对你的情况有了初步了解。<br>你可以随时回来找我聊。</div>
+    <button class="completion-btn" onclick="location.reload()">进入首页</button>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let currentStep = 0; // 0-2 (3 steps total)
+let messageQueue = [];
+let isProcessing = false;
+const chat = document.getElementById('chat');
+
+// ── Utility: Add message with delay ──
+function addMessage(type, content, delay = 400) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const el = createMessageElement(type, content);
+      chat.appendChild(el);
+      requestAnimationFrame(() => { el.scrollIntoView({ behavior: 'smooth', block: 'end' }); });
+      resolve(el);
+    }, delay);
+  });
+}
+
+function createMessageElement(type, content) {
+  if (type === 'agent') {
+    const wrap = document.createElement('div');
+    wrap.className = 'message agent';
+    wrap.innerHTML = `<div class="avatar">🌙</div><div class="bubble">${content}</div>`;
+    return wrap;
+  }
+  if (type === 'user') {
+    const wrap = document.createElement('div');
+    wrap.className = 'message user';
+    wrap.innerHTML = `<div class="bubble">${content}</div>`;
+    return wrap;
+  }
+  if (type === 'loading') {
+    const el = document.createElement('div');
+    el.className = 'loading-msg';
+    el.id = 'currentLoading';
+    el.innerHTML = `<div class="spinner"></div><span>${content}</span>`;
+    return el;
+  }
+  return document.createElement('div');
+}
+
+function removeLoading() {
+  const l = document.getElementById('currentLoading');
+  if (l) l.remove();
+}
+
+// ── Progress Bar ──
+function updateProgress(step) {
+  const fill = document.getElementById('progressFill');
+  for (let i = 0; i < 3; i++) {
+    const dot = document.getElementById('dot' + i);
+    const label = document.getElementById('label' + i);
+    dot.className = 'step-dot';
+    label.className = 'step-label';
+    if (i < step) {
+      dot.classList.add('completed');
+      label.classList.add('completed');
+    } else if (i === step) {
+      dot.classList.add('active');
+      label.classList.add('active');
+    }
+  }
+  fill.style.width = ((step) / 2 * 100) + '%';
+}
+
+
+
+// ── Suggest Replies ──
+function addSuggestReplies(options, callback) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const wrap = document.createElement('div');
+      wrap.className = 'suggest-replies';
+      options.forEach(text => {
+        const btn = document.createElement('button');
+        btn.className = 'suggest-btn';
+        btn.textContent = text;
+        btn.onclick = () => {
+          wrap.remove();
+          callback(text);
+          resolve();
+        };
+        wrap.appendChild(btn);
+      });
+      chat.appendChild(wrap);
+      requestAnimationFrame(() => { wrap.scrollIntoView({ behavior: 'smooth', block: 'end' }); });
+    }, 300);
+  });
+}
+
+// ── Option Cards ──
+function addOptionCard(options, callback) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const wrap = document.createElement('div');
+      wrap.className = 'option-card';
+      options.forEach(text => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = text;
+        btn.onclick = () => {
+          if (text.startsWith('📝')) {
+            // "其他" option: highlight + activate input bar for free text
+            wrap.querySelectorAll('.option-btn').forEach(b => {
+              b.classList.remove('selected');
+              b.disabled = true;
+              b.style.cursor = 'default';
+            });
+            btn.classList.add('selected');
+            btn.disabled = false; // keep it visually selected
+
+            const inputField = document.querySelector('.input-field');
+            const sendBtn = document.querySelector('.send-btn');
+            inputField.removeAttribute('readonly');
+            inputField.placeholder = '请补充你的情况...';
+            inputField.style.opacity = '1';
+            sendBtn.style.opacity = '1';
+            sendBtn.style.cursor = 'pointer';
+            inputField.focus();
+
+            const handleSend = () => {
+              const val = inputField.value.trim();
+              if (!val) return;
+              inputField.value = '';
+              inputField.setAttribute('readonly', '');
+              inputField.placeholder = '输入消息...';
+              sendBtn.style.opacity = '0.4';
+              sendBtn.style.cursor = 'default';
+              sendBtn.removeEventListener('click', handleSend);
+              inputField.removeEventListener('keydown', handleKeydown);
+              callback(val);
+              resolve();
+            };
+            const handleKeydown = (e) => {
+              if (e.key === 'Enter') { e.preventDefault(); handleSend(); }
+            };
+            sendBtn.addEventListener('click', handleSend);
+            inputField.addEventListener('keydown', handleKeydown);
+          } else {
+            // Normal option: select and send immediately
+            wrap.querySelectorAll('.option-btn').forEach(b => {
+              b.classList.remove('selected');
+              b.disabled = true;
+              b.style.cursor = 'default';
+            });
+            btn.classList.add('selected');
+            callback(text);
+            resolve();
+          }
+        };
+        wrap.appendChild(btn);
+      });
+      chat.appendChild(wrap);
+      requestAnimationFrame(() => { wrap.scrollIntoView({ behavior: 'smooth', block: 'end' }); });
+    }, 300);
+  });
+}
+
+// ── Data Card ──
+function addDataCard() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const card = document.createElement('div');
+      card.className = 'data-card';
+      const days = ['一','二','三','四','五','六','日'];
+      const deeps = [42,55,26,58,49,87,53];
+      const rems = [35,40,30,42,38,50,35];
+      const lights = [38,35,42,30,33,40,28];
+      card.innerHTML = `
+        <div class="data-card-header">
+          <span class="highlight-tag warn">深睡偏低 18%</span>
+          <span class="highlight-tag">入睡快 ~15min</span>
+        </div>
+        <div class="chart-mock">
+          ${days.map((d, i) => `
+            <div class="chart-bar-group">
+              <div class="chart-bar bar-light" style="height:${lights[i]}%"></div>
+              <div class="chart-bar bar-rem" style="height:${rems[i]}%"></div>
+              <div class="chart-bar bar-deep" style="height:${deeps[i]}%"></div>
+              <span class="chart-label">周${d}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:8px">
+          <span style="font-size:11px;color:#5E5CE6">● 深睡</span>
+          <span style="font-size:11px;color:#64D2FF">● REM</span>
+          <span style="font-size:11px;color:#48484A">● 浅睡</span>
+        </div>
+        <div class="data-card-footer">精力管家 · 睡眠概览</div>
+      `;
+      chat.appendChild(card);
+      requestAnimationFrame(() => { card.scrollIntoView({ behavior: 'smooth', block: 'end' }); });
+      resolve();
+    }, 500);
+  });
+}
+
+// ── Feedback Card ──
+function addFeedbackCard() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const card = document.createElement('div');
+      card.className = 'feedback-card';
+      card.innerHTML = `
+        <div class="fc-header">🔄 精力管家想跟进</div>
+        <div class="fc-body">今晚试试 23:00 把手机放客厅？</div>
+        <div class="fc-time">📅 明早 08:00 提醒</div>
+      `;
+      chat.appendChild(card);
+      requestAnimationFrame(() => { card.scrollIntoView({ behavior: 'smooth', block: 'end' }); });
+      resolve();
+    }, 500);
+  });
+}
+
+// ── Confetti ──
+function launchConfetti() {
+  const container = document.getElementById('confetti');
+  const colors = ['#34C759','#5E5CE6','#FF9500','#FF375F','#64D2FF','#FFD60A'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    piece.style.animationDelay = Math.random() * 0.5 + 's';
+    piece.style.width = (5 + Math.random() * 8) + 'px';
+    piece.style.height = (5 + Math.random() * 8) + 'px';
+    container.appendChild(piece);
+  }
+}
+
+// ══════════════════════════════════════
+//  FLOW LOGIC
+// ══════════════════════════════════════
+
+async function startFlow() {
+  updateProgress(0);
+
+  // Step 1: Greeting + Data Analysis
+  await addMessage('agent', '👋 嗨！我是你的精力管家。', 800);
+  await addMessage('agent', '让我先看看你最近的睡眠数据 🔍', 600);
+
+  await addMessage('loading', '正在分析你的睡眠数据...', 600);
+  await new Promise(r => setTimeout(r, 2000));
+  removeLoading();
+
+  await addMessage('agent',
+    '看了你最近 7 天的睡眠数据，有几个发现：<br><br>' +
+    '1️⃣ 你工作日平均睡 <b>6.5 小时</b>，周末跳到 <b>8.4 小时</b>——差距有点大<br><br>' +
+    '2️⃣ 深睡占比 <b>18%</b>，略低于健康范围（20-25%）<br><br>' +
+    '3️⃣ 好消息是你入睡速度很快（~15min），说明入睡能力没问题 👍',
+  600);
+
+  // Data card
+  await addDataCard();
+
+  await addMessage('agent', '要进一步分析，我需要更了解你 😊', 800);
+
+  // Suggest replies to Step 2
+  addSuggestReplies(['好呀 👋', '问吧 💬'], async (text) => {
+    await addMessage('user', text, 200);
+    startStep2();
+  });
+}
+
+// ── Step 2: Profile Building ──
+async function startStep2() {
+  updateProgress(1);
+  currentStep = 1;
+
+  // Round 1
+  await addMessage('agent', '先聊几个基本的 🙂', 500);
+  await addMessage('agent', '你的工作节奏大概是？', 400);
+  await addOptionCard([
+    '朝九晚六，比较规律',
+    '经常加班，到家比较晚',
+    '时间自由，没有固定上下班',
+    '📝 其他（请补充）'
+  ], async (selected) => {
+    await addMessage('user', selected, 200);
+    await addMessage('agent', '明白了 👌', 400);
+    await step3_q2();
+  });
+}
+
+async function step3_q2() {
+  await addMessage('agent', '睡前最后一个小时通常在干嘛？', 500);
+  await addOptionCard([
+    '刷手机 / 看视频',
+    '看书 / 听播客',
+    '没有固定习惯，看情况',
+    '📝 其他（请补充）'
+  ], async (selected) => {
+    await addMessage('user', selected, 200);
+    await addMessage('agent', '了解 📝', 400);
+    await step3_q3();
+  });
+}
+
+async function step3_q3() {
+  await addMessage('agent', '之前试过改善睡眠的方法吗？', 500);
+  await addOptionCard([
+    '试过，没什么用',
+    '试过，有些有用',
+    '没试过',
+    '📝 其他（请补充）'
+  ], async (selected) => {
+    await addMessage('user', selected, 200);
+
+    // Loading: updating profile
+    await addMessage('loading', '正在更新你的档案...', 400);
+    await new Promise(r => setTimeout(r, 1500));
+    removeLoading();
+
+    // Round 2
+    await addMessage('agent', '再了解几个 —— 了解你 2/3', 600);
+    await step3_round2();
+  });
+}
+
+async function step3_round2() {
+  await addMessage('agent', '平时喝咖啡吗？', 500);
+  await addOptionCard([
+    '每天喝，下午也喝',
+    '只上午喝',
+    '很少喝 / 不喝',
+    '📝 其他（请补充）'
+  ], async (selected) => {
+    await addMessage('user', selected, 200);
+    await addMessage('agent', '记下了 ☕', 400);
+    await step3_r2q2();
+  });
+}
+
+async function step3_r2q2() {
+  await addMessage('agent', '睡觉时手机放哪儿？', 500);
+  await addOptionCard([
+    '床头 / 枕边',
+    '房间其他地方',
+    '房间外面',
+    '📝 其他（请补充）'
+  ], async (selected) => {
+    await addMessage('user', selected, 200);
+    await addMessage('agent', '好的 📱', 400);
+    await step3_r2q3();
+  });
+}
+
+async function step3_r2q3() {
+  await addMessage('agent', '有明确不想尝试的改善方法吗？', 500);
+  await addOptionCard([
+    '早起运动',
+    '冥想 / 呼吸练习',
+    '没有特别排斥的',
+    '📝 其他（请补充）'
+  ], async (selected) => {
+    await addMessage('user', selected, 200);
+
+    // Loading: updating profile
+    await addMessage('loading', '正在更新你的档案...', 400);
+    await new Promise(r => setTimeout(r, 1800));
+    removeLoading();
+
+    // Loading: generating advice
+    await addMessage('loading', '正在为你制定改善方案...', 400);
+    await new Promise(r => setTimeout(r, 2000));
+    removeLoading();
+
+    // Step 3
+    startStep3();
+  });
+}
+
+// ── Step 3: First Advice ──
+async function startStep3() {
+  updateProgress(2);
+  currentStep = 2;
+
+  await addMessage('agent',
+    '根据你的睡眠数据和刚才的了解：<br><br>' +
+    '你的核心问题是<b>睡前刷手机导致上床太晚</b>（工作日平均 01:30），' +
+    '但好消息是入睡速度快、睡眠连续性好——只要上床时间提前，睡眠质量就能起来。',
+  600);
+
+  await addMessage('agent',
+    '💡 <b>第一步建议：</b><br><br>' +
+    '今晚试试 <b>23:00 设个闹钟</b>，响了之后把手机放到客厅充电。' +
+    '不需要马上睡，就是让手机离开卧室。<br><br>' +
+    '明天早上我来问你情况。',
+  800);
+
+  // Feedback card
+  await addFeedbackCard();
+
+  // Final suggest replies
+  addSuggestReplies(['好，试试看 ✅', '换个建议 🔄'], async (text) => {
+    await addMessage('user', text, 200);
+    if (text === '好，试试看 ✅') {
+      finishOnboarding();
+    } else {
+      // Alternative advice
+      await addMessage('agent',
+        '好，换一个方向：<br><br>' +
+        '💡 今晚睡觉前，把卧室灯调暗（或只开小夜灯），给大脑一个"该休息了"的信号。<br><br>' +
+        '明天早上我来问你感觉。',
+      600);
+      addSuggestReplies(['好，试试看 ✅'], async (text) => {
+        await addMessage('user', text, 200);
+        finishOnboarding();
+      });
+    }
+  });
+}
+
+// ── Completion ──
+async function finishOnboarding() {
+  await addMessage('agent', '🎉 <b>引导完成！</b><br><br>我已经对你的情况有了初步了解。你可以随时回来找我聊——不管是看数据、调整建议，还是随便聊聊。', 600);
+
+  // Fill progress bar
+  updateProgress(3);
+
+  // Show completion overlay after delay
+  await new Promise(r => setTimeout(r, 1500));
+  document.getElementById('completionOverlay').classList.add('show');
+  launchConfetti();
+}
+
+// ── Start ──
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(startFlow, 600);
+});
+</script>
+</body>
+</html>
