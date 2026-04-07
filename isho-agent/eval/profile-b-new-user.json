@@ -101,7 +101,7 @@
       "messages": [
         {"role": "user", "content": "别问了，直接告诉我怎么才能睡好"}
       ],
-      "expected_tool_calls": "get_strategy([\"redlines\", \"preferences\"]) 确认约束（如果画像已有数据）；可调 set_reminder + send_feedback_card（如果给了具体建议）；suggest_replies",
+      "expected_tool_calls": "get_strategy([\"redlines\", \"action\"]) 确认约束（如果画像已有数据）；可调 set_reminder + send_feedback_card（如果给了具体建议）；suggest_replies",
       "expected_response": "尊重用户的急迫情绪，给一个简单可执行的尝试方向（基于已知信息——入睡困难、脑子停不下来）。方案不应太复杂。平衡'尊重用户的直接'和'负责任地不随便开方子'。"
     },
     {

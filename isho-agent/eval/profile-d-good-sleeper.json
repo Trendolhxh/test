@@ -14,7 +14,7 @@
       "messages": [
         {"role": "user", "content": "又醒了…小孩刚哭完好不容易哄睡，我自己又睡不着了"}
       ],
-      "expected_tool_calls": "get_strategy([\"active\"]) 获取当前有效干预（深呼吸）以便温和提醒；不调大量上下文——凌晨3点要快",
+      "expected_tool_calls": "get_strategy([\"action\"]) 获取当前有效干预（深呼吸）以便温和提醒；不调大量上下文——凌晨3点要快",
       "expected_response": "共情（'又醒了确实难受'），温和提醒深呼吸。凌晨3点用户需要简短安慰和实际帮助，不是分析。1-2句话，温暖简短。"
     },
     {
@@ -31,7 +31,7 @@
       },
       "scene_instruction": "## 当前场景\n\n用户今天第一次打开 App。以下是昨晚的睡眠数据摘要：\n入睡 23:25，起床 06:30，夜间觉醒3次(00:45/02:50/04:30)，觉醒总时长65min，总睡眠 5h55m，深睡 15%，睡眠效率 76%\n\n像朋友一样聊昨晚的睡眠，不要像报告一样列数据。\n如果数据和干预策略中的当前干预相关，可以关联起来聊。",
       "messages": [],
-      "expected_tool_calls": "get_strategy([\"active\", \"trends\"]) 关联干预效果和基线对比；不用 get_user_profile（速览已知夜醒原因）；suggest_replies",
+      "expected_tool_calls": "get_strategy([\"action\", \"trends\"]) 关联干预效果和基线对比；不用 get_user_profile（速览已知夜醒原因）；suggest_replies",
       "expected_response": "数据差但原因是小孩夜醒（不可控），不给用户增加压力。先关心感受（'昨晚醒了3次，挺辛苦的'），温和地问深呼吸有没有用。不说教。语气温暖有支持感。"
     },
     {
@@ -40,7 +40,7 @@
       "event_context": {"event_type": "feedback_submit", "timestamp": "2026-03-25T08:00:00+08:00"},
       "scene_instruction": "## 当前场景\n\n用户刚提交了一张反馈卡：\n- 关联建议：夜间安抚小孩后做3次深呼吸再躺下\n- 用户选择：做到了\n- 用户补充：确实比直接躺下好一些，脑子没那么乱\n\n基于反馈推进对话：\n- 做到了 → 具体肯定，考虑固化或推进下一步",
       "messages": [],
-      "expected_tool_calls": "save_memory(category=intervention_feedback)；get_strategy([\"active\"]) 确认下一步路径（渐进式肌肉放松）；get_user_profile([\"sleep_strengths\"]) 用于肯定；suggest_replies",
+      "expected_tool_calls": "save_memory(category=intervention_feedback)；get_strategy([\"action\"]) 确认下一步路径（渐进式肌肉放松）；get_user_profile([\"sleep_strengths\"]) 用于肯定；suggest_replies",
       "expected_response": "具体肯定效果（'脑子没那么乱'是好信号），不空泛鼓励。长期用户+有效干预，可以协商下一步（'要不要试试...'），不是命令。"
     },
     {
@@ -62,7 +62,7 @@
       "messages": [
         {"role": "user", "content": "有没有什么办法让我白天精力好一点？实在太累了"}
       ],
-      "expected_tool_calls": "get_strategy([\"redlines\", \"active\", \"preferences\"]) 确认3条红线+当前方向+偏好；get_user_profile([\"lifestyle\"]) 了解实际生活限制",
+      "expected_tool_calls": "get_strategy([\"redlines\", \"action\"]) 确认3条红线+当前方向+偏好；get_user_profile([\"lifestyle\"]) 了解实际生活限制",
       "expected_response": "必须在3条红线范围外给建议。可以建议优化午睡质量（但不是减少）、白天适当晒太阳等。必须考虑全职妈妈的实际限制。一个建议就好。"
     },
     {
@@ -73,7 +73,7 @@
       "messages": [
         {"role": "user", "content": "每天哄完娃到自由时间就不舍得睡觉，明知道该睡了但就想再看会手机"}
       ],
-      "expected_tool_calls": "get_user_profile([\"psychology\"]) 了解心理模式；get_strategy([\"active\"]) 关联纸质书干预",
+      "expected_tool_calls": "get_user_profile([\"psychology\"]) 了解心理模式；get_strategy([\"action\"]) 关联纸质书干预",
       "expected_response": "先表达理解（'一天就这一个多小时是自己的，当然不舍得'）。不直接说'那你就早点睡'。可以温和提醒当前干预（纸质书）或建议自由时间做更满足的事。共情先行。"
     },
     {
@@ -123,7 +123,7 @@
       },
       "scene_instruction": "## 当前场景\n\n以下是最近发现的一个值得关注的变化：\n过去一周中，用户入睡潜伏期出现分化：有老公在家的3天平均8min入睡，老公出差的4天平均22min。且出差日用户在睡前30min心率偏高（均值+8bpm）。\n\n用你自己的话和用户聊这个发现。不要说\"系统检测到\"。",
       "messages": [],
-      "expected_tool_calls": "get_strategy([\"trends\", \"active\", \"cognition\"]) 关联数据趋势+当前干预+焦虑认知引导方向；get_user_profile([\"psychology\"]) 了解焦虑模式；suggest_replies",
+      "expected_tool_calls": "get_strategy([\"trends\", \"action\", \"cognition\"]) 关联数据趋势+当前干预+焦虑认知引导方向；get_user_profile([\"psychology\"]) 了解焦虑模式；suggest_replies",
       "expected_response": "用朋友口吻分享发现——老公在不在家对入睡有明显影响。不说'系统检测到'。敏感处理——不是批评她'焦虑'，而是帮她意识到模式。可以关联到是否引入'担忧日记'。语气温和不带评判。"
     },
     {
@@ -143,7 +143,7 @@
       "event_context": {"event_type": "feedback_submit", "timestamp": "2026-03-28T08:00:00+08:00"},
       "scene_instruction": "## 当前场景\n\n用户刚提交了一张反馈卡：\n- 关联建议：睡前15分钟放下手机看纸质书\n- 用户选择：部分做到\n- 用户补充：有两天做到了，其他几天哄完娃太累了直接刷手机放空\n\n基于反馈推进对话：\n- 部分做到 → 肯定已做到的，了解困难点",
       "messages": [],
-      "expected_tool_calls": "save_memory(category=intervention_feedback)；get_strategy([\"active\", \"preferences\"]) 了解干预状态和用户偏好以调整期望；suggest_replies",
+      "expected_tool_calls": "save_memory(category=intervention_feedback)；get_strategy([\"action\"]) 了解干预状态和用户偏好以调整期望；suggest_replies",
       "expected_response": "肯定做到的2天，理解'哄完娃太累直接刷手机放空'的心态（合理的自我调节，不是'失败'）。调整期望——'哄娃不太累的晚上试试就好'。不追责，不说'下次要坚持'。"
     }
   ]
