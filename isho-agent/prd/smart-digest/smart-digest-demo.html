@@ -348,6 +348,38 @@
     background: rgb(202,165,243);
   }
 
+  /* ── Quick Questions ── */
+  .quick-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .qq-btn {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.9);
+    color: #000;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(217,232,249,0.4);
+    transition: all 0.2s;
+    line-height: 1.4;
+    font-family: var(--font);
+  }
+  .qq-btn:hover {
+    background: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(217,232,249,0.6);
+  }
+  .qq-btn:active { transform: scale(0.98); }
+
   /* ── Bottom Input Bar ── */
   .bottom-bar {
     position: relative;
@@ -521,8 +553,9 @@
     <div style="height: 24px; flex-shrink: 0;"></div>
   </div>
 
-  <!-- Bottom Input Bar -->
+  <!-- Bottom: Quick Questions + Input Bar -->
   <div class="bottom-bar">
+    <div class="quick-questions" id="quick-questions"></div>
     <div class="input-wrapper">
       <svg class="input-sparkle" viewBox="0 0 20 18">
         <path d="M10 0L12.2 6.8L19 8.5L12.2 10.2L10 17L7.8 10.2L1 8.5L7.8 6.8Z" fill="url(#sparkleGrad)"/>
@@ -552,6 +585,7 @@ const SCENES = [
     time: '8:30',
     greeting: '早上好',
     digest: '昨夜的安稳，是送给今天最好的礼物。去迎战你的主场吧，我已为你储备好一整天的底气',
+    questions: ['深睡为什么会波动', '近三天深睡趋势', '怎么保持这状态'],
     metrics: { sleep: 92, hr: 87, cal: 672 },
     energy: { label: '今日剩余', val: '7h 36m', slot1: '09:30 - 11:45', slot2: '18:45 - 21:10' },
     info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:00' },
@@ -563,6 +597,7 @@ const SCENES = [
     time: '9:15',
     greeting: '早上好',
     digest: '1:45 才躺下，深睡只捞到 15%，不过高能窗口 9:30 就开了，先干正事',
+    questions: ['晚睡对深睡影响多大', '深睡占比多少正常', '今晚怎么改善'],
     metrics: { sleep: 68, hr: 71, cal: 180 },
     energy: { label: '今日剩余', val: '9h 30m', slot1: '09:30 - 12:00', slot2: '15:00 - 17:30' },
     info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:00' },
@@ -574,6 +609,7 @@ const SCENES = [
     time: '14:20',
     greeting: '下午好',
     digest: '还剩 4 小时高能，2-4 点是你的主场——那个需求文档该写了',
+    questions: ['高能时段怎么算的', '今天高能窗口变了吗', '高能时段怎么用好'],
     metrics: { sleep: 85, hr: 82, cal: 450 },
     energy: { label: '今日剩余', val: '4h', slot1: '14:00 - 16:00', slot2: '19:00 - 21:00' },
     info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:30' },
@@ -585,6 +621,7 @@ const SCENES = [
     time: '16:45',
     greeting: '下午好',
     digest: '高能额度已经刷完了，大脑已进入节能模式，剩下的时间适合做不费脑的事',
+    questions: ['怎么判断完全没电了', '咖啡能续命多久', '现在做点什么能恢复'],
     metrics: { sleep: 78, hr: 88, cal: 580 },
     energy: { label: '今日高能', val: '已耗尽', slot1: '09:00 - 11:30', slot2: '13:30 - 15:45' },
     info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '22:30' },
@@ -596,6 +633,7 @@ const SCENES = [
     time: '19:30',
     greeting: '晚上好',
     digest: '今天只消耗了 320 大卡，你的椅子比你更累。明天可以动一动',
+    questions: ['消耗低影响睡眠吗', '睡前适合什么活动', '推荐个放松运动'],
     metrics: { sleep: 85, hr: 75, cal: 320 },
     energy: { label: '明日刷新', val: '06:00', slot1: '-- : --', slot2: '-- : --' },
     info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:00' },
@@ -607,6 +645,7 @@ const SCENES = [
     time: '23:10',
     greeting: '夜深了',
     digest: '静息心率已经降到 58 了，身体比你先表态——该准备收工了',
+    questions: ['低心率说明什么', '现在多快能睡着', '帮我设个闹钟'],
     metrics: { sleep: 88, hr: 58, cal: 650 },
     energy: { label: '推荐入睡', val: '23:30', slot1: '-- : --', slot2: '-- : --' },
     info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:30' },
@@ -618,6 +657,7 @@ const SCENES = [
     time: '10:00',
     greeting: '早上好',
     digest: '',
+    questions: [],
     metrics: { sleep: 88, hr: 76, cal: 350 },
     energy: { label: '今日剩余', val: '6h', slot1: '10:00 - 12:00', slot2: '14:00 - 16:00' },
     info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:00' },
@@ -659,6 +699,21 @@ function applyScene(s) {
   $('info-label-1').textContent = s.info1.label;
   $('info-sublabel-1').textContent = s.info1.sublabel;
   $('info-value-1').textContent = s.info1.value;
+
+  // Quick Questions
+  const qqContainer = $('quick-questions');
+  qqContainer.innerHTML = '';
+  if (s.questions && s.questions.length > 0 && s.digest) {
+    qqContainer.style.display = 'flex';
+    s.questions.forEach(q => {
+      const btn = document.createElement('div');
+      btn.className = 'qq-btn';
+      btn.textContent = q;
+      qqContainer.appendChild(btn);
+    });
+  } else {
+    qqContainer.style.display = 'none';
+  }
 }
 
 applyScene(SCENES[0]);
