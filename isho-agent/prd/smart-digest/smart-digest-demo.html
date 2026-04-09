@@ -9,12 +9,16 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --brand-green: #34C759;
-    --bg-dark: #000000;
-    --bg-app: #f2f2f7;
-    --text-primary: #1C1C1E;
-    --text-secondary: #8E8E93;
-    --card-bg: #FFFFFF;
+    --bg-page: rgb(236,243,253);
+    --text-primary: #000;
+    --text-secondary: rgba(0,0,0,0.6);
+    --card-gradient: linear-gradient(180deg, rgb(236,250,251) 0%, rgb(238,234,243) 100%);
+    --card-shadow: 0 4px 18px rgba(217,232,249,1);
+    --energy-gradient: linear-gradient(180deg, rgb(223,249,255) 0%, rgb(239,255,254) 100%);
+    --energy-shadow: 0 16px 58px rgba(217,232,249,0.51);
+    --icon-bg: rgb(227,234,252);
+    --icon-inner: linear-gradient(180deg, rgb(205,227,231) 0%, rgb(215,226,249) 100%);
+    --bottom-gradient: linear-gradient(180deg, rgb(220,227,253) 0%, rgb(220,227,253) 100%);
     --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
   }
 
@@ -30,7 +34,7 @@
     gap: 40px;
   }
 
-  /* ── Controle Panel ── */
+  /* ── Control Panel ── */
   .control-panel {
     background: #2C2C2E;
     padding: 24px;
@@ -39,16 +43,8 @@
     color: #fff;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
-  .control-panel h3 {
-    margin-bottom: 16px;
-    font-size: 16px;
-    font-weight: 600;
-  }
-  .control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  .control-panel h3 { margin-bottom: 16px; font-size: 16px; font-weight: 600; }
+  .control-group { display: flex; flex-direction: column; gap: 10px; }
   .scene-btn {
     background: #3A3A3C;
     border: 1px solid #48484A;
@@ -61,65 +57,94 @@
     font-family: var(--font);
     transition: all 0.2s;
   }
-  .scene-btn:hover {
-    background: #48484A;
-  }
+  .scene-btn:hover { background: #48484A; }
   .scene-btn.active {
     background: rgba(52, 199, 89, 0.15);
-    border-color: var(--brand-green);
-    color: var(--brand-green);
+    border-color: #34C759;
+    color: #34C759;
     font-weight: 500;
   }
-  .scene-btn span {
-    display: block;
-    font-size: 11px;
-    color: #8E8E93;
-    margin-top: 4px;
-    line-height: 1.4;
-  }
-  .scene-btn.active span {
-    color: rgba(52, 199, 89, 0.7);
-  }
+  .scene-btn span { display: block; font-size: 11px; color: #8E8E93; margin-top: 4px; line-height: 1.4; }
+  .scene-btn.active span { color: rgba(52, 199, 89, 0.7); }
 
   /* ── iPhone Frame ── */
   .iphone-frame {
     width: 393px;
     height: 852px;
-    background: var(--bg-app);
     border-radius: 50px;
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    box-shadow:
-      0 0 0 3px #2C2C2E,
-      0 0 0 6px #1a1a1a,
-      0 20px 60px rgba(0,0,0,0.6);
-    /* 首页顶部有一个好看的渐变底色 */
-    background: linear-gradient(180deg, #E6F3FF 0%, #F5F5F7 25%, #F5F5F7 100%);
+    box-shadow: 0 0 0 3px #2C2C2E, 0 0 0 6px #1a1a1a, 0 20px 60px rgba(0,0,0,0.6);
+  }
+
+  /* ── Background layer (matches Figma bg group) ── */
+  .bg-layer {
+    position: absolute;
+    inset: 0;
+    background: rgb(236,243,253);
+    overflow: hidden;
+    z-index: 0;
+  }
+  .bg-blob-1 {
+    position: absolute;
+    width: 408px;
+    height: 234px;
+    top: -116px;
+    left: 89px;
+    background: rgb(190,241,248);
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.7;
+  }
+  .bg-blob-2 {
+    position: absolute;
+    width: 142px;
+    height: 142px;
+    top: -68px;
+    left: 55px;
+    background: rgb(211,249,240);
+    border-radius: 50%;
+    filter: blur(30px);
+    opacity: 0.8;
+  }
+  .bg-blob-3 {
+    position: absolute;
+    width: 142px;
+    height: 142px;
+    top: -78px;
+    left: -45px;
+    background: rgb(252,238,224);
+    border-radius: 50%;
+    filter: blur(30px);
+    opacity: 0.8;
+  }
+  .bg-blob-4 {
+    position: absolute;
+    width: 640px;
+    height: 444px;
+    bottom: -100px;
+    left: -157px;
+    background: rgb(220,227,253);
+    border-radius: 40%;
+    filter: blur(50px);
+    opacity: 0.5;
   }
 
   /* ── Status Bar ── */
   .status-bar {
-    height: 54px;
+    height: 62px;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    padding: 0 32px 8px;
+    padding: 0 24px 10px;
     position: relative;
     z-index: 10;
   }
-  .status-bar .time {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-  .status-bar .icons {
-    display: flex;
-    gap: 5px;
-    font-size: 12px;
-    color: #1a1a1a;
-  }
+  .status-bar .time { font-size: 17px; font-weight: 590; color: #000; }
+  .status-bar .icons { display: flex; gap: 6px; align-items: center; }
+  .status-bar .icons svg { width: 18px; height: 12px; fill: #000; }
   .dynamic-island {
     position: absolute;
     top: 12px;
@@ -135,321 +160,412 @@
   /* ── Homepage Content ── */
   .homepage {
     flex: 1;
-    padding: 20px 24px;
+    padding: 16px 20px 0;
     display: flex;
     flex-direction: column;
     position: relative;
+    z-index: 1;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-  
-  .greeting-area {
-    margin-bottom: 24px;
-    min-height: 80px; /* 防止内容为空时塌陷 */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-  }
-  
+  .homepage::-webkit-scrollbar { display: none; }
+
   .greeting-title {
-    font-size: 34px;
-    font-weight: 800;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-    letter-spacing: -0.5px;
+    font-size: 32px;
+    font-weight: 600;
+    color: #000;
+    line-height: 40px;
+    margin-bottom: 8px;
     transition: opacity 0.3s;
   }
-  
   .digest-text {
-    font-size: 15px;
-    line-height: 1.5;
-    color: #3A3A3C;
-    transition: opacity 0.3s, transform 0.3s;
+    font-size: 14px;
+    line-height: 22px;
+    color: rgba(0,0,0,0.6);
     font-weight: 400;
+    margin-bottom: 24px;
+    transition: opacity 0.3s, transform 0.3s;
   }
 
-  /* Hide/Show animations */
-  .fade-enter-active {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .fade-exit-active {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
+  /* ── Data Cards Row (Sleep / HR / Calories) ── */
   .data-cards-row {
     display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 11px;
+    margin-bottom: 12px;
   }
   .data-card {
-    flex: 1;
-    background: var(--card-bg);
-    border-radius: 20px;
-    padding: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    width: 110px;
+    height: 96px;
+    background: var(--card-gradient);
+    border: 1px solid #fff;
+    border-radius: 24px;
+    box-shadow: var(--card-shadow);
     position: relative;
     overflow: hidden;
+    padding: 13px 0 0 13px;
   }
-  /* 卡片内部左上方的圆形 icon */
-  .data-card .icon-circle {
-    width: 32px;
-    height: 32px;
+  .data-card .icon-outer {
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
-    background: #F5F5F7;
+    border: 1px solid rgba(255,255,255,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    opacity: 0.8;
-  }
-  .data-card .metric-info {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-  .data-card .metric-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-  }
-  .data-card .metric-val {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-  }
-  
-  /* 填充模块，伪装成其他内容 */
-  .filler-module {
-    background: var(--card-bg);
-    height: 160px;
-    border-radius: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-  }
-  .filler-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .filler-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-  .filler-subtitle { font-size: 12px; color: var(--text-secondary); }
-  
-  /* 伪装的波浪图表现 */
-  .filler-chart {
-    flex: 1;
     position: relative;
   }
-  .chart-area {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,40 L0,20 C10,0 20,40 35,20 C50,0 70,40 85,25 C95,15 100,20 100,20 L100,40 Z" fill="%2334C759" opacity="0.1"/></svg>') no-repeat bottom center;
-    background-size: 100% 100%;
-  }
-  .chart-line {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,20 C10,0 20,40 35,20 C50,0 70,40 85,25 C95,15 100,20 100,20" fill="none" stroke="%2334C759" stroke-width="2"/></svg>') no-repeat bottom center;
-    background-size: 100% 100%;
-  }
-
-  /* ── Bottom Section (Questions + Input) ── */
-  .bottom-section {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 0 16px 36px;
-    background: linear-gradient(0deg, rgba(245,245,247,1) 70%, rgba(245,245,247,0) 100%);
+  .data-card .icon-inner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--icon-inner);
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
   }
-
-  .quick-questions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
-    padding: 0 4px;
-    transition: opacity 0.3s, transform 0.3s;
-  }
-  
-  .qq-btn {
-    align-self: flex-start;
-    background: #FFFFFF;
-    border: 1px solid rgba(0,0,0,0.05);
-    color: #1C1C1E;
-    padding: 12px 18px;
-    border-radius: 20px;
-    font-size: 14px;
+  .data-card .metric-val {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    font-size: 20px;
     font-weight: 500;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-    transition: all 0.2s;
-    line-height: 1.4;
-    max-width: 100%;
+    color: #000;
+    line-height: 28px;
   }
-  .qq-btn:hover {
-    background: #F9F9F9;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-  }
-  .qq-btn:active {
-    transform: scale(0.98);
+  .data-card .metric-label {
+    position: absolute;
+    left: 16px;
+    bottom: 12px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #000;
+    line-height: 16px;
   }
 
-  .input-wrapper {
-    background: #FFFFFF;
+  /* ── Energy Card ── */
+  .energy-card {
+    background: var(--energy-gradient);
+    border: 1px solid #fff;
     border-radius: 24px;
-    height: 48px;
+    box-shadow: var(--energy-shadow);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .energy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .energy-title { font-size: 14px; font-weight: 500; color: #000; line-height: 20px; }
+  .energy-remain { text-align: right; }
+  .energy-remain-label { font-size: 12px; color: rgba(0,0,0,0.6); line-height: 16px; }
+  .energy-remain-val { font-size: 16px; font-weight: 500; color: rgba(0,0,0,0.9); line-height: 24px; }
+
+  .energy-chart {
+    height: 56px;
+    position: relative;
+    margin-bottom: 4px;
+  }
+  .energy-chart svg { width: 100%; height: 100%; }
+
+  .energy-divider {
+    height: 1px;
+    background: rgba(0,0,0,0.04);
+    margin: 8px 0;
+  }
+  .energy-times {
+    display: flex;
+    gap: 40px;
+    padding-left: 8px;
+  }
+  .energy-time {
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(0,0,0,0.9);
+    line-height: 16px;
+  }
+
+  /* ── Info Row Cards (Sleep Window / Sleep Analysis) ── */
+  .info-row {
+    background: #fff;
+    border: 1px solid #fff;
+    border-radius: 16px;
+    height: 64px;
     display: flex;
     align-items: center;
     padding: 0 16px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    margin-bottom: 12px;
   }
-  .input-icon {
+  .info-row-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--icon-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
     font-size: 18px;
-    margin-right: 12px;
+  }
+  .info-row-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #000;
+    line-height: 20px;
+    margin-left: 8px;
+  }
+  .info-row-right {
+    margin-left: auto;
+    text-align: right;
+  }
+  .info-row-sublabel {
+    font-size: 12px;
+    color: rgba(0,0,0,0.6);
+    line-height: 16px;
+  }
+  .info-row-value {
+    font-size: 24px;
+    font-weight: 500;
+    color: #000;
+    line-height: 32px;
+  }
+
+  /* Sleep bars mini chart */
+  .sleep-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 40px;
+    margin-left: auto;
+  }
+  .sleep-bar {
+    width: 6px;
+    border-radius: 3px;
+    background: rgb(202,165,243);
+  }
+
+  /* ── Bottom Input Bar ── */
+  .bottom-bar {
+    position: relative;
+    z-index: 10;
+    background: var(--bottom-gradient);
+    padding: 12px 20px 36px;
+  }
+  .input-wrapper {
+    background: #fff;
+    border: 1px solid #fff;
+    border-radius: 32px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px 0 12px;
+  }
+  .input-sparkle {
+    width: 20px;
+    height: 18px;
+    flex-shrink: 0;
   }
   .input-field {
     flex: 1;
     border: none;
     background: transparent;
-    font-size: 15px;
-    color: #1C1C1E;
+    font-size: 14px;
+    color: #000;
     outline: none;
     font-family: var(--font);
+    margin-left: 8px;
+    opacity: 0.35;
   }
-  .input-field::placeholder {
-    color: #8E8E93;
+  .input-field::placeholder { color: #000; }
+  .input-send {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    cursor: pointer;
   }
+  .input-send svg { width: 12px; height: 12px; fill: none; stroke: #fff; stroke-width: 2; }
 
+  /* ── Animations ── */
+  .fade-enter-active { opacity: 1; transform: translateY(0); }
+  .fade-exit-active { opacity: 0; transform: translateY(-10px); }
 </style>
 </head>
 <body>
 
-<!-- 控制面板 -->
+<!-- Control Panel -->
 <div class="control-panel">
   <h3>快速切换场景</h3>
   <div class="control-group" id="btn-group"></div>
 </div>
 
 <div class="iphone-frame" id="app">
+  <!-- Background blobs -->
+  <div class="bg-layer">
+    <div class="bg-blob-1"></div>
+    <div class="bg-blob-2"></div>
+    <div class="bg-blob-3"></div>
+    <div class="bg-blob-4"></div>
+  </div>
+
   <!-- Dynamic Island -->
   <div class="dynamic-island"></div>
 
   <!-- Status Bar -->
   <div class="status-bar">
-    <span class="time" id="sys-time">09:41</span>
-    <span class="icons">📶 🔋</span>
+    <span class="time" id="sys-time">9:41</span>
+    <span class="icons">
+      <svg viewBox="0 0 19 13"><rect x="0" y="3" width="3" height="10" rx="0.7"/><rect x="4.5" y="2" width="3" height="11" rx="0.7"/><rect x="9" y="1" width="3" height="12" rx="0.7"/><rect x="13.5" y="0" width="3" height="13" rx="0.7"/></svg>
+      <svg viewBox="0 0 17 13"><path d="M8.5 3.5C10.8 3.5 12.8 4.5 14.2 6L15.8 4.4C14 2.5 11.4 1.2 8.5 1.2S3 2.5 1.2 4.4L2.8 6C4.2 4.5 6.2 3.5 8.5 3.5z"/><path d="M8.5 7C9.9 7 11.2 7.6 12.1 8.5L13.7 6.9C12.4 5.6 10.5 4.8 8.5 4.8S4.6 5.6 3.3 6.9L4.9 8.5C5.8 7.6 7.1 7 8.5 7z"/><circle cx="8.5" cy="11" r="2"/></svg>
+      <svg viewBox="0 0 28 13"><rect x="0" y="0" width="25" height="13" rx="4.3" fill="none" stroke="#000" stroke-opacity="0.35"/><rect x="2" y="2" width="21" height="9" rx="2.5" fill="#000"/><rect x="26" y="3.5" width="1.3" height="4" rx="0.7" fill="#000" opacity="0.4"/></svg>
+    </span>
   </div>
 
   <div class="homepage">
-    <!-- 智能摘要区域 -->
-    <div class="greeting-area">
-      <div class="greeting-title" id="greeting">早上好</div>
-      <div class="digest-text" id="digest">深睡 21% 回到线上，HRV 也涨了 3ms——今早的你可以嚣张一点</div>
-    </div>
-    
-    <!-- 健康数据卡片 -->
+    <!-- Greeting -->
+    <div class="greeting-title" id="greeting">早上好</div>
+    <div class="digest-text" id="digest">昨夜的安稳，是送给今天最好的礼物。去迎战你的主场吧，我已为你储备好一整天的底气</div>
+
+    <!-- Data Cards: Sleep / HR / Calories -->
     <div class="data-cards-row">
       <div class="data-card">
-        <div class="icon-circle">🌙</div>
-        <div class="metric-info">
-          <span class="metric-label">睡眠</span>
-          <span class="metric-val" id="metric-sleep">92</span>
-        </div>
+        <div class="icon-outer"><div class="icon-inner">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 8.5C14 12 11.3 14.5 8 14.5C4.7 14.5 2 12 2 8.5C2 5 4 1.5 8 1.5"/><path d="M8 1.5C8 4.5 10 6 13 6"/></svg>
+        </div></div>
+        <span class="metric-label">睡眠</span>
+        <span class="metric-val" id="metric-sleep">92</span>
       </div>
       <div class="data-card">
-        <div class="icon-circle">❤️</div>
-        <div class="metric-info">
-          <span class="metric-label">心率</span>
-          <span class="metric-val" id="metric-hr">87</span>
-        </div>
+        <div class="icon-outer"><div class="icon-inner">
+          <svg width="16" height="15" viewBox="0 0 16 15" fill="#000"><path d="M8 14s-5.5-4.2-5.5-8.2C2.5 3 4.5 1.5 6.5 1.5c1.2 0 2.5.7 3 1.5.5-.8 1.8-1.5 3-1.5 2 0 4 1.5 4 4.3C13.5 9.8 8 14 8 14z" transform="scale(0.85) translate(1.2,0.5)"/></svg>
+        </div></div>
+        <span class="metric-label">心率</span>
+        <span class="metric-val" id="metric-hr">87</span>
       </div>
       <div class="data-card">
-        <div class="icon-circle">🔥</div>
-        <div class="metric-info">
-          <span class="metric-label">活动</span>
-          <span class="metric-val" id="metric-cal">672</span>
+        <div class="icon-outer"><div class="icon-inner">
+          <svg width="17" height="17" viewBox="0 0 17 17" fill="#000"><path d="M8.5 1L10 5.5H14.5L11 8.5L12.5 13L8.5 10.2L4.5 13L6 8.5L2.5 5.5H7L8.5 1Z" stroke="#333" stroke-width="0.8" fill="none"/><line x1="8.5" y1="6" x2="8.5" y2="13" stroke="#333" stroke-width="0.8"/></svg>
+        </div></div>
+        <span class="metric-label">消耗</span>
+        <span class="metric-val" id="metric-cal">672</span>
+      </div>
+    </div>
+
+    <!-- Energy Card -->
+    <div class="energy-card">
+      <div class="energy-header">
+        <span class="energy-title">高能时段</span>
+        <div class="energy-remain">
+          <div class="energy-remain-label" id="energy-label">今日剩余</div>
+          <div class="energy-remain-val" id="energy-val">7h 36m</div>
         </div>
       </div>
-    </div>
-    
-    <!-- 填充模块 -->
-    <div class="filler-module">
-      <div class="filler-header">
-        <span class="filler-title">高能时段</span>
-        <span class="filler-subtitle" id="filler-sub">今日剩余 7h 36m</span>
+      <div class="energy-chart">
+        <svg viewBox="0 0 318 56" preserveAspectRatio="none">
+          <!-- area fills -->
+          <path d="M9 0 C20 0 30 5 45 10 C55 14 60 56 63 56 L63 0 Z" fill="url(#tealGrad)" opacity="0.6"/>
+          <path d="M145 10 C155 5 170 20 181 20 C192 20 200 56 210 56 L181 56 Z" fill="url(#tealGrad)" opacity="0.6"/>
+          <!-- line -->
+          <path d="M0 28 C10 10 25 5 45 12 C55 16 60 40 72 48 C84 52 100 50 120 48 C140 46 155 15 175 22 C190 28 200 42 218 48 C240 52 270 48 318 46" fill="none" stroke="rgba(0,200,204,0.4)" stroke-width="1.5"/>
+          <!-- pointer -->
+          <polygon points="98,6 93,14 103,14" fill="rgb(0,200,204)"/>
+          <defs>
+            <linearGradient id="tealGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgb(86,245,244)"/>
+              <stop offset="100%" stop-color="rgb(91,254,253)"/>
+            </linearGradient>
+          </defs>
+        </svg>
       </div>
-      <div class="filler-chart">
-        <div class="chart-area"></div>
-        <div class="chart-line"></div>
+      <div class="energy-divider"></div>
+      <div class="energy-times">
+        <span class="energy-time" id="time-slot-1">09:30 - 11:45</span>
+        <span class="energy-time" id="time-slot-2">18:45 - 21:10</span>
       </div>
     </div>
-    
+
+    <!-- Sleep Window -->
+    <div class="info-row" id="info-row-1">
+      <div class="info-row-icon">🛏️</div>
+      <span class="info-row-label" id="info-label-1">入睡窗口</span>
+      <div class="info-row-right">
+        <div class="info-row-sublabel" id="info-sublabel-1">推荐入睡</div>
+        <div class="info-row-value" id="info-value-1">23:00</div>
+      </div>
+    </div>
+
+    <!-- Sleep Analysis -->
+    <div class="info-row" id="info-row-2">
+      <div class="info-row-icon">📊</div>
+      <span class="info-row-label">睡眠分析</span>
+      <div class="sleep-bars">
+        <div class="sleep-bar" style="height:26px"></div>
+        <div class="sleep-bar" style="height:30px"></div>
+        <div class="sleep-bar" style="height:27px"></div>
+        <div class="sleep-bar" style="height:30px"></div>
+        <div class="sleep-bar" style="height:39px"></div>
+        <div class="sleep-bar" style="height:25px"></div>
+        <div class="sleep-bar" style="height:34px"></div>
+      </div>
+    </div>
+
+    <!-- spacer for bottom bar -->
+    <div style="height: 24px; flex-shrink: 0;"></div>
   </div>
 
-  <!-- 底部交互区域 -->
-  <div class="bottom-section" id="bottom-section">
-    <!-- 快捷提问列表 -->
-    <div class="quick-questions" id="quick-questions">
-      <div class="qq-btn">深睡和 HRV 为什么同步变化？</div>
-      <div class="qq-btn">这三天的深睡趋势怎么样？</div>
-      <div class="qq-btn">怎么把这个状态保持住？</div>
-    </div>
-    
-    <!-- 聊天输入框 -->
+  <!-- Bottom Input Bar -->
+  <div class="bottom-bar">
     <div class="input-wrapper">
-      <div class="input-icon">✨</div>
+      <svg class="input-sparkle" viewBox="0 0 20 18">
+        <path d="M10 0L12.2 6.8L19 8.5L12.2 10.2L10 17L7.8 10.2L1 8.5L7.8 6.8Z" fill="url(#sparkleGrad)"/>
+        <path d="M16.5 0L17.3 2.3L19.5 3L17.3 3.7L16.5 6L15.7 3.7L13.5 3L15.7 2.3Z" fill="url(#sparkleGrad)"/>
+        <defs>
+          <linearGradient id="sparkleGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="rgb(241,139,217)"/>
+            <stop offset="76%" stop-color="rgb(115,115,244)"/>
+            <stop offset="100%" stop-color="rgb(111,219,255)"/>
+          </linearGradient>
+        </defs>
+      </svg>
       <input type="text" class="input-field" placeholder="输入您的内容" readonly>
+      <div class="input-send">
+        <svg viewBox="0 0 12 12"><polyline points="6,0 6,12" /><polyline points="0,6 6,0 12,6" /></svg>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-// ── 场景数据定义 ──
 const SCENES = [
   {
     id: 'morning_good',
     name: '晨起 - 睡眠优质',
     desc: '昨夜睡眠数据首次同步，指标好转',
-    time: '08:30',
+    time: '8:30',
     greeting: '早上好',
-    digest: '深睡 21% 回到线上，HRV 也涨了 3ms——今早的你可以嚣张一点',
-    questions: [
-      '深睡和 HRV 为什么经常同步变化？',
-      '这三天的深睡趋势怎么样？',
-      '怎么把这个状态保持住？'
-    ],
-    metrics: { sleep: 92, hr: 62, cal: 120, remain: '今日剩余 11h' }
+    digest: '昨夜的安稳，是送给今天最好的礼物。去迎战你的主场吧，我已为你储备好一整天的底气',
+    metrics: { sleep: 92, hr: 87, cal: 672 },
+    energy: { label: '今日剩余', val: '7h 36m', slot1: '09:30 - 11:45', slot2: '18:45 - 21:10' },
+    info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:00' },
   },
   {
     id: 'morning_bad',
     name: '晨起 - 入睡太晚',
-    desc: '入睡太晚导致深睡下降，但白天仍有高能窗口',
-    time: '09:15',
+    desc: '入睡太晚导致深睡下降',
+    time: '9:15',
     greeting: '早上好',
     digest: '1:45 才躺下，深睡只捞到 15%，不过高能窗口 9:30 就开了，先干正事',
-    questions: [
-      '入睡时间晚多少深睡就开始掉？',
-      '什么是深睡占比，多少算正常？',
-      '今晚有什么能马上试的方法？'
-    ],
-    metrics: { sleep: 68, hr: 71, cal: 180, remain: '今日剩余 9h 30m' }
+    metrics: { sleep: 68, hr: 71, cal: 180 },
+    energy: { label: '今日剩余', val: '9h 30m', slot1: '09:30 - 12:00', slot2: '15:00 - 17:30' },
+    info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:00' },
   },
   {
     id: 'afternoon_energy',
@@ -458,12 +574,9 @@ const SCENES = [
     time: '14:20',
     greeting: '下午好',
     digest: '还剩 4 小时高能，2-4 点是你的主场——那个需求文档该写了',
-    questions: [
-      '高能时段具体是怎么算出来的？',
-      '今天的高能窗口和昨天比有变化吗？',
-      '怎么在高能窗口里提升效率？'
-    ],
-    metrics: { sleep: 85, hr: 82, cal: 450, remain: '今日剩余 4h' }
+    metrics: { sleep: 85, hr: 82, cal: 450 },
+    energy: { label: '今日剩余', val: '4h', slot1: '14:00 - 16:00', slot2: '19:00 - 21:00' },
+    info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:30' },
   },
   {
     id: 'afternoon_depleted',
@@ -472,12 +585,9 @@ const SCENES = [
     time: '16:45',
     greeting: '下午好',
     digest: '高能额度已经刷完了，大脑已进入节能模式，剩下的时间适合做不费脑的事',
-    questions: [
-      '怎么判断自己是不是完全没电了？',
-      '喝杯咖啡能续命多久？',
-      '现在做点什么能稍微恢复下？'
-    ],
-    metrics: { sleep: 78, hr: 88, cal: 580, remain: '今日高能已耗尽' }
+    metrics: { sleep: 78, hr: 88, cal: 580 },
+    energy: { label: '今日高能', val: '已耗尽', slot1: '09:00 - 11:30', slot2: '13:30 - 15:45' },
+    info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '22:30' },
   },
   {
     id: 'evening_low',
@@ -486,12 +596,9 @@ const SCENES = [
     time: '19:30',
     greeting: '晚上好',
     digest: '今天只消耗了 320 大卡，你的椅子比你更累。明天可以动一动',
-    questions: [
-      '消耗过低对晚上的睡眠有影响吗？',
-      '睡前适合做些什么轻量活动？',
-      '帮我推荐一个15分钟的放松运动'
-    ],
-    metrics: { sleep: 85, hr: 75, cal: 320, remain: '明日 06:00 刷新' }
+    metrics: { sleep: 85, hr: 75, cal: 320 },
+    energy: { label: '明日刷新', val: '06:00', slot1: '-- : --', slot2: '-- : --' },
+    info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:00' },
   },
   {
     id: 'night_ready',
@@ -500,45 +607,31 @@ const SCENES = [
     time: '23:10',
     greeting: '夜深了',
     digest: '静息心率已经降到 58 了，身体比你先表态——该准备收工了',
-    questions: [
-      '静息心率低在睡前意味着什么？',
-      '我现在的状态多快能睡着？',
-      '帮我设个明天早上的闹钟'
-    ],
-    metrics: { sleep: 88, hr: 58, cal: 650, remain: '推荐入睡 23:30' }
+    metrics: { sleep: 88, hr: 58, cal: 650 },
+    energy: { label: '推荐入睡', val: '23:30', slot1: '-- : --', slot2: '-- : --' },
+    info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:30' },
   },
   {
     id: 'none',
     name: '数据无更新 / 冷却期',
-    desc: '未满足触发条件，不生成摘要和提问',
+    desc: '未满足触发条件，不生成摘要',
     time: '10:00',
     greeting: '早上好',
     digest: '',
-    questions: [],
-    metrics: { sleep: 88, hr: 76, cal: 350, remain: '今日剩余 6h' }
+    metrics: { sleep: 88, hr: 76, cal: 350 },
+    energy: { label: '今日剩余', val: '6h', slot1: '10:00 - 12:00', slot2: '14:00 - 16:00' },
+    info1: { label: '入睡窗口', sublabel: '推荐入睡', value: '23:00' },
   }
 ];
 
-// ── DOM 元素 ──
-const elTime = document.getElementById('sys-time');
-const elGreeting = document.getElementById('greeting');
-const elDigest = document.getElementById('digest');
-const elMetrics = {
-  sleep: document.getElementById('metric-sleep'),
-  hr: document.getElementById('metric-hr'),
-  cal: document.getElementById('metric-cal')
-};
-const elFillerSub = document.getElementById('filler-sub');
-const elQuestionsContainer = document.getElementById('quick-questions');
-const btnGroup = document.getElementById('btn-group');
+const $ = id => document.getElementById(id);
+const btnGroup = $('btn-group');
 
-// ── 渲染控制面板 ──
-SCENES.forEach((scene, index) => {
+SCENES.forEach((scene, i) => {
   const btn = document.createElement('button');
-  btn.className = `scene-btn ${index === 0 ? 'active' : ''}`;
+  btn.className = `scene-btn ${i === 0 ? 'active' : ''}`;
   btn.innerHTML = `${scene.name} <span>${scene.desc}</span>`;
   btn.onclick = () => {
-    // 移除其他激活状态
     document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     applyScene(scene);
@@ -546,60 +639,29 @@ SCENES.forEach((scene, index) => {
   btnGroup.appendChild(btn);
 });
 
-// ── 切换场景逻辑 ──
-function applyScene(scene) {
-  // 添加渐出动画
-  elDigest.classList.remove('fade-enter-active');
-  elQuestionsContainer.classList.remove('fade-enter-active');
-  elDigest.classList.add('fade-exit-active');
-  elQuestionsContainer.classList.add('fade-exit-active');
+function applyScene(s) {
+  $('sys-time').textContent = s.time;
+  $('greeting').textContent = s.greeting;
 
-  setTimeout(() => {
-    // 更新数据
-    elTime.textContent = scene.time;
-    elGreeting.textContent = scene.greeting;
-    elDigest.textContent = scene.digest;
-    
-    // 更新指标卡片
-    elMetrics.sleep.textContent = scene.metrics.sleep;
-    elMetrics.hr.textContent = scene.metrics.hr;
-    elMetrics.cal.textContent = scene.metrics.cal;
-    elFillerSub.textContent = scene.metrics.remain;
+  const digestEl = $('digest');
+  digestEl.textContent = s.digest;
+  digestEl.style.display = s.digest ? 'block' : 'none';
 
-    // 清空并重新生成侧边提问按钮
-    elQuestionsContainer.innerHTML = '';
-    scene.questions.forEach(q => {
-      const btn = document.createElement('div');
-      btn.className = 'qq-btn';
-      btn.textContent = q;
-      elQuestionsContainer.appendChild(btn);
-    });
+  $('metric-sleep').textContent = s.metrics.sleep;
+  $('metric-hr').textContent = s.metrics.hr;
+  $('metric-cal').textContent = s.metrics.cal;
 
-    // 处理无内容的表现: 隐藏摘要和提问容器
-    if (!scene.digest) {
-      elDigest.style.display = 'none';
-    } else {
-      elDigest.style.display = 'block';
-    }
-    
-    if (scene.questions.length === 0) {
-      elQuestionsContainer.style.display = 'none';
-    } else {
-      elQuestionsContainer.style.display = 'flex';
-    }
+  $('energy-label').textContent = s.energy.label;
+  $('energy-val').textContent = s.energy.val;
+  $('time-slot-1').textContent = s.energy.slot1;
+  $('time-slot-2').textContent = s.energy.slot2;
 
-    // 添加渐入动画
-    elDigest.classList.remove('fade-exit-active');
-    elQuestionsContainer.classList.remove('fade-exit-active');
-    elDigest.classList.add('fade-enter-active');
-    elQuestionsContainer.classList.add('fade-enter-active');
-
-  }, 300); // 等待淡出动画完成
+  $('info-label-1').textContent = s.info1.label;
+  $('info-sublabel-1').textContent = s.info1.sublabel;
+  $('info-value-1').textContent = s.info1.value;
 }
 
-// 默认进入场景 1
 applyScene(SCENES[0]);
-
 </script>
 </body>
 </html>
