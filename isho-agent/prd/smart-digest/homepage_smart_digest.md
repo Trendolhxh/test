@@ -20,10 +20,9 @@
 | 维度 | 主 Agent Chatflow | Smart Digest |
 |:---|:---|:---|
 | 定位 | 完整对话引擎 | 首页轻量触点 |
-| System Prompt | 4 层拼接（身份+速览+样式+场景）~580 tk | 单层压缩 ~200 tk |
-| 工具 | 9 个 tool definitions ~1000 tk | 无（数据由 orchestrator 预注入） |
+| System Prompt | 4 层拼接（身份+速览+样式+场景） | 单层压缩 |
+| 工具 | 9 个 tool definitions | 无（数据由 orchestrator 预注入） |
 | 对话轮次 | 多轮 Agent Loop | 单次调用，固定 JSON 输出 |
-| Token 总计 | ~8,000 tk | ~650 tk |
 | 触发方式 | 事件状态机（07-events） | 数据更新 + 冷却期 |
 
 **关键衔接**：Smart Digest 的输出（摘要 + 快捷提问）在用户进入对话时，注入为 Chatflow 的上下文首条消息，主 Agent 能自然衔接摘要内容回复。
@@ -35,7 +34,7 @@
 | **数据优先，不说废话** | 摘要必须锚定在数据变化上，不生成空洞的鸡汤或通用问候 |
 | **调侃不建议** | 摘要只做评价、观察、调侃，不给具体行动建议——建议留给快捷提问引导到 Chatflow |
 | **会心一笑** | 像一个看过你数据的损友说的一句话，不是医生的诊断书 |
-| **高频低成本** | 压缩到 ~650 tk 单次调用，15 分钟冷却，控制成本和延迟 |
+| **高频低成本** | 单次轻量调用，15 分钟冷却，控制成本和延迟 |
 
 ---
 
@@ -197,16 +196,7 @@ diff:
 
 ## 四、Prompt 设计
 
-### 4.1 Token 预算
-
-| 部分 | 预算 |
-|:---|:---|
-| System prompt（角色 + 规则） | ~200 tk |
-| 数据注入（速览 + 24h 数据 + diff） | ~300 tk |
-| 输出（digest + questions JSON） | ~150 tk |
-| **总计** | **~650 tk** |
-
-### 4.2 Prompt 模板
+### 4.1 Prompt 模板
 
 ```
 你是 iSho 精力管家。根据用户的健康数据变化生成首页摘要。
@@ -226,7 +216,7 @@ diff:
 {"digest":"...","questions":["...","...","..."]}
 ```
 
-### 4.3 摘要风格规范
+### 4.2 摘要风格规范
 
 | 维度 | 要求 |
 |:---|:---|
@@ -235,7 +225,7 @@ diff:
 | **禁止** | ❌ 具体建议（"建议你..."）、❌ 鸡汤（"相信自己"）、❌ 重复模板 |
 | **语气** | 跟随用户速览中的沟通偏好（如「数据驱动,不喜鸡汤,偶尔自嘲」） |
 
-### 4.4 风格示例
+### 4.3 风格示例
 
 **早上（sleep 数据刚同步）**
 
@@ -259,7 +249,7 @@ diff:
 | 活动量偏低 | 今天只消耗了 320 大卡，你的椅子比你更累。明天可以动一动 |
 | 接近推荐入睡时间 | 静息心率已经降到 58 了，身体比你先表态——该准备收工了 |
 
-### 4.5 快捷提问示例
+### 4.4 快捷提问示例
 
 | 摘要上下文 | 推荐提问 |
 |:---|:---|
@@ -413,102 +403,20 @@ v1.0 先用策略 1 + 2，效果不够再加策略 3。
 
 ---
 
-## 八、成本与性能
-
-### 8.1 成本估算
-
-| 指标 | 值 |
-|:---|:---|
-| 单次调用 (input) | ~500 tk |
-| 单次调用 (output) | ~150 tk |
-| 单次总 token | ~650 tk |
-| 模型 | Claude Sonnet 级别 |
-| 单次成本 | ~$0.002 |
-| 每用户每日触发次数（预估） | 3-5 次（受 15 分钟冷却 + 数据更新频率限制） |
-| 每用户日均成本 | ~$0.006-0.01 |
-| 1 万 DAU 日成本 | ~$60-100 |
-
-### 8.2 性能要求
+## 八、性能与降级要求
 
 | 指标 | 要求 |
 |:---|:---|
-| LLM 响应时间 | < 2 秒 |
-| 不需要 streaming | 单次 JSON 返回，前端等待完整结果后渲染 |
-| 容错 | 超时 3 秒未返回 → 降级为空摘要 |
+| 模型选择 | Sonnet 级别（平衡质量与成本） |
+| LLM 响应超时 | 3 秒未返回 → 降级为空摘要 |
+| Streaming | 不需要，单次 JSON 返回，前端等待完整结果后渲染 |
 | 重试 | 不重试（高频场景，下次打开再生成） |
 
 ---
 
-## 九、完整调用流程伪代码
+## 九、边界与约束
 
-```python
-# ── 常量 ──
-DIGEST_COOLDOWN_MINUTES = 15
-DIGEST_PROMPT_TEMPLATE = load_file("prompt-library/digest/smart-digest.md")
-
-# ── 每次 app_open + data_refreshed 时调用 ──
-
-def handle_digest(user_id: str) -> DigestResult | None:
-    """
-    返回 { digest: str, questions: list[str] } 或 None（不触发/失败）
-    """
-
-    # ① 冷却检查
-    last_digest = cache.get_last_digest(user_id)
-    if last_digest and minutes_since(last_digest.generated_at) < DIGEST_COOLDOWN_MINUTES:
-        return last_digest  # 返回缓存
-
-    # ② 数据 diff 检查
-    current_snapshot = health_service.get_current_snapshot(user_id)
-    last_snapshot = cache.get_last_snapshot(user_id)
-    diff = compute_diff(last_snapshot, current_snapshot)
-
-    if not diff.has_meaningful_changes():
-        return last_digest  # 无新数据，返回缓存
-
-    # ③ 组装数据（自动调用，不走 LLM function call）
-    last_24h = health_service.get_24h_summary(user_id)
-    user_summary = db.get_user_summary(user_id)  # 复用记忆系统 [summary]
-    current_time = get_current_time_info()        # time + period + day_of_week
-
-    # ④ 组装压缩 prompt
-    prompt = DIGEST_PROMPT_TEMPLATE.format(
-        user_summary=user_summary,
-        current_time=current_time,
-        last_24h_compact=compress(last_24h),
-        diff_compact=compress(diff),
-    )
-
-    # ⑤ 可选：注入上次摘要用于防重复
-    if last_digest:
-        prompt += f"\n上次摘要：{last_digest.digest}"
-
-    # ⑥ 单次 LLM 调用
-    try:
-        result = llm.call(
-            model="claude-sonnet",
-            system=prompt,
-            messages=[],          # 无对话历史
-            max_tokens=200,
-            temperature=0.8,
-            timeout=3,
-        )
-        parsed = json.parse(result)  # { digest, questions }
-    except (Timeout, ParseError):
-        return None  # 降级：不展示摘要
-
-    # ⑦ 更新快照与缓存
-    cache.save_snapshot(user_id, current_snapshot)
-    cache.save_digest(user_id, parsed, generated_at=now())
-
-    return parsed
-```
-
----
-
-## 十、边界与约束
-
-### 10.1 v1.0 包含
+### 9.1 v1.0 包含
 
 - [x] 数据更新后自动生成智能摘要（一行）
 - [x] 基于摘要和时段生成 3 个快捷提问
@@ -517,14 +425,14 @@ def handle_digest(user_id: str) -> DigestResult | None:
 - [x] 快捷提问点击后跳转到 Chatflow 对话
 - [x] 无数据/LLM 失败的降级处理
 
-### 10.2 v1.0 不包含
+### 9.2 v1.0 不包含
 
 - [ ] 摘要的 A/B 测试框架（不同风格的对比实验）
 - [ ] 用户对摘要的反馈机制（觉得好/觉得没用）
 - [ ] 基于用户历史偏好的个性化摘要风格调节
 - [ ] 多语言支持（v1.0 仅中文）
 
-### 10.3 关键假设
+### 9.3 关键假设
 
 | 假设 | 影响 | 验证方式 |
 |:---|:---|:---|
