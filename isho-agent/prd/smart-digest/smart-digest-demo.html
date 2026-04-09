@@ -10,7 +10,6 @@
 
   :root {
     --brand-green: #34C759;
-    --bg-dark: #000000;
     --bg-app: #f2f2f7;
     --text-primary: #1C1C1E;
     --text-secondary: #8E8E93;
@@ -30,7 +29,7 @@
     gap: 40px;
   }
 
-  /* ── Controle Panel ── */
+  /* ── Control Panel ── */
   .control-panel {
     background: #2C2C2E;
     padding: 24px;
@@ -39,16 +38,8 @@
     color: #fff;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
-  .control-panel h3 {
-    margin-bottom: 16px;
-    font-size: 16px;
-    font-weight: 600;
-  }
-  .control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  .control-panel h3 { margin-bottom: 16px; font-size: 16px; font-weight: 600; }
+  .control-group { display: flex; flex-direction: column; gap: 10px; }
   .scene-btn {
     background: #3A3A3C;
     border: 1px solid #48484A;
@@ -61,31 +52,21 @@
     font-family: var(--font);
     transition: all 0.2s;
   }
-  .scene-btn:hover {
-    background: #48484A;
-  }
+  .scene-btn:hover { background: #48484A; }
   .scene-btn.active {
     background: rgba(52, 199, 89, 0.15);
     border-color: var(--brand-green);
     color: var(--brand-green);
     font-weight: 500;
   }
-  .scene-btn span {
-    display: block;
-    font-size: 11px;
-    color: #8E8E93;
-    margin-top: 4px;
-    line-height: 1.4;
-  }
-  .scene-btn.active span {
-    color: rgba(52, 199, 89, 0.7);
-  }
+  .scene-btn span { display: block; font-size: 11px; color: #8E8E93; margin-top: 4px; line-height: 1.4; }
+  .scene-btn.active span { color: rgba(52, 199, 89, 0.7); }
 
   /* ── iPhone Frame ── */
   .iphone-frame {
     width: 393px;
     height: 852px;
-    background: var(--bg-app);
+    background: linear-gradient(180deg, #E6F3FF 0%, #F5F5F7 25%, #F5F5F7 100%);
     border-radius: 50px;
     position: relative;
     overflow: hidden;
@@ -95,8 +76,6 @@
       0 0 0 3px #2C2C2E,
       0 0 0 6px #1a1a1a,
       0 20px 60px rgba(0,0,0,0.6);
-    /* 首页顶部有一个好看的渐变底色 */
-    background: linear-gradient(180deg, #E6F3FF 0%, #F5F5F7 25%, #F5F5F7 100%);
   }
 
   /* ── Status Bar ── */
@@ -109,17 +88,8 @@
     position: relative;
     z-index: 10;
   }
-  .status-bar .time {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-  .status-bar .icons {
-    display: flex;
-    gap: 5px;
-    font-size: 12px;
-    color: #1a1a1a;
-  }
+  .status-bar .time { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .status-bar .icons { display: flex; gap: 5px; font-size: 12px; color: #1a1a1a; }
   .dynamic-island {
     position: absolute;
     top: 12px;
@@ -140,15 +110,14 @@
     flex-direction: column;
     position: relative;
   }
-  
+
   .greeting-area {
     margin-bottom: 24px;
-    min-height: 80px; /* 防止内容为空时塌陷 */
+    min-height: 80px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
   }
-  
   .greeting-title {
     font-size: 34px;
     font-weight: 800;
@@ -157,7 +126,6 @@
     letter-spacing: -0.5px;
     transition: opacity 0.3s;
   }
-  
   .digest-text {
     font-size: 15px;
     line-height: 1.5;
@@ -166,21 +134,11 @@
     font-weight: 400;
   }
 
-  /* Hide/Show animations */
-  .fade-enter-active {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .fade-exit-active {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
+  .fade-enter-active { opacity: 1; transform: translateY(0); }
+  .fade-exit-active { opacity: 0; transform: translateY(-10px); }
 
-  .data-cards-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
+  /* ── Data Cards ── */
+  .data-cards-row { display: flex; gap: 12px; margin-bottom: 20px; }
   .data-card {
     flex: 1;
     background: var(--card-bg);
@@ -190,39 +148,21 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    position: relative;
-    overflow: hidden;
   }
-  /* 卡片内部左上方的圆形 icon */
   .data-card .icon-circle {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%;
     background: #F5F5F7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    opacity: 0.8;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; opacity: 0.8;
   }
-  .data-card .metric-info {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-  .data-card .metric-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary);
-  }
+  .data-card .metric-info { display: flex; align-items: baseline; justify-content: space-between; }
+  .data-card .metric-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
   .data-card .metric-val {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
+    font-size: 24px; font-weight: 600;
+    color: var(--text-primary); font-variant-numeric: tabular-nums;
   }
-  
-  /* 填充模块，伪装成其他内容 */
+
+  /* ── Filler Module ── */
   .filler-module {
     background: var(--card-bg);
     height: 160px;
@@ -233,44 +173,25 @@
     display: flex;
     flex-direction: column;
   }
-  .filler-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
+  .filler-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
   .filler-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
   .filler-subtitle { font-size: 12px; color: var(--text-secondary); }
-  
-  /* 伪装的波浪图表现 */
-  .filler-chart {
-    flex: 1;
-    position: relative;
-  }
+  .filler-chart { flex: 1; position: relative; }
   .chart-area {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
+    position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
     background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,40 L0,20 C10,0 20,40 35,20 C50,0 70,40 85,25 C95,15 100,20 100,20 L100,40 Z" fill="%2334C759" opacity="0.1"/></svg>') no-repeat bottom center;
     background-size: 100% 100%;
   }
   .chart-line {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
+    position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
     background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,20 C10,0 20,40 35,20 C50,0 70,40 85,25 C95,15 100,20 100,20" fill="none" stroke="%2334C759" stroke-width="2"/></svg>') no-repeat bottom center;
     background-size: 100% 100%;
   }
 
-  /* ── Bottom Section (Questions + Input) ── */
+  /* ── Bottom Section ── */
   .bottom-section {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 0; left: 0; right: 0;
     padding: 0 16px 36px;
     background: linear-gradient(0deg, rgba(245,245,247,1) 70%, rgba(245,245,247,0) 100%);
     display: flex;
@@ -278,39 +199,43 @@
     justify-content: flex-end;
   }
 
+  /* ── Quick Questions: 横向单排 ── */
   .quick-questions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     padding: 0 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     transition: opacity 0.3s, transform 0.3s;
   }
-  
+  .quick-questions::-webkit-scrollbar { display: none; }
+
   .qq-btn {
-    align-self: flex-start;
+    flex-shrink: 0;
     background: #FFFFFF;
-    border: 1px solid rgba(0,0,0,0.05);
-    color: #1C1C1E;
-    padding: 12px 18px;
+    border: 1px solid rgba(0,0,0,0.06);
+    color: var(--text-primary);
+    padding: 10px 16px;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     transition: all 0.2s;
-    line-height: 1.4;
-    max-width: 100%;
+    white-space: nowrap;
+    line-height: 1;
   }
   .qq-btn:hover {
-    background: #F9F9F9;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    background: #F5F5F7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   }
-  .qq-btn:active {
-    transform: scale(0.98);
-  }
+  .qq-btn:active { transform: scale(0.97); }
 
+  /* ── Input Bar ── */
   .input-wrapper {
     background: #FFFFFF;
     border-radius: 24px;
@@ -320,51 +245,36 @@
     padding: 0 16px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.05);
   }
-  .input-icon {
-    font-size: 18px;
-    margin-right: 12px;
-  }
+  .input-icon { font-size: 18px; margin-right: 12px; }
   .input-field {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: 15px;
-    color: #1C1C1E;
-    outline: none;
+    flex: 1; border: none; background: transparent;
+    font-size: 15px; color: #1C1C1E; outline: none;
     font-family: var(--font);
   }
-  .input-field::placeholder {
-    color: #8E8E93;
-  }
-
+  .input-field::placeholder { color: #8E8E93; }
 </style>
 </head>
 <body>
 
-<!-- 控制面板 -->
+<!-- Control Panel -->
 <div class="control-panel">
-  <h3>快速切换场景</h3>
+  <h3>场景切换</h3>
   <div class="control-group" id="btn-group"></div>
 </div>
 
 <div class="iphone-frame" id="app">
-  <!-- Dynamic Island -->
   <div class="dynamic-island"></div>
-
-  <!-- Status Bar -->
   <div class="status-bar">
     <span class="time" id="sys-time">09:41</span>
     <span class="icons">📶 🔋</span>
   </div>
 
   <div class="homepage">
-    <!-- 智能摘要区域 -->
     <div class="greeting-area">
       <div class="greeting-title" id="greeting">早上好</div>
-      <div class="digest-text" id="digest">深睡 21% 回到线上，HRV 也涨了 3ms——今早的你可以嚣张一点</div>
+      <div class="digest-text" id="digest"></div>
     </div>
-    
-    <!-- 健康数据卡片 -->
+
     <div class="data-cards-row">
       <div class="data-card">
         <div class="icon-circle">🌙</div>
@@ -388,8 +298,7 @@
         </div>
       </div>
     </div>
-    
-    <!-- 填充模块 -->
+
     <div class="filler-module">
       <div class="filler-header">
         <span class="filler-title">高能时段</span>
@@ -400,19 +309,10 @@
         <div class="chart-line"></div>
       </div>
     </div>
-    
   </div>
 
-  <!-- 底部交互区域 -->
   <div class="bottom-section" id="bottom-section">
-    <!-- 快捷提问列表 -->
-    <div class="quick-questions" id="quick-questions">
-      <div class="qq-btn">深睡和 HRV 为什么同步变化？</div>
-      <div class="qq-btn">这三天的深睡趋势怎么样？</div>
-      <div class="qq-btn">怎么把这个状态保持住？</div>
-    </div>
-    
-    <!-- 聊天输入框 -->
+    <div class="quick-questions" id="quick-questions"></div>
     <div class="input-wrapper">
       <div class="input-icon">✨</div>
       <input type="text" class="input-field" placeholder="输入您的内容" readonly>
@@ -421,96 +321,71 @@
 </div>
 
 <script>
-// ── 场景数据定义 ──
 const SCENES = [
   {
     id: 'morning_good',
-    name: '晨起 - 睡眠优质',
-    desc: '昨夜睡眠数据首次同步，指标好转',
+    name: '早上 · 睡眠优质',
+    desc: '深睡达标 + HRV 上升',
     time: '08:30',
     greeting: '早上好',
     digest: '深睡 21% 回到线上，HRV 也涨了 3ms——今早的你可以嚣张一点',
-    questions: [
-      '深睡和 HRV 为什么经常同步变化？',
-      '这三天的深睡趋势怎么样？',
-      '怎么把这个状态保持住？'
-    ],
+    questions: ['深睡为什么会波动', '近三天深睡趋势', '怎么保持这状态'],
     metrics: { sleep: 92, hr: 62, cal: 120, remain: '今日剩余 11h' }
   },
   {
     id: 'morning_bad',
-    name: '晨起 - 入睡太晚',
-    desc: '入睡太晚导致深睡下降，但白天仍有高能窗口',
+    name: '早上 · 入睡太晚',
+    desc: '深睡偏低 + 入睡延迟',
     time: '09:15',
     greeting: '早上好',
     digest: '1:45 才躺下，深睡只捞到 15%，不过高能窗口 9:30 就开了，先干正事',
-    questions: [
-      '入睡时间晚多少深睡就开始掉？',
-      '什么是深睡占比，多少算正常？',
-      '今晚有什么能马上试的方法？'
-    ],
+    questions: ['晚睡对深睡影响多大', '深睡占比多少正常', '今晚怎么改善'],
     metrics: { sleep: 68, hr: 71, cal: 180, remain: '今日剩余 9h 30m' }
   },
   {
     id: 'afternoon_energy',
-    name: '下午 - 高能剩余多',
-    desc: '剩余高能时长充足，适合深度工作',
+    name: '下午 · 高能剩余多',
+    desc: '当前处于高能窗口',
     time: '14:20',
     greeting: '下午好',
     digest: '还剩 4 小时高能，2-4 点是你的主场——那个需求文档该写了',
-    questions: [
-      '高能时段具体是怎么算出来的？',
-      '今天的高能窗口和昨天比有变化吗？',
-      '怎么在高能窗口里提升效率？'
-    ],
+    questions: ['高能时段怎么算的', '今天高能窗口变了吗', '高能时段怎么用好'],
     metrics: { sleep: 85, hr: 82, cal: 450, remain: '今日剩余 4h' }
   },
   {
     id: 'afternoon_depleted',
-    name: '下午 - 高能耗尽',
-    desc: '高能时长已耗尽，建议放松',
+    name: '下午 · 高能耗尽',
+    desc: '高能额度已清零',
     time: '16:45',
     greeting: '下午好',
-    digest: '高能额度已经刷完了，大脑已进入节能模式，剩下的时间适合做不费脑的事',
-    questions: [
-      '怎么判断自己是不是完全没电了？',
-      '喝杯咖啡能续命多久？',
-      '现在做点什么能稍微恢复下？'
-    ],
+    digest: '高能额度已经刷完了，剩下的时间适合做不费脑的事',
+    questions: ['高能耗尽后怎么办', 'HRV 日内波动原因', '精力恢复要多久'],
     metrics: { sleep: 78, hr: 88, cal: 580, remain: '今日高能已耗尽' }
   },
   {
     id: 'evening_low',
-    name: '傍晚 - 活动量偏低',
-    desc: '今日总体活动消耗不足',
+    name: '傍晚 · 活动量偏低',
+    desc: '全天消耗不足',
     time: '19:30',
-    greeting: '晚上好',
-    digest: '今天只消耗了 320 大卡，你的椅子比你更累。明天可以动一动',
-    questions: [
-      '消耗过低对晚上的睡眠有影响吗？',
-      '睡前适合做些什么轻量活动？',
-      '帮我推荐一个15分钟的放松运动'
-    ],
+    greeting: '傍晚好',
+    digest: '今天只消耗了 320 大卡，步数也没过 3000——你的椅子比你更累',
+    questions: ['久坐影响睡眠吗', '活动量和HRV关系', '步数目标多少合适'],
     metrics: { sleep: 85, hr: 75, cal: 320, remain: '明日 06:00 刷新' }
   },
   {
     id: 'night_ready',
-    name: '夜晚 - 准备入睡',
-    desc: '身体已准备好入睡，心率下降',
-    time: '23:10',
-    greeting: '夜深了',
+    name: '夜晚 · 准备入睡',
+    desc: '心率下降，接近入睡窗口',
+    time: '22:30',
+    greeting: '晚上好',
     digest: '静息心率已经降到 58 了，身体比你先表态——该准备收工了',
-    questions: [
-      '静息心率低在睡前意味着什么？',
-      '我现在的状态多快能睡着？',
-      '帮我设个明天早上的闹钟'
-    ],
-    metrics: { sleep: 88, hr: 58, cal: 650, remain: '推荐入睡 23:30' }
+    questions: ['心率低说明什么', '入睡窗口怎么算的', '睡前状态怎么优化'],
+    metrics: { sleep: 88, hr: 58, cal: 650, remain: '推荐入睡 23:00' }
   },
   {
     id: 'none',
-    name: '数据无更新 / 冷却期',
-    desc: '未满足触发条件，不生成摘要和提问',
+    name: '无更新 / 冷却期',
+    desc: '不触发生成，展示空状态',
     time: '10:00',
     greeting: '早上好',
     digest: '',
@@ -519,7 +394,6 @@ const SCENES = [
   }
 ];
 
-// ── DOM 元素 ──
 const elTime = document.getElementById('sys-time');
 const elGreeting = document.getElementById('greeting');
 const elDigest = document.getElementById('digest');
@@ -529,16 +403,14 @@ const elMetrics = {
   cal: document.getElementById('metric-cal')
 };
 const elFillerSub = document.getElementById('filler-sub');
-const elQuestionsContainer = document.getElementById('quick-questions');
+const elQQ = document.getElementById('quick-questions');
 const btnGroup = document.getElementById('btn-group');
 
-// ── 渲染控制面板 ──
-SCENES.forEach((scene, index) => {
+SCENES.forEach((scene, i) => {
   const btn = document.createElement('button');
-  btn.className = `scene-btn ${index === 0 ? 'active' : ''}`;
+  btn.className = `scene-btn ${i === 0 ? 'active' : ''}`;
   btn.innerHTML = `${scene.name} <span>${scene.desc}</span>`;
   btn.onclick = () => {
-    // 移除其他激活状态
     document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     applyScene(scene);
@@ -546,60 +418,40 @@ SCENES.forEach((scene, index) => {
   btnGroup.appendChild(btn);
 });
 
-// ── 切换场景逻辑 ──
 function applyScene(scene) {
-  // 添加渐出动画
   elDigest.classList.remove('fade-enter-active');
-  elQuestionsContainer.classList.remove('fade-enter-active');
+  elQQ.classList.remove('fade-enter-active');
   elDigest.classList.add('fade-exit-active');
-  elQuestionsContainer.classList.add('fade-exit-active');
+  elQQ.classList.add('fade-exit-active');
 
   setTimeout(() => {
-    // 更新数据
     elTime.textContent = scene.time;
     elGreeting.textContent = scene.greeting;
     elDigest.textContent = scene.digest;
-    
-    // 更新指标卡片
     elMetrics.sleep.textContent = scene.metrics.sleep;
     elMetrics.hr.textContent = scene.metrics.hr;
     elMetrics.cal.textContent = scene.metrics.cal;
     elFillerSub.textContent = scene.metrics.remain;
 
-    // 清空并重新生成侧边提问按钮
-    elQuestionsContainer.innerHTML = '';
+    elQQ.innerHTML = '';
     scene.questions.forEach(q => {
-      const btn = document.createElement('div');
-      btn.className = 'qq-btn';
-      btn.textContent = q;
-      elQuestionsContainer.appendChild(btn);
+      const b = document.createElement('div');
+      b.className = 'qq-btn';
+      b.textContent = q;
+      elQQ.appendChild(b);
     });
 
-    // 处理无内容的表现: 隐藏摘要和提问容器
-    if (!scene.digest) {
-      elDigest.style.display = 'none';
-    } else {
-      elDigest.style.display = 'block';
-    }
-    
-    if (scene.questions.length === 0) {
-      elQuestionsContainer.style.display = 'none';
-    } else {
-      elQuestionsContainer.style.display = 'flex';
-    }
+    elDigest.style.display = scene.digest ? 'block' : 'none';
+    elQQ.style.display = scene.questions.length ? 'flex' : 'none';
 
-    // 添加渐入动画
     elDigest.classList.remove('fade-exit-active');
-    elQuestionsContainer.classList.remove('fade-exit-active');
+    elQQ.classList.remove('fade-exit-active');
     elDigest.classList.add('fade-enter-active');
-    elQuestionsContainer.classList.add('fade-enter-active');
-
-  }, 300); // 等待淡出动画完成
+    elQQ.classList.add('fade-enter-active');
+  }, 300);
 }
 
-// 默认进入场景 1
 applyScene(SCENES[0]);
-
 </script>
 </body>
 </html>
