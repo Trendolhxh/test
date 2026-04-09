@@ -351,13 +351,17 @@
   /* ── Quick Questions ── */
   .quick-questions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 8px;
     margin-bottom: 12px;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
     transition: opacity 0.3s, transform 0.3s;
   }
+  .quick-questions::-webkit-scrollbar { display: none; }
   .qq-btn {
-    align-self: flex-start;
+    flex-shrink: 0;
     background: rgba(255,255,255,0.85);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
