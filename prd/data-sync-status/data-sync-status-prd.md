@@ -12,7 +12,7 @@
 
 用户每次打开 App 时，系统自动从 HealthKit 同步最新健康数据。在同步过程中，首页数据区域（指标卡片、功能卡片）展示对应的视觉反馈：
 
-1. **同步中**：数据区域播放 shimmer 骨架动画，让用户知道"正在加载"
+1. **同步中**：数据区域显示上次缓存值 + 卡片角落小型 loading 指示器，用户可正常阅读旧数据
 2. **同步成功**：数据平滑过渡到最新值（CountUp 动画），给用户明确的"已更新"感知
 3. **同步失败/数据过期**：展示上次缓存值 + 原因提示条，告知用户为什么数据没更新、如何解决
 
@@ -27,7 +27,7 @@
 | 实现方式 | LLM 单轮调用 | 纯前端 + HealthKit API 状态检测 |
 | Token 成本 | Sonnet 级别单次调用 | 零（无 LLM 参与） |
 
-**关键衔接**：数据同步状态位于 Smart Digest 的**上游**。同步成功后发射 `data_refreshed` 事件，正是 Smart Digest 的触发信号。同步失败时 `data_refreshed` 不发送，Smart Digest 已有的缓存降级逻辑（展示上次缓存的摘要）自然覆盖此场景，无需额外适配。
+**关键衔接**：数据同步状态位于 Smart Digest 的**上游**。**所有卡片**同步成功后才发射 `data_refreshed` 事件触发 Smart Digest，确保首页数据和 AI 摘要基于同一套完整数据，避免信息不一致。任一卡片 stale 时不发送 `data_refreshed`，Smart Digest 展示上次缓存的摘要。
 
 ### 1.3 设计理念
 
@@ -68,7 +68,7 @@ stateDiagram-v2
     stale --> idle : App 进入后台
 ```
 
-> **"数据过期"判定**：HealthKit 查询成功返回了数据，但最新 sample 的 `endDate` 距当前时间超过**数据类型对应的新鲜度阈值**（见 3.4），视为 `stale`——查询本身没错，但数据不够新。
+> **"数据过期"判定**：HealthKit 查询成功返回了数据，但所有 sample 中最新一条的 `endDate` 距当前时间超过 12 小时（见 5.2），视为整体 `stale`——查询本身没错，但数据不够新鲜。
 
 ### 2.3 按卡片粒度独立
 
@@ -95,22 +95,20 @@ sequenceDiagram
     participant Orch as Orchestrator
 
     User->>App: 打开 App (app_open)
-    App->>App: 数据区域进入 syncing 状态（shimmer）
+    App->>App: 展示缓存值 + 角落 loading 指示器
     Note over App: Smart Digest 独立展示缓存/空
-    App->>HK: 发起 HKAnchoredObjectQuery（6 类数据并行）
+    App->>HK: 发起 HKAnchoredObjectQuery（并行）
 
-    alt 同步成功 + 有新数据
-        HK-->>App: 返回新数据
-        App->>App: 对应卡片 → success，播放 CountUp 动画
-        App->>Orch: data_refreshed (has_new_data=true)
-        Note over Orch: Smart Digest 触发条件检查（冷却期 + diff）
-    else 同步成功 + 无新数据
-        HK-->>App: 返回数据（与缓存一致）
-        App->>App: 对应卡片 → success_no_change，静态展示
-        App->>Orch: data_refreshed (has_new_data=false)
-    else 同步失败 / 超时
-        HK-->>App: 错误 / 10s 超时
-        App->>App: 对应卡片 → stale，展示缓存值 + 原因条
+    Note over App: 等待所有卡片同步完成
+
+    alt 全部成功 + 有新数据
+        HK-->>App: 所有查询返回
+        App->>App: 各卡片 → success / success_no_change
+        App->>Orch: data_refreshed (has_new_data=true/false)
+        Note over Orch: Smart Digest 触发条件检查
+    else 任一失败 / 超时 / 数据过期
+        HK-->>App: 部分查询失败或数据过期
+        App->>App: 失败卡片 → stale + 原因条，成功卡片正常展示
         Note over App: data_refreshed 不发送
         Note over Orch: Smart Digest 不触发，继续展示缓存
     end
@@ -181,7 +179,7 @@ sequenceDiagram
 
 | 优先级 | 检测条件 | 用户文案 | 可操作性 |
 |:---:|:---|:---|:---|
-| 3 | 数据过期（最新 sample > 阈值，如 2h） | 数据未更新，请打开{伴侣App名}同步 | 引导打开伴侣 App |
+| 3 | 整体数据过期（所有 sample 中最新一条 > 12h） | 数据未更新，请打开{伴侣App名}同步 | 引导打开伴侣 App |
 
 #### 兜底（所有设备）
 
@@ -196,7 +194,7 @@ sequenceDiagram
 | **格式** | `{现状描述}，{用户可做的事}` |
 | **长度** | 不超过 25 字 |
 | **禁止** | ❌ 技术术语（HealthKit、BLE、HKQuery）、❌ 归咎 App（"App 出错了"）、❌ 断言无法确认的原因 |
-| **优先级** | 多个问题同时存在时，只展示最高优先级的一条 |
+| **优先级** | 多个问题同时存在时，优先展示用户最可操作的一条（能跳设置 > 能开蓝牙 > 能检查设备 > 兜底） |
 | **设备名称** | 第三方设备文案中使用实际的伴侣 App 名称（如"小米运动"），通过 `primary_source` 映射 |
 
 ### 3.6 诊断流程
@@ -244,7 +242,7 @@ flowchart TD
 │                                         │
 │  ┌────┐  ┌────┐  ┌────┐                │
 │  │睡眠│  │心率│  │消耗│                  │  ← 数据指标卡片（受同步状态影响）
-│  │ ~~ │  │ 87 │  │ ~~ │                  │     可能部分 shimmer、部分正常
+│  │ ~~ │  │ 87 │  │ ~~ │                  │     syncing 时角落有 loading 指示器
 │  └────┘  └────┘  └────┘                │
 │                                         │
 │  ┌──────── 同步状态条 ─────────┐         │  ← stale 时显示（小卡片下方）
@@ -264,30 +262,31 @@ flowchart TD
 
 | 状态 | 数据指标卡片 | 功能卡片 | 同步状态条 |
 |:---|:---|:---|:---|
-| `syncing` | Shimmer 动画覆盖数值区 | Shimmer 动画覆盖内容区 | 不显示 |
-| `success` | 数值 CountUp 动画更新 | 内容淡入更新 | 不显示 |
-| `success_no_change` | 静态显示当前值 | 静态显示 | 不显示 |
-| `stale` | 显示上次缓存值 + 灰色更新时间（格式见 9.2） | 显示上次缓存 + 灰色标记 | 显示原因 + 重试按钮 |
+| `syncing` | 显示缓存值（可读） + 角落 loading 指示器 | 显示缓存内容 + 角落 loading | 不显示 |
+| `success` | 数值 CountUp 动画更新，loading 消失 | 内容淡入更新，loading 消失 | 不显示 |
+| `success_no_change` | 静态显示当前值，loading 消失 | 静态显示，loading 消失 | 不显示 |
+| `stale` | 缓存值 + 灰色更新时间（格式见 9.2），loading 消失 | 缓存 + 灰色标记，loading 消失 | 显示原因 + 重试按钮 |
 
-> Smart Digest 在所有状态下均独立运行，不受本功能影响（详见 1.2）。
+> Smart Digest 在所有状态下均独立运行，不受本功能影响（详见 1.2）。无论同步成功还是失败，首页始终有数据可读（缓存值或最新值），不会出现空白页面。
 
-### 4.3 Shimmer 动画规格
+### 4.3 Syncing 状态 Loading 指示器规格
 
 | 属性 | 规格 |
 |:---|:---|
-| 覆盖区域 | 数值文字区域（不覆盖卡片标题和图标） |
-| 动画类型 | 从左到右的渐变光带扫过（标准 iOS skeleton animation） |
-| 颜色 | 背景色 → 高亮色 → 背景色（跟随系统深色/浅色模式） |
-| 速度 | 1.5s 每周期，无限循环 |
-| 过渡 | sync success 时，shimmer 淡出 (0.3s) → 数值 CountUp 淡入 (0.5s) |
+| 位置 | 卡片右上角 |
+| 样式 | 小型旋转圆环（UIActivityIndicatorView.Style.medium 或等效） |
+| 尺寸 | 16pt × 16pt |
+| 颜色 | 跟随系统主题色，透明度 60% |
+| 出现 | app_open 后 < 100ms 展示 |
+| 消失 | 同步完成后淡出（0.2s），无论 success 或 stale |
 
 ### 4.4 Success 过渡动画规格
 
 | 场景 | 动画 |
 |:---|:---|
-| 数值更新（有旧值） | CountUp：旧值 → 新值，0.5s，ease-out |
-| 首次出现（无旧值） | Fade-in：从 0 透明度渐入，0.3s |
-| 功能卡片内容更新 | Crossfade：旧内容 → 新内容，0.4s |
+| 数值更新（有旧值） | Loading 淡出(0.2s) → CountUp：旧值 → 新值，0.5s，ease-out |
+| 首次出现（无旧值） | Loading 淡出(0.2s) → Fade-in：从 0 透明度渐入，0.3s |
+| 功能卡片内容更新 | Loading 淡出(0.2s) → Crossfade：旧内容 → 新内容，0.4s |
 
 ### 4.5 Stale 状态条设计
 
@@ -298,8 +297,8 @@ flowchart TD
 | 高度 | 40pt，左右边距与卡片对齐 |
 | 出现动画 | 从上滑入，0.3s ease-out |
 | 可关闭 | 用户可点 × 关闭，下次 app_open 重新判断 |
-| 多条原因 | 最多显示一条（最高优先级），不堆叠 |
-| 重试按钮行为 | 点击后：仅将当前处于 `stale` 的卡片重新 → `syncing`（已成功的卡片不受影响）。状态条立即消失，shimmer 动画开始。若重试仍失败，状态条重新出现（无重复出现动画，直接静态显示）。重试不受 5 分钟 app_open 防抖限制，但受 10 秒最小间隔约束 |
+| 多条原因 | 最多显示一条，不堆叠。优先展示**用户最可操作**的那条（按 3.4 优先级排序：可跳转设置 > 可开蓝牙 > 可检查设备 > 通用兜底） |
+| 重试按钮行为 | 点击后：仅将当前处于 `stale` 的卡片重新 → `syncing`（已成功的卡片不受影响）。状态条立即消失，角落 loading 指示器出现。若重试仍失败，状态条重新出现（无重复出现动画，直接静态显示）。重试不受 5 分钟 app_open 防抖限制，但受 10 秒最小间隔约束 |
 
 ### 4.6 Stale 卡片数值标注
 
@@ -355,7 +354,7 @@ sequenceDiagram
         App->>App: 高能时段/入睡窗口卡片 → success
     end
 
-    App->>App: 汇总：任一卡片 success → 发送 data_refreshed
+    App->>App: 汇总：全部卡片 success/success_no_change → 发送 data_refreshed；任一 stale → 不发送
 ```
 
 ### 5.2 超时与数据新鲜度
@@ -364,9 +363,11 @@ sequenceDiagram
 
 **a) 查询超时**：单个 HealthKit 查询 10 秒内未返回即视为超时，各卡片独立计算。
 
-**b) 数据过期**：HealthKit 查询成功返回了数据，但最新 sample 的 `endDate` 距当前时间超过新鲜度阈值，视为数据过期。
+**b) 数据过期（整体判定）**：App 对 HealthKit 的数据拉取是统一发起的，因此新鲜度也按**整体**判定，不按单个数据类型单独设阈值。判定规则：
 
-> 新鲜度阈值需要按数据类型区分（待讨论，见文末开放问题 #7）。
+- 取本次所有 HealthKit 查询返回的 sample 中，**最新的一条**的 `endDate`
+- 如果该时间距当前时间超过新鲜度阈值，则视为整体数据过期，**所有卡片**统一进入 `stale`
+- 新鲜度阈值：与 Smart Digest 的快照 diff 窗口对齐，**暂定 12 小时**（覆盖"昨晚睡觉到今早打开 App"的正常间隔，超过则说明设备可能长时间未同步）
 
 ### 5.3 刷新触发方式
 
@@ -395,7 +396,7 @@ sequenceDiagram
 | 正常打开，同步失败 | syncing → stale | 展示缓存 | digest 缓存仍有价值 |
 | 冷却期内再次打开，同步成功 | syncing → success | 展示缓存（冷却期内） | 数据更新了但 digest 不重新生成 |
 | 新用户，无数据 | stale（暂无数据文案） | 空（不展示） | 两者都为空态 |
-| 部分同步（心率成功，睡眠失败） | 心率 success，睡眠 stale | 可能触发（如果心率变化超阈值） | 部分数据也能触发 digest |
+| 部分同步（心率成功，睡眠失败） | 心率 success，睡眠 stale | 不触发，展示缓存 | 保证首页数据与摘要一致性 |
 
 > 视觉层级和事件流时序见 4.1（首页布局）和 2.4（时序图），此处不重复。
 
@@ -409,11 +410,11 @@ sequenceDiagram
 |:---:|:---|:---|
 | 1 | 同步过程中用户切到后台 | 暂停同步状态 UI，回到前台时按 5.4 防抖规则判断是否重新触发 |
 | 2 | 同步过程中用户点击数据卡片进入详情页 | 详情页使用缓存数据展示，不阻塞导航。后台同步继续，返回首页后更新 |
-| 3 | Apple Health 后台同步已完成 | app_open 时 HealthKit 查询立即返回，shimmer 极短（<0.5s）后直接过渡到 success |
+| 3 | Apple Health 后台同步已完成 | app_open 时 HealthKit 查询立即返回，loading 指示器闪现后直接 CountUp 过渡到 success |
 | 4 | 连续 stale（用户反复打开都失败） | 不重复播放状态条出现动画，静态显示原因条即可 |
 | 5 | 多个数据来源并存（Watch + iPhone 自带传感器） | 以最近一次写入的来源作为 `primary_source`，诊断文案基于该来源 |
 | 6 | HealthKit 数据库不可用（极端情况） | 捕获 `HKError.errorDatabaseInaccessible`，走兜底文案 |
-| 7 | 首次安装弹出 HealthKit 授权对话框 | 授权前数据卡片保持 shimmer；用户授权后立即查询，拒绝后走 3.4 优先级 1 文案 |
+| 7 | 首次安装弹出 HealthKit 授权对话框 | 授权前数据卡片显示"--" + loading 指示器；用户授权后立即查询，拒绝后走 3.4 优先级 1 文案 |
 
 ---
 
@@ -421,12 +422,12 @@ sequenceDiagram
 
 | 指标 | 要求 |
 |:---|:---|
-| Shimmer 启动延迟 | < 100ms（app_open 后立即展示） |
+| Loading 指示器启动延迟 | < 100ms（app_open 后立即展示） |
 | 缓存数据加载 | < 50ms（从本地存储读取上次缓存） |
 | HealthKit 单个查询超时 | 10 秒 |
 | CountUp 动画帧率 | ≥ 60fps |
 | 状态条出现动画 | 0.3s ease-out |
-| Shimmer → CountUp 过渡 | shimmer 淡出 0.3s + CountUp 0.5s |
+| Loading → CountUp 过渡 | loading 淡出 0.2s + CountUp 0.5s |
 | 内存开销 | 缓存完整数据快照，约 2KB |
 | 重试策略 | 不自动重试（下次 app_open 或手动下拉触发），网络恢复自动重试除外 |
 | 并行查询 | 所有 HealthKit 数据类型并行查询，不串行 |

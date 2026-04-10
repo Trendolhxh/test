@@ -16,10 +16,10 @@
 - 所有数据与上次缓存不同
 
 **预期行为**：
-- 打开后立即：3 个小卡片 + 功能卡片展示 shimmer 动画
-- HealthKit 返回后（<3s）：shimmer 淡出 → 数值 CountUp 动画（旧值→新值，0.5s）
+- 打开后立即：展示缓存值 + 各卡片角落 loading 指示器
+- HealthKit 返回后（<3s）：loading 消失 → 数值 CountUp 动画（旧值→新值，0.5s）
 - 同步状态条：不显示
-- Smart Digest：收到 `data_refreshed (has_new_data=true)`，检查触发条件
+- Smart Digest：所有卡片成功 → 收到 `data_refreshed (has_new_data=true)`，检查触发条件
 - 缓存更新：所有卡片的 `last_sync_success` 和 `last_value` 写入新值
 
 ### A02 中午重新打开 · 无新数据
@@ -29,8 +29,8 @@
 - HealthKit 返回数据与缓存完全一致
 
 **预期行为**：
-- 打开后：shimmer 短暂播放
-- HealthKit 返回后：shimmer 消失，静态展示当前值（无 CountUp 动画）
+- 打开后：loading 短暂播放
+- HealthKit 返回后：loading 消失，静态展示当前值（无 CountUp 动画）
 - 同步状态条：不显示
 - Smart Digest：收到 `data_refreshed (has_new_data=false)`，展示缓存
 
@@ -41,8 +41,8 @@
 - HealthKit 返回：心率有新数据（resting_bpm 从 65→62），睡眠和活动数据无变化
 
 **预期行为**：
-- 心率卡片：shimmer → CountUp 动画（65→62）
-- 睡眠/消耗卡片：shimmer → 静态展示（无动画过渡）
+- 心率卡片：loading → CountUp 动画（65→62）
+- 睡眠/消耗卡片：loading → 静态展示（无动画过渡）
 - Smart Digest：可能触发（如果心率变化超过阈值 Δ≥3bpm）
 
 ### A04 快速切换前后台 · 5 分钟内
@@ -52,7 +52,7 @@
 
 **预期行为**：
 - 不触发新的 HealthKit 查询（防抖：<5 分钟）
-- 直接展示上次同步结果，无 shimmer 动画
+- 直接展示上次同步结果，无 角落 loading 指示器
 - Smart Digest：维持当前展示，不触发
 
 ### A05 后台已同步 · HealthKit 极速返回
@@ -62,7 +62,7 @@
 - app_open 时 HealthKit 查询立即返回新数据（<0.5s）
 
 **预期行为**：
-- shimmer 极短（<0.5s）后立即过渡到 CountUp 动画
+- loading 极短（<0.5s）后立即过渡到 CountUp 动画
 - 用户几乎无感知加载过程，直接看到数值更新
 
 ---
@@ -126,8 +126,8 @@
 - HealthKit 查询发出后 10 秒无返回
 
 **预期行为**：
-- 0-10s：shimmer 动画持续播放
-- 10s 后：shimmer 消失 → 显示缓存值 + 同步状态条"数据同步中，稍后将自动更新"
+- 0-10s：角落 loading 指示器持续播放
+- 10s 后：loading 消失 → 显示缓存值 + 同步状态条"数据同步中，稍后将自动更新"
 - 下次 app_open 自动重试
 
 ### B06 部分超时 · 睡眠超时但心率成功
@@ -137,10 +137,11 @@
 - HealthKit 睡眠查询 10s 超时
 
 **预期行为**：
-- 心率卡片：2s 时 shimmer → CountUp 动画，正常展示
-- 睡眠卡片：10s 时 shimmer → 缓存值 + 灰色更新时间
+- 心率卡片：2s 时 loading → CountUp 动画，正常展示
+- 睡眠卡片：10s 时 loading → 缓存值 + 灰色更新时间
 - 同步状态条：显示（因为有卡片处于 stale）
-- `data_refreshed`：仍然发送（因为心率有新数据）
+- `data_refreshed`：**不**发送（任一卡片 stale 即不发送）
+- Smart Digest：不触发，展示缓存
 
 ---
 
@@ -154,14 +155,14 @@
 - 查询返回新数据
 
 **预期行为**：
-- 与 Apple Watch 同步成功表现一致：shimmer → CountUp
+- 与 Apple Watch 同步成功表现一致：loading → CountUp
 - 不走 WCSession 诊断分支（WCSession 仅用于 Apple Watch）
 
 ### C02 小米手环 · 数据过期（伴侣 App 未同步）
 
 **输入条件**：
 - primary_source: `com.xiaomi.mihealthapp`
-- HealthKit 中最新 sample 时间为 3 小时前（超过 2h 阈值）
+- HealthKit 中所有 sample 里最新一条时间为 13 小时前（超过 12h 整体阈值）
 - HealthKit 查询成功但无新数据
 
 **预期行为**：
@@ -173,7 +174,7 @@
 
 **输入条件**：
 - primary_source: `com.garmin.connect.mobile`（Garmin Connect）
-- HealthKit 中最新 sample 时间为 5 小时前
+- HealthKit 中所有 sample 里最新一条时间为 14 小时前（超过 12h）
 
 **预期行为**：
 - 数据卡片：显示缓存值 + 灰色"03:15 更新"
@@ -242,7 +243,7 @@
 - Smart Digest：展示缓存（冷却期内不重新生成）
 - 两者都展示缓存内容，页面平稳无变化
 
-### D04 部分同步成功 + Smart Digest 部分触发
+### D04 部分同步成功 + Smart Digest 不触发
 
 **输入条件**：
 - 心率同步成功（有新数据，Δ resting_bpm = -5）
@@ -252,8 +253,8 @@
 **预期行为**：
 - 心率卡片：CountUp 动画
 - 睡眠卡片：缓存值 + stale 标记
-- `data_refreshed` 发送（因为心率有新数据）
-- Smart Digest：触发生成，但输入数据中睡眠部分为上次缓存值（非实时值），LLM 基于可用数据生成摘要
+- `data_refreshed` **不**发送（任一卡片 stale 即不发送，保证数据一致性）
+- Smart Digest：不触发，展示上次缓存的摘要
 
 ---
 
@@ -279,14 +280,14 @@
 - 用户在 10 秒内连续下拉 3 次
 
 **预期行为**：
-- 第 1 次下拉：正常触发同步，shimmer 动画
+- 第 1 次下拉：正常触发同步，角落 loading 指示器
 - 第 2、3 次下拉（10s 内）：忽略，不重新触发
 - UI 无异常跳动
 
 ### E03 同步中点击卡片进入详情
 
 **输入条件**：
-- 睡眠卡片正在 shimmer 动画中
+- 睡眠卡片正在 角落 loading 指示器中
 - 用户点击睡眠卡片进入详情页
 
 **预期行为**：
@@ -294,16 +295,17 @@
 - 详情页使用缓存数据展示
 - 后台同步继续进行，返回首页后展示最新状态
 
-### E04 数据超过 24 小时
+### E04 数据整体过期（>12h）
 
 **输入条件**：
-- HealthKit 查询成功，但最新 sample 的 endDate 是昨天 22:00（>24h 前）
-- 用户整天未佩戴设备
+- HealthKit 查询成功，但所有 sample 中最新一条的 endDate 是昨天 18:00（>12h 前）
+- 用户长时间未佩戴设备
 
 **预期行为**：
-- 数据卡片：显示昨天的缓存值 + 灰色"昨天 22:00"
-- 视为 stale（即使 HealthKit 查询本身成功，数据新鲜度不达标）
+- 整体判定为数据过期 → 所有卡片统一进入 stale
+- 数据卡片：显示缓存值 + 灰色"昨天 18:00"
 - 同步状态条：基于 primary_source 类型显示对应文案
+- `data_refreshed` 不发送
 
 ### E05 HealthKit 数据库不可用
 
@@ -322,7 +324,7 @@
 - NWPathMonitor 检测到网络从不可用变为可用
 
 **预期行为**：
-- stale 卡片自动进入 syncing 状态（shimmer 动画）
+- stale 卡片自动进入 syncing 状态（角落 loading 指示器）
 - 无需用户操作
 - 如果重试成功 → CountUp 动画 + 状态条消失
 - 如果重试仍失败 → 保持 stale，不反复弹状态条动画
@@ -347,6 +349,6 @@
 - 用户尚未选择允许或拒绝
 
 **预期行为**：
-- 数据卡片：shimmer 动画（等待授权结果）
+- 数据卡片：角落 loading 指示器（等待授权结果）
 - 用户授权后 → 立即发起 HealthKit 查询
 - 用户拒绝后 → stale + "需要健康数据权限，点击前往设置"
