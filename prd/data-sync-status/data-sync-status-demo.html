@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>首页数据同步状态 - 交互原型</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', sans-serif;
+  background: #111; display: flex; justify-content: center; align-items: flex-start;
+  min-height: 100vh; padding: 32px 20px; gap: 32px;
+}
+
+/* ── Controls ── */
+.controls {
+  position: fixed; left: 24px; top: 50%; transform: translateY(-50%);
+  background: #fff; border-radius: 16px; padding: 20px; width: 210px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15); z-index: 100;
+}
+.controls h3 { font-size: 14px; color: #333; margin-bottom: 14px; font-weight: 600; }
+.btn-group { display: flex; flex-direction: column; gap: 6px; }
+.btn-group button {
+  padding: 9px 12px; border: 1.5px solid #e0e0e0; border-radius: 10px;
+  background: #fff; font-size: 13px; color: #555; cursor: pointer;
+  transition: all 0.15s; text-align: left; font-family: inherit;
+}
+.btn-group button:hover { border-color: #bbb; background: #f8f8f8; }
+.btn-group button.active { background: #007AFF; color: #fff; border-color: #007AFF; }
+.state-desc {
+  margin-top: 16px; padding-top: 14px; border-top: 1px solid #eee;
+  font-size: 12px; color: #888; line-height: 1.7;
+}
+
+/* ── Phone Frame ── */
+.phone {
+  width: 390px; height: 844px; border-radius: 48px; overflow: hidden;
+  position: relative; flex-shrink: 0; margin-left: 240px;
+  background: linear-gradient(178deg, #CFECF7 0%, #D8E2F6 30%, #E4DCF2 60%, #F0E2EE 100%);
+  box-shadow: 0 0 0 6px #222, 0 0 0 8px #444, 0 24px 80px rgba(0,0,0,0.5);
+}
+.phone-notch {
+  width: 126px; height: 34px; background: #222; border-radius: 0 0 20px 20px;
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 10;
+}
+.phone-statusbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 28px 6px; font-size: 15px; font-weight: 600; color: #1a1a1a;
+}
+.phone-statusbar .icons { display: flex; gap: 5px; align-items: center; }
+
+/* ── Content ── */
+.content { padding: 2px 22px 44px; overflow-y: auto; height: calc(100% - 44px); }
+.content::-webkit-scrollbar { display: none; }
+.greeting { font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+.digest {
+  font-size: 13.5px; color: #555; line-height: 1.75; margin-bottom: 18px;
+  letter-spacing: 0.2px;
+}
+
+/* ── Wave Area ── */
+.wave-area {
+  border-radius: 16px; height: 72px; margin-bottom: 14px; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(110,200,215,0.25) 0%, rgba(130,185,225,0.12) 100%);
+}
+.wave-area svg { position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; }
+
+/* ── Metric Cards ── */
+.metric-cards { display: flex; gap: 10px; margin-bottom: 12px; }
+.metric-card {
+  flex: 1; background: rgba(255,255,255,0.5); backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px); border-radius: 16px;
+  padding: 14px 8px 12px; text-align: center; position: relative;
+  transition: background 0.3s;
+}
+.metric-card .card-top {
+  display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 4px;
+}
+.metric-card .card-icon { font-size: 15px; line-height: 1; }
+.metric-card .card-label { font-size: 12.5px; color: #777; }
+.metric-card .card-value {
+  font-size: 32px; font-weight: 700; color: #1a1a1a;
+  transition: opacity 0.3s; line-height: 1.15; min-height: 37px;
+}
+.metric-card .update-time {
+  font-size: 10px; color: #aaa; margin-top: 2px;
+  display: none; height: 0; overflow: hidden; transition: all 0.2s;
+}
+
+/* ── Loading Spinner ── */
+.spinner {
+  position: absolute; top: 10px; right: 10px; width: 14px; height: 14px;
+  border: 2px solid rgba(0,0,0,0.06); border-top-color: rgba(0,160,210,0.55);
+  border-radius: 50%; opacity: 0; transition: opacity 0.2s;
+  animation: spin 0.65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.syncing .spinner { opacity: 1; }
+
+/* ── Stale States ── */
+.metric-card.stale .card-value { opacity: 0.45; }
+.metric-card.stale .update-time { display: block; height: auto; }
+.func-card.stale { opacity: 0.55; }
+
+/* ── Sync Status Bar ── */
+.sync-bar {
+  background: rgba(255,255,255,0.72); backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px); border-radius: 12px;
+  display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555;
+  max-height: 0; opacity: 0; overflow: hidden; margin-bottom: 0;
+  padding: 0 14px; transition: all 0.3s ease-out; pointer-events: none;
+}
+.sync-bar.visible {
+  max-height: 52px; opacity: 1; padding: 10px 14px;
+  margin-bottom: 12px; pointer-events: auto;
+}
+.sync-bar .bar-icon { font-size: 16px; flex-shrink: 0; }
+.sync-bar .bar-text { flex: 1; font-size: 12.5px; line-height: 1.4; }
+.sync-bar .bar-retry {
+  color: #007AFF; font-size: 13px; font-weight: 500;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+.sync-bar .bar-retry:hover { opacity: 0.7; }
+.sync-bar .bar-close {
+  font-size: 15px; color: #bbb; cursor: pointer; padding: 0 2px; flex-shrink: 0;
+}
+.sync-bar .bar-close:hover { color: #888; }
+
+/* ── Functional Cards ── */
+.func-card {
+  background: rgba(255,255,255,0.5); backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px); border-radius: 16px;
+  padding: 14px 16px; margin-bottom: 10px; position: relative;
+  transition: opacity 0.3s;
+}
+.func-card .card-header {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.func-card .card-title {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 15px; font-weight: 600; color: #1a1a1a;
+}
+.func-card .card-title .t-icon { font-size: 18px; }
+.func-card .card-right { text-align: right; }
+.func-card .card-right .big-val {
+  font-size: 24px; font-weight: 700; color: #1a1a1a; line-height: 1.2;
+}
+.func-card .card-right .small-label { font-size: 11px; color: #999; }
+
+/* Time bars */
+.time-slots { display: flex; gap: 16px; margin-top: 10px; }
+.time-slot { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #777; }
+.time-slot .slot-bar {
+  width: 36px; height: 5px; border-radius: 3px;
+  background: linear-gradient(90deg, #60C0D0, #A088E8);
+}
+
+/* Mini chart */
+.mini-bars { display: flex; align-items: flex-end; gap: 3px; height: 36px; }
+.mini-bars .bar { width: 5px; border-radius: 2.5px; transition: height 0.4s, opacity 0.3s; }
+
+/* ── Input Box ── */
+.input-box {
+  background: rgba(255,255,255,0.6); backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px); border-radius: 24px;
+  padding: 10px 14px; display: flex; align-items: center;
+  justify-content: space-between; margin-top: 16px;
+}
+.input-box .input-hint { font-size: 14px; color: #bbb; display: flex; align-items: center; gap: 6px; }
+.input-box .send-btn {
+  width: 28px; height: 28px; background: #1a1a1a; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 15px; font-weight: 600;
+}
+
+/* ── Animations ── */
+.count-up-anim { animation: countPop 0.45s ease-out; }
+@keyframes countPop {
+  0%   { transform: scale(0.92); opacity: 0.6; }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.fade-in-anim { animation: fadeUp 0.35s ease-out; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Controls Panel ── -->
+<div class="controls">
+  <h3>状态切换</h3>
+  <div class="btn-group">
+    <button id="btn-syncing" onclick="switchState('syncing')">⏳ 同步中</button>
+    <button id="btn-success" onclick="switchState('success')">✅ 同步成功</button>
+    <button id="btn-no_change" onclick="switchState('no_change')">✅ 成功（无变化）</button>
+    <button id="btn-stale" onclick="switchState('stale')">⚠️ 数据过期</button>
+    <button id="btn-partial" onclick="switchState('partial')">⚠️ 部分过期</button>
+    <button id="btn-first_use" onclick="switchState('first_use')">🆕 首次使用</button>
+  </div>
+  <div class="state-desc" id="state-desc">点击按钮切换状态，观察首页数据区域的变化</div>
+</div>
+
+<!-- ── Phone Mockup ── -->
+<div class="phone">
+  <div class="phone-notch"></div>
+  <div class="phone-statusbar">
+    <span>9:41</span>
+    <span class="icons">
+      <svg width="16" height="11" viewBox="0 0 16 11"><rect x="0" y="7" width="3" height="4" rx="0.5" fill="#1a1a1a"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="0.5" fill="#1a1a1a"/><rect x="9" y="2" width="3" height="9" rx="0.5" fill="#1a1a1a"/><rect x="13.5" y="0" width="2.5" height="11" rx="0.5" fill="#1a1a1a"/></svg>
+      <svg width="15" height="11" viewBox="0 0 15 11"><path d="M7.5 3.2C5.5 3.2 3.7 4 2.4 5.3L1 3.9C2.7 2.2 5 1.2 7.5 1.2s4.8 1 6.5 2.7L12.6 5.3C11.3 4 9.5 3.2 7.5 3.2zm3.7 4L9.8 8.6c-.6-.6-1.4-.9-2.3-.9s-1.7.3-2.3.9L3.8 7.2C4.8 6.2 6.1 5.6 7.5 5.6s2.7.6 3.7 1.6zM7.5 9.8c-.5 0-1 .2-1.3.6l1.3 1.4 1.3-1.4c-.3-.4-.8-.6-1.3-.6z" fill="#1a1a1a"/></svg>
+      <svg width="25" height="11" viewBox="0 0 25 11"><rect x="0" y="0.5" width="21" height="10" rx="2.5" stroke="#1a1a1a" stroke-width="1" fill="none"/><rect x="22" y="3.5" width="2" height="4" rx="0.8" fill="#1a1a1a" opacity="0.4"/><rect x="1.5" y="2" width="18" height="7" rx="1.5" fill="#1a1a1a"/></svg>
+    </span>
+  </div>
+
+  <div class="content">
+    <h1 class="greeting">早上好</h1>
+    <p class="digest">昨夜的安稳，是送给今天最好的礼物。去迎战你的主场吧，我已为你储备好一整天的底气</p>
+
+    <!-- Wave decoration -->
+    <div class="wave-area">
+      <svg viewBox="0 0 346 72" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(90,195,215,0.35)"/>
+            <stop offset="100%" stop-color="rgba(90,195,215,0.03)"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,35 C50,12 110,50 170,30 C230,10 290,45 346,25 L346,72 L0,72Z" fill="url(#wg)"/>
+        <path d="M0,35 C50,12 110,50 170,30 C230,10 290,45 346,25" fill="none" stroke="rgba(80,190,210,0.5)" stroke-width="2"/>
+        <path d="M0,42 C65,22 125,55 190,38 C255,21 310,48 346,35 L346,72 L0,72Z" fill="rgba(100,180,220,0.1)"/>
+        <path d="M0,42 C65,22 125,55 190,38 C255,21 310,48 346,35" fill="none" stroke="rgba(80,190,210,0.25)" stroke-width="1.5"/>
+      </svg>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="metric-cards">
+      <div class="metric-card" id="card-sleep">
+        <div class="spinner"></div>
+        <div class="card-top"><span class="card-icon">🌙</span><span class="card-label">睡眠</span></div>
+        <div class="card-value" id="val-sleep">92</div>
+        <div class="update-time">08:15 更新</div>
+      </div>
+      <div class="metric-card" id="card-hr">
+        <div class="spinner"></div>
+        <div class="card-top"><span class="card-icon">❤️</span><span class="card-label">心率</span></div>
+        <div class="card-value" id="val-hr">87</div>
+        <div class="update-time">08:15 更新</div>
+      </div>
+      <div class="metric-card" id="card-cal">
+        <div class="spinner"></div>
+        <div class="card-top"><span class="card-icon">🔥</span><span class="card-label">消耗</span></div>
+        <div class="card-value" id="val-cal">672</div>
+        <div class="update-time">昨天 23:30</div>
+      </div>
+    </div>
+
+    <!-- Sync Status Bar -->
+    <div class="sync-bar" id="sync-bar">
+      <span class="bar-icon">⌚</span>
+      <span class="bar-text" id="bar-text">手表暂时无法连接，请确认已解锁并在身边</span>
+      <span class="bar-retry" onclick="handleRetry()">重试</span>
+      <span class="bar-close" onclick="closeBar()">✕</span>
+    </div>
+
+    <!-- Functional Cards -->
+    <div class="func-card" id="card-energy">
+      <div class="spinner"></div>
+      <div class="card-header">
+        <div class="card-title"><span class="t-icon">⚡</span>高能时段</div>
+        <div class="card-right">
+          <div class="small-label">今日剩余</div>
+          <div class="big-val" id="energy-val">7h 36m</div>
+        </div>
+      </div>
+      <div class="time-slots">
+        <div class="time-slot"><div class="slot-bar"></div>09:30 - 11:45</div>
+        <div class="time-slot"><div class="slot-bar"></div>18:45 - 21:10</div>
+      </div>
+    </div>
+
+    <div class="func-card" id="card-window">
+      <div class="spinner"></div>
+      <div class="card-header">
+        <div class="card-title"><span class="t-icon">😴</span>入睡窗口</div>
+        <div class="card-right">
+          <div class="small-label">推荐入睡</div>
+          <div class="big-val" id="window-val">23:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="func-card" id="card-analysis">
+      <div class="spinner"></div>
+      <div class="card-header">
+        <div class="card-title"><span class="t-icon">📊</span>睡眠分析</div>
+        <div class="mini-bars" id="mini-bars"></div>
+      </div>
+    </div>
+
+    <!-- Input Box -->
+    <div class="input-box">
+      <span class="input-hint">✨ 输入您的内容</span>
+      <span class="send-btn">↑</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 状态配置 ──
+const CACHED = { sleep: '85', hr: '82', cal: '580' };
+const FRESH  = { sleep: '92', hr: '87', cal: '672' };
+
+const STATES = {
+  syncing: {
+    desc: '数据正在从穿戴设备同步。卡片显示上次缓存值，右上角出现 loading 指示器，用户可正常阅读旧数据。',
+    metric: { sleep: 'syncing', hr: 'syncing', cal: 'syncing' },
+    func:   { energy: 'syncing', window: 'syncing', analysis: 'syncing' },
+    values: CACHED, bar: null,
+  },
+  success: {
+    desc: '同步成功，有新数据。Loading 淡出，数值从旧值滚动到新值（CountUp 动画），给用户明确的「已更新」感知。',
+    metric: { sleep: 'success', hr: 'success', cal: 'success' },
+    func:   { energy: 'normal', window: 'normal', analysis: 'normal' },
+    values: FRESH, bar: null,
+  },
+  no_change: {
+    desc: '同步成功但数据无变化。Loading 淡出，数值静态显示（无动画），不触发 Smart Digest 重新生成。',
+    metric: { sleep: 'normal', hr: 'normal', cal: 'normal' },
+    func:   { energy: 'normal', window: 'normal', analysis: 'normal' },
+    values: FRESH, bar: null,
+  },
+  stale: {
+    desc: '同步失败 / 数据过期。卡片显示缓存值（降低透明度）+ 灰色更新时间标注。数据卡片下方出现状态条，显示原因和重试按钮。',
+    metric: { sleep: 'stale', hr: 'stale', cal: 'stale' },
+    func:   { energy: 'stale', window: 'stale', analysis: 'stale' },
+    values: CACHED, bar: '手表暂时无法连接，请确认已解锁并在身边',
+  },
+  partial: {
+    desc: '部分过期：睡眠数据同步失败，心率和消耗正常更新。依赖睡眠的功能卡片（高能时段、入睡窗口、睡眠分析）也进入过期状态。',
+    metric: { sleep: 'stale', hr: 'success', cal: 'success' },
+    func:   { energy: 'stale', window: 'stale', analysis: 'stale' },
+    values: { sleep: CACHED.sleep, hr: FRESH.hr, cal: FRESH.cal },
+    bar: '睡眠数据未更新，请确认手表已佩戴并在身边',
+  },
+  first_use: {
+    desc: '新用户首次使用，无缓存数据。卡片数值显示「--」+ loading 指示器。同步失败或无设备时显示「--」+ 对应原因文案。',
+    metric: { sleep: 'first_use', hr: 'first_use', cal: 'first_use' },
+    func:   { energy: 'first_use', window: 'first_use', analysis: 'first_use' },
+    values: { sleep: '--', hr: '--', cal: '--' }, bar: null,
+  },
+};
+
+let currentState = null;
+
+// ── Mini bars chart ──
+const BAR_HEIGHTS = [18, 26, 34, 22, 30, 16, 32, 24, 20, 33, 27, 19];
+const BAR_COLORS  = ['#7C6EE6','#7C6EE6','#9B8FEF','#7C6EE6','#9B8FEF','#EFC050',
+                     '#7C6EE6','#9B8FEF','#7C6EE6','#EFC050','#9B8FEF','#7C6EE6'];
+
+function initMiniBars() {
+  const el = document.getElementById('mini-bars');
+  el.innerHTML = BAR_HEIGHTS.map((h, i) =>
+    `<div class="bar" style="height:${h}px;background:${BAR_COLORS[i]}"></div>`
+  ).join('');
+}
+
+// ── CountUp Animation ──
+function countUp(el, from, to, duration) {
+  if (from === to) { el.textContent = to; return; }
+  const start = performance.now();
+  el.classList.remove('count-up-anim');
+  void el.offsetWidth; // reflow
+  el.classList.add('count-up-anim');
+  (function frame(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(from + (to - from) * ease);
+    if (t < 1) requestAnimationFrame(frame);
+  })(start);
+}
+
+// ── Update Cards ──
+function setMetricCard(id, status, value, animate) {
+  const card = document.getElementById('card-' + id);
+  const valEl = document.getElementById('val-' + id);
+  card.className = 'metric-card' + (status === 'syncing' || status === 'first_use' ? ' syncing' : '')
+                                  + (status === 'stale' ? ' stale' : '');
+  valEl.classList.remove('count-up-anim', 'fade-in-anim');
+  if (animate && status === 'success') {
+    const from = parseInt(CACHED[id]) || 0;
+    const to = parseInt(value) || 0;
+    countUp(valEl, from, to, 500);
+  } else {
+    valEl.textContent = value;
+    if (status === 'success' || status === 'normal') {
+      void valEl.offsetWidth;
+      valEl.classList.add('fade-in-anim');
+    }
+  }
+}
+
+function setFuncCard(id, status) {
+  const card = document.getElementById('card-' + id);
+  card.className = 'func-card' + (status === 'syncing' || status === 'first_use' ? ' syncing' : '')
+                                + (status === 'stale' ? ' stale' : '');
+  // 首次使用时功能卡片数值显示占位
+  const valEl = document.getElementById(id + '-val');
+  if (valEl) valEl.textContent = status === 'first_use' ? '--' : (id === 'energy' ? '7h 36m' : '23:00');
+  // Mini bars 透明度
+  if (id === 'analysis') {
+    document.querySelectorAll('#mini-bars .bar').forEach(b => {
+      b.style.opacity = (status === 'stale' || status === 'first_use') ? '0.35' : '1';
+    });
+  }
+}
+
+// ── State Switching ──
+function switchState(state) {
+  currentState = state;
+  const cfg = STATES[state];
+
+  // Buttons
+  document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + state).classList.add('active');
+  document.getElementById('state-desc').textContent = cfg.desc;
+
+  // Metric cards
+  const animate = (state === 'success' || state === 'partial');
+  setMetricCard('sleep', cfg.metric.sleep, cfg.values.sleep, animate);
+  setMetricCard('hr',    cfg.metric.hr,    cfg.values.hr,    animate);
+  setMetricCard('cal',   cfg.metric.cal,   cfg.values.cal,   animate);
+
+  // Func cards
+  setFuncCard('energy',   cfg.func.energy);
+  setFuncCard('window',   cfg.func.window);
+  setFuncCard('analysis', cfg.func.analysis);
+
+  // Status bar
+  const bar = document.getElementById('sync-bar');
+  if (cfg.bar) {
+    document.getElementById('bar-text').textContent = cfg.bar;
+    requestAnimationFrame(() => bar.classList.add('visible'));
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+// ── Retry ──
+function handleRetry() {
+  if (!currentState) return;
+  const cfg = STATES[currentState];
+  // 将 stale 卡片切到 syncing
+  ['sleep','hr','cal'].forEach(id => {
+    if (cfg.metric[id] === 'stale') {
+      const card = document.getElementById('card-' + id);
+      card.classList.remove('stale');
+      card.classList.add('syncing');
+    }
+  });
+  ['energy','window','analysis'].forEach(id => {
+    if (cfg.func[id] === 'stale') {
+      const card = document.getElementById('card-' + id);
+      card.classList.remove('stale');
+      card.classList.add('syncing');
+    }
+  });
+  document.getElementById('sync-bar').classList.remove('visible');
+  // 2 秒后恢复原状态（模拟重试失败）
+  setTimeout(() => switchState(currentState), 2000);
+}
+
+function closeBar() {
+  document.getElementById('sync-bar').classList.remove('visible');
+}
+
+// ── Init ──
+initMiniBars();
+switchState('syncing');
+</script>
+</body>
+</html>
