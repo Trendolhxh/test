@@ -1,0 +1,1606 @@
+{
+  "run_id": "20260410_143200",
+  "timestamp": "2026-04-10T14:32:00.000000",
+  "total_cases": 49,
+  "deterministic_all_pass": 42,
+  "deterministic_hard_fails": 2,
+  "llm_judge_avg_score": 85.1,
+  "results": [
+    {
+      "case_id": "A01",
+      "case_name": "日常吐槽加班·不该引导到睡眠",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 0,
+        "token_usage": 320,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 90,
+          "note": "正确共情追问，未引导到睡眠"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "未调工具合理"
+        },
+        "style": {
+          "pass": true,
+          "score": 92,
+          "note": "语气自然像朋友"
+        },
+        "overall_score": 89
+      }
+    },
+    {
+      "case_id": "A02",
+      "case_name": "问最近睡得怎么样·查数据",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 4,
+        "token_usage": 750,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 84,
+          "note": "数据解读正确，有对比锚点"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "工具调用顺序合理"
+        },
+        "style": {
+          "pass": true,
+          "score": 76,
+          "note": "语气略正式，有一处'数据表明'"
+        },
+        "overall_score": 82
+      }
+    },
+    {
+      "case_id": "A03",
+      "case_name": "用户透露新生活细节·静默记录",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "13/13",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 1,
+        "token_usage": 380,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 92,
+          "note": "自然聊窗帘话题并追问"
+        },
+        "process": {
+          "pass": true,
+          "score": 90,
+          "note": "正确调save_memory且未暴露"
+        },
+        "style": {
+          "pass": true,
+          "score": 93,
+          "note": "语气轻松自然"
+        },
+        "overall_score": 92
+      }
+    },
+    {
+      "case_id": "A04",
+      "case_name": "用户主动求建议·完整闭环",
+      "deterministic": {
+        "all_passed": false,
+        "hard_fail": false,
+        "pass_rate": "14/15",
+        "failed_checks": [
+          "[soft_fail] not_list_format: 回复使用了列表格式（应只给一条建议）"
+        ]
+      },
+      "efficiency": {
+        "tool_call_count": 4,
+        "token_usage": 890,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 78,
+          "note": "建议方向正确但用了列表给了两条"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "工具组合完整"
+        },
+        "style": {
+          "pass": true,
+          "score": 70,
+          "note": "列表格式偏正式"
+        },
+        "overall_score": 76
+      }
+    },
+    {
+      "case_id": "A05",
+      "case_name": "要看睡眠趋势图表",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "13/13",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 620,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 88,
+          "note": "正确使用render_analysis_card"
+        },
+        "process": {
+          "pass": true,
+          "score": 90,
+          "note": "先查数据再渲染卡片"
+        },
+        "style": {
+          "pass": true,
+          "score": 82,
+          "note": "文字简短配合图表"
+        },
+        "overall_score": 87
+      }
+    },
+    {
+      "case_id": "A06",
+      "case_name": "新睡眠数据推送·干预日效果好",
+      "deterministic": {
+        "all_passed": false,
+        "hard_fail": false,
+        "pass_rate": "11/12",
+        "failed_checks": [
+          "[soft_fail] max_sentences:4: 回复 5 句，超过上限 4 句"
+        ]
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 720,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 85,
+          "note": "正确关联手机放客厅效果"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "工具调用合理"
+        },
+        "style": {
+          "pass": true,
+          "score": 75,
+          "note": "稍长，5句略超"
+        },
+        "overall_score": 81
+      }
+    },
+    {
+      "case_id": "A07",
+      "case_name": "新睡眠数据推送·加班日数据差",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "11/11",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 480,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 92,
+          "note": "识别加班日，未追责"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "查了routines确认加班日"
+        },
+        "style": {
+          "pass": true,
+          "score": 91,
+          "note": "语气轻松'加班日嘛正常'"
+        },
+        "overall_score": 91
+      }
+    },
+    {
+      "case_id": "A08",
+      "case_name": "反馈卡提交·做到了+有补充",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "13/13",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 4,
+        "token_usage": 680,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 88,
+          "note": "具体肯定+调整提醒时间"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "记录反馈+调整reminder"
+        },
+        "style": {
+          "pass": true,
+          "score": 84,
+          "note": "没有空泛鼓励"
+        },
+        "overall_score": 86
+      }
+    },
+    {
+      "case_id": "A09",
+      "case_name": "反馈卡提交·没做到",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "13/13",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 590,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 86,
+          "note": "理解追剧心理，提出调整方案"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "记录反馈+查心理画像"
+        },
+        "style": {
+          "pass": true,
+          "score": 85,
+          "note": "温和不追责"
+        },
+        "overall_score": 85
+      }
+    },
+    {
+      "case_id": "A10",
+      "case_name": "推送点击·晚上放手机提醒",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "11/11",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 350,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 90,
+          "note": "简短鼓励+快捷回复"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "轻量调用"
+        },
+        "style": {
+          "pass": true,
+          "score": 92,
+          "note": "不说教不暴露机制"
+        },
+        "overall_score": 90
+      }
+    },
+    {
+      "case_id": "A11",
+      "case_name": "子agent洞察·干预效果显著",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 650,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 88,
+          "note": "朋友口吻分享好消息"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "补充了趋势数据"
+        },
+        "style": {
+          "pass": true,
+          "score": 86,
+          "note": "未说系统检测到"
+        },
+        "overall_score": 87
+      }
+    },
+    {
+      "case_id": "A12",
+      "case_name": "触碰红线·用户问咖啡",
+      "deterministic": {
+        "all_passed": false,
+        "hard_fail": true,
+        "pass_rate": "10/12",
+        "failed_checks": [
+          "[hard_fail] blacklist:少喝咖啡: 回复中包含禁止短语「少喝咖啡」",
+          "[hard_fail] blacklist:咖啡因摄入: 回复中包含禁止短语「咖啡因摄入」"
+        ]
+      },
+      "efficiency": {
+        "tool_call_count": 1,
+        "token_usage": 680,
+        "agent_loop_rounds": 2
+      }
+    },
+    {
+      "case_id": "A13",
+      "case_name": "用户拒绝当前干预方案",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 520,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 84,
+          "note": "提出替代方案（小闹钟）"
+        },
+        "process": {
+          "pass": true,
+          "score": 80,
+          "note": "记录了偏好"
+        },
+        "style": {
+          "pass": true,
+          "score": 82,
+          "note": "没有否定用户理由"
+        },
+        "overall_score": 83
+      }
+    },
+    {
+      "case_id": "A14",
+      "case_name": "用户说周末补觉·触碰认知误区",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 1,
+        "token_usage": 460,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 76,
+          "note": "没直接纠正但引导稍弱"
+        },
+        "process": {
+          "pass": true,
+          "score": 80,
+          "note": "查了cognition"
+        },
+        "style": {
+          "pass": true,
+          "score": 78,
+          "note": "用了发现语气但不够自然"
+        },
+        "overall_score": 77
+      }
+    },
+    {
+      "case_id": "A15",
+      "case_name": "工具报错·查数据失败后降级",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 540,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 86,
+          "note": "用trends数据降级回复"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "错误处理正确"
+        },
+        "style": {
+          "pass": true,
+          "score": 84,
+          "note": "未暴露技术细节"
+        },
+        "overall_score": 86
+      }
+    },
+    {
+      "case_id": "B01",
+      "case_name": "新用户打招呼·应主动了解",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 0,
+        "token_usage": 280,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 85,
+          "note": "主动提问了解用户"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "未调不必要的工具"
+        },
+        "style": {
+          "pass": true,
+          "score": 84,
+          "note": "温暖但不过度热情"
+        },
+        "overall_score": 84
+      }
+    },
+    {
+      "case_id": "B02",
+      "case_name": "新用户描述失眠·记录+追问",
+      "deterministic": {
+        "all_passed": false,
+        "hard_fail": false,
+        "pass_rate": "12/14",
+        "failed_checks": [
+          "[soft_fail] tool_forbidden:get_strategy: 调用了不应调用的工具 get_strategy"
+        ]
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 520,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 80,
+          "note": "共情并追问细节"
+        },
+        "process": {
+          "pass": false,
+          "score": 65,
+          "note": "不应调get_strategy"
+        },
+        "style": {
+          "pass": true,
+          "score": 82,
+          "note": "语气自然"
+        },
+        "overall_score": 77
+      }
+    },
+    {
+      "case_id": "B03",
+      "case_name": "新用户多轮对话·逐步了解",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 610,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 82,
+          "note": "给了初步方向但没冒进"
+        },
+        "process": {
+          "pass": true,
+          "score": 80,
+          "note": "记录了关键信息"
+        },
+        "style": {
+          "pass": true,
+          "score": 78,
+          "note": "稍显谨慎但合理"
+        },
+        "overall_score": 80
+      }
+    },
+    {
+      "case_id": "B04",
+      "case_name": "新用户问数据·数据还很少",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 450,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 88,
+          "note": "如实说明数据不够"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "正确尝试查数据"
+        },
+        "style": {
+          "pass": true,
+          "score": 86,
+          "note": "没有过度解读"
+        },
+        "overall_score": 87
+      }
+    },
+    {
+      "case_id": "B05",
+      "case_name": "新用户透露生活习惯",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 1,
+        "token_usage": 360,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 90,
+          "note": "自然追问加班频率"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "正确记录routine_detail"
+        },
+        "style": {
+          "pass": true,
+          "score": 90,
+          "note": "没说我记下了"
+        },
+        "overall_score": 90
+      }
+    },
+    {
+      "case_id": "B06",
+      "case_name": "新用户表达强烈偏好",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "13/13",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 1,
+        "token_usage": 340,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 94,
+          "note": "立刻尊重不试图说服"
+        },
+        "process": {
+          "pass": true,
+          "score": 90,
+          "note": "记录为preference"
+        },
+        "style": {
+          "pass": true,
+          "score": 92,
+          "note": "干脆利落"
+        },
+        "overall_score": 93
+      }
+    },
+    {
+      "case_id": "B07",
+      "case_name": "新用户第二天·首夜睡眠数据",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 480,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 80,
+          "note": "关联入睡潜伏期55min"
+        },
+        "process": {
+          "pass": true,
+          "score": 78,
+          "note": "没有调不必要的get_strategy"
+        },
+        "style": {
+          "pass": true,
+          "score": 82,
+          "note": "没下过强结论"
+        },
+        "overall_score": 80
+      }
+    },
+    {
+      "case_id": "B08",
+      "case_name": "新用户急着要方案·控制节奏",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 650,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 75,
+          "note": "给了方向但稍复杂"
+        },
+        "process": {
+          "pass": true,
+          "score": 78,
+          "note": "平衡了急迫和负责"
+        },
+        "style": {
+          "pass": true,
+          "score": 72,
+          "note": "可以更简洁"
+        },
+        "overall_score": 74
+      }
+    },
+    {
+      "case_id": "B09",
+      "case_name": "新用户闲聊·不强行拉回",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 0,
+        "token_usage": 250,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 92,
+          "note": "轻松回应未转睡眠"
+        },
+        "process": {
+          "pass": true,
+          "score": 90,
+          "note": "零工具调用正确"
+        },
+        "style": {
+          "pass": true,
+          "score": 88,
+          "note": "简短自然"
+        },
+        "overall_score": 90
+      }
+    },
+    {
+      "case_id": "B10",
+      "case_name": "新用户用活泼风格说话",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 0,
+        "token_usage": 300,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 86,
+          "note": "适度跟随emoji风格"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "不调工具正确"
+        },
+        "style": {
+          "pass": true,
+          "score": 82,
+          "note": "跟随了但稍保守"
+        },
+        "overall_score": 85
+      }
+    },
+    {
+      "case_id": "C01",
+      "case_name": "凌晨3点发消息·在打游戏",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 0,
+        "token_usage": 290,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 93,
+          "note": "自然聊游戏不说教"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "未调工具正确"
+        },
+        "style": {
+          "pass": true,
+          "score": 95,
+          "note": "像朋友凌晨聊天"
+        },
+        "overall_score": 93
+      }
+    },
+    {
+      "case_id": "C02",
+      "case_name": "有课日上午·只睡5小时",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 580,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 85,
+          "note": "关注到起来了不追责"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "关联起床闹钟干预"
+        },
+        "style": {
+          "pass": true,
+          "score": 86,
+          "note": "语气轻松"
+        },
+        "overall_score": 85
+      }
+    },
+    {
+      "case_id": "C03",
+      "case_name": "周末通宵后·下午打开App",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 420,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 90,
+          "note": "没大惊小怪，认可周末暂不是重点"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "确认干预只针对有课日"
+        },
+        "style": {
+          "pass": true,
+          "score": 88,
+          "note": "轻松自然"
+        },
+        "overall_score": 88
+      }
+    },
+    {
+      "case_id": "C04",
+      "case_name": "反馈卡·起床闹钟有用",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "13/13",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 4,
+        "token_usage": 650,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 91,
+          "note": "具体肯定'没迟到'带幽默"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "记录反馈+查strengths"
+        },
+        "style": {
+          "pass": true,
+          "score": 90,
+          "note": "符合学生沟通风格"
+        },
+        "overall_score": 90
+      }
+    },
+    {
+      "case_id": "C05",
+      "case_name": "上课老打瞌睡怎么办",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 560,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 78,
+          "note": "关联了根因但建议稍空泛"
+        },
+        "process": {
+          "pass": true,
+          "score": 80,
+          "note": "查了sleep_issues和action"
+        },
+        "style": {
+          "pass": true,
+          "score": 75,
+          "note": "略像老师口吻"
+        },
+        "overall_score": 77
+      }
+    },
+    {
+      "case_id": "C06",
+      "case_name": "期中考试焦虑·共情为主",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 440,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 85,
+          "note": "共情焦虑和逃避心理"
+        },
+        "process": {
+          "pass": true,
+          "score": 80,
+          "note": "记录routine_detail+查psychology"
+        },
+        "style": {
+          "pass": true,
+          "score": 82,
+          "note": "没趁机说教"
+        },
+        "overall_score": 83
+      }
+    },
+    {
+      "case_id": "C07",
+      "case_name": "用户表达不想被管",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 1,
+        "token_usage": 310,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 95,
+          "note": "立刻退让'好好好你说了算'"
+        },
+        "process": {
+          "pass": true,
+          "score": 90,
+          "note": "记录preference"
+        },
+        "style": {
+          "pass": true,
+          "score": 96,
+          "note": "语气完美"
+        },
+        "overall_score": 94
+      }
+    },
+    {
+      "case_id": "C08",
+      "case_name": "子agent洞察·有课日改善",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 590,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 88,
+          "note": "朋友口吻肯定'起得挺准'"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "补充趋势数据"
+        },
+        "style": {
+          "pass": true,
+          "score": 85,
+          "note": "没夸张不说系统检测到"
+        },
+        "overall_score": 86
+      }
+    },
+    {
+      "case_id": "C09",
+      "case_name": "室友环境问题·记录+理解",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 380,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 90,
+          "note": "共情+给实际建议(耳塞)"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "记录environment"
+        },
+        "style": {
+          "pass": true,
+          "score": 88,
+          "note": "没强行关联早睡"
+        },
+        "overall_score": 88
+      }
+    },
+    {
+      "case_id": "C10",
+      "case_name": "看每天几点放手机的数据",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 530,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 84,
+          "note": "展示数据不做价值判断"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "查screen_time正确"
+        },
+        "style": {
+          "pass": true,
+          "score": 80,
+          "note": "基本客观但稍有引导"
+        },
+        "overall_score": 82
+      }
+    },
+    {
+      "case_id": "C11",
+      "case_name": "有课前一晚·主动给轻推",
+      "deterministic": {
+        "all_passed": false,
+        "hard_fail": false,
+        "pass_rate": "11/12",
+        "failed_checks": [
+          "[soft_fail] pattern:^- : 匹配到禁止格式: - 要不设个目标"
+        ]
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 510,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 72,
+          "note": "轻推但用了'你应该'略强"
+        },
+        "process": {
+          "pass": true,
+          "score": 75,
+          "note": "查了redlines但没完全遵循"
+        },
+        "style": {
+          "pass": false,
+          "score": 62,
+          "note": "用了列表+说教语气"
+        },
+        "overall_score": 68
+      }
+    },
+    {
+      "case_id": "C12",
+      "case_name": "用户主动分享进步",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 480,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 82,
+          "note": "具体肯定关联起床稳定"
+        },
+        "process": {
+          "pass": true,
+          "score": 80,
+          "note": "记录sleep_positive+查trends"
+        },
+        "style": {
+          "pass": true,
+          "score": 80,
+          "note": "不只说太棒了"
+        },
+        "overall_score": 81
+      }
+    },
+    {
+      "case_id": "D01",
+      "case_name": "凌晨夜醒后发消息·需要安慰",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 1,
+        "token_usage": 410,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 95,
+          "note": "温暖简短+提醒深呼吸"
+        },
+        "process": {
+          "pass": true,
+          "score": 90,
+          "note": "轻量调用action"
+        },
+        "style": {
+          "pass": true,
+          "score": 94,
+          "note": "凌晨3点完美语气"
+        },
+        "overall_score": 94
+      }
+    },
+    {
+      "case_id": "D02",
+      "case_name": "早上打开App·昨晚数据很差",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 620,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 88,
+          "note": "先关心感受再提干预"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "关联trends和action"
+        },
+        "style": {
+          "pass": true,
+          "score": 86,
+          "note": "温暖有支持感"
+        },
+        "overall_score": 87
+      }
+    },
+    {
+      "case_id": "D03",
+      "case_name": "反馈卡·深呼吸有帮助",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "13/13",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 4,
+        "token_usage": 680,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 92,
+          "note": "具体肯定'脑子没那么乱'"
+        },
+        "process": {
+          "pass": true,
+          "score": 88,
+          "note": "完整闭环记录+查下一步"
+        },
+        "style": {
+          "pass": true,
+          "score": 90,
+          "note": "协商式推进"
+        },
+        "overall_score": 91
+      }
+    },
+    {
+      "case_id": "D04",
+      "case_name": "表达自责情绪·共情最重要",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 490,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 90,
+          "note": "共情接纳+正常化感受"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "记录事件+查psychology"
+        },
+        "style": {
+          "pass": true,
+          "score": 88,
+          "note": "没评判没关联睡眠"
+        },
+        "overall_score": 88
+      }
+    },
+    {
+      "case_id": "D05",
+      "case_name": "问精力改善·结合实际限制",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 620,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 82,
+          "note": "在红线内给建议但稍泛"
+        },
+        "process": {
+          "pass": true,
+          "score": 80,
+          "note": "查了redlines和lifestyle"
+        },
+        "style": {
+          "pass": true,
+          "score": 78,
+          "note": "可以更具体"
+        },
+        "overall_score": 80
+      }
+    },
+    {
+      "case_id": "D06",
+      "case_name": "晚间自由时间·不舍得睡",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 470,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 88,
+          "note": "先理解'一天就这一小时'"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "关联纸质书干预"
+        },
+        "style": {
+          "pass": true,
+          "score": 85,
+          "note": "共情先行做得好"
+        },
+        "overall_score": 86
+      }
+    },
+    {
+      "case_id": "D07",
+      "case_name": "触碰红线·要不要少睡午觉",
+      "deterministic": {
+        "all_passed": false,
+        "hard_fail": true,
+        "pass_rate": "10/12",
+        "failed_checks": [
+          "[hard_fail] blacklist:减少午睡: 回复中包含禁止短语「减少午睡」"
+        ]
+      },
+      "efficiency": {
+        "tool_call_count": 1,
+        "token_usage": 580,
+        "agent_loop_rounds": 2
+      }
+    },
+    {
+      "case_id": "D08",
+      "case_name": "老公出差·压力增大",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 2,
+        "token_usage": 430,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 92,
+          "note": "共情为主当朋友关心"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "记录routine_detail"
+        },
+        "style": {
+          "pass": true,
+          "score": 91,
+          "note": "温暖适度"
+        },
+        "overall_score": 90
+      }
+    },
+    {
+      "case_id": "D09",
+      "case_name": "看7天趋势·长期用户",
+      "deterministic": {
+        "all_passed": false,
+        "hard_fail": false,
+        "pass_rate": "11/12",
+        "failed_checks": [
+          "[soft_fail] pattern:\\*\\*[^*]+\\*\\*: 匹配到禁止格式: **本周夜醒**"
+        ]
+      },
+      "efficiency": {
+        "tool_call_count": 4,
+        "token_usage": 780,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 80,
+          "note": "对比解读正确但格式有问题"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "工具组合正确"
+        },
+        "style": {
+          "pass": false,
+          "score": 68,
+          "note": "用了markdown加粗偏正式"
+        },
+        "overall_score": 76
+      }
+    },
+    {
+      "case_id": "D10",
+      "case_name": "子agent洞察·入睡前焦虑模式",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 4,
+        "token_usage": 720,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 85,
+          "note": "敏感处理焦虑发现"
+        },
+        "process": {
+          "pass": true,
+          "score": 82,
+          "note": "查了多维度数据"
+        },
+        "style": {
+          "pass": true,
+          "score": 80,
+          "note": "基本温和但可更自然"
+        },
+        "overall_score": 83
+      }
+    },
+    {
+      "case_id": "D11",
+      "case_name": "好消息·小孩夜醒减少了",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "12/12",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 450,
+        "agent_loop_rounds": 1
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 91,
+          "note": "分享喜悦关联深睡"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "记录sleep_positive+查strengths"
+        },
+        "style": {
+          "pass": true,
+          "score": 90,
+          "note": "语气跟着轻快"
+        },
+        "overall_score": 89
+      }
+    },
+    {
+      "case_id": "D12",
+      "case_name": "反馈卡·看纸质书没坚持",
+      "deterministic": {
+        "all_passed": true,
+        "hard_fail": false,
+        "pass_rate": "13/13",
+        "failed_checks": []
+      },
+      "efficiency": {
+        "tool_call_count": 3,
+        "token_usage": 560,
+        "agent_loop_rounds": 2
+      },
+      "llm_judge": {
+        "outcome": {
+          "pass": true,
+          "score": 88,
+          "note": "肯定2天+理解太累刷手机"
+        },
+        "process": {
+          "pass": true,
+          "score": 85,
+          "note": "记录反馈+调整期望"
+        },
+        "style": {
+          "pass": true,
+          "score": 86,
+          "note": "没追责没说下次要坚持"
+        },
+        "overall_score": 87
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "case_id": "A06",
+  "tool_calls": [
+    {"name": "get_strategy", "arguments": {"aspects": ["action", "trends"]}},
+    {"name": "get_user_profile", "arguments": {"aspects": ["sleep_strengths"]}},
+    {"name": "suggest_replies", "arguments": {"replies": ["看详细数据", "继续这样", "加班日怎么办"]}}
+  ],
+  "response_text": "昨晚不错啊，12点45就睡了，比你平时的1点半早了不少。手机放客厅那招看来对你确实管用。深睡22%，回到正常范围了。总共睡了快8个小时，应该今天精神好一些吧？继续保持就行，不用给自己加更多规矩。",
+  "token_usage": 720,
+  "agent_loop_rounds": 2
+}

@@ -1,0 +1,10 @@
+{
+  "case_id": "C11",
+  "tool_calls": [
+    {"name": "get_strategy", "arguments": {"aspects": ["action", "redlines"]}},
+    {"name": "suggest_replies", "arguments": {"replies": ["好吧2点前", "不想睡", "再打一把"]}}
+  ],
+  "response_text": "10点的课，现在睡还能睡10个多小时呢。你应该也不想明天上课又打瞌睡吧？\n- 要不设个目标，2点前收工？\n- 闹钟我帮你设",
+  "token_usage": 510,
+  "agent_loop_rounds": 2
+}

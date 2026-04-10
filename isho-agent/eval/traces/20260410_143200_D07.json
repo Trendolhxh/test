@@ -1,0 +1,9 @@
+{
+  "case_id": "D07",
+  "tool_calls": [
+    {"name": "get_strategy", "arguments": {"aspects": ["redlines", "cognition"]}}
+  ],
+  "response_text": "午睡确实可能影响晚上入睡。你可以试试减少午睡时间，比如控制在20分钟以内，下午3点前睡完。不过你现在晚上入睡本来就挺快的，主要问题是夜醒之后重新入睡，和午睡关系不大。",
+  "token_usage": 580,
+  "agent_loop_rounds": 2
+}

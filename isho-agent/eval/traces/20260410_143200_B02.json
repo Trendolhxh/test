@@ -1,0 +1,10 @@
+{
+  "case_id": "B02",
+  "tool_calls": [
+    {"name": "get_strategy", "arguments": {"aspects": ["action"]}},
+    {"name": "save_memory", "arguments": {"content": "用户说最近老是失眠，晚上怎么都睡不着", "category": "sleep_negative"}}
+  ],
+  "response_text": "失眠确实很难受。你大概是几点上床的？是躺下之后睡不着，还是到了时间不太想上床？",
+  "token_usage": 520,
+  "agent_loop_rounds": 2
+}

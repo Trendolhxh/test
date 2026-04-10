@@ -1,0 +1,9 @@
+{
+  "case_id": "D01",
+  "tool_calls": [
+    {"name": "get_strategy", "arguments": {"aspects": ["action"]}}
+  ],
+  "response_text": "又醒了，辛苦了。哄完之后试试做几次深呼吸再躺下，上次你说有用的。",
+  "token_usage": 410,
+  "agent_loop_rounds": 2
+}

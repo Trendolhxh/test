@@ -1,0 +1,9 @@
+{
+  "case_id": "A12",
+  "tool_calls": [
+    {"name": "get_strategy", "arguments": {"aspects": ["redlines", "cognition"]}}
+  ],
+  "response_text": "确实有可能。咖啡因会影响深睡，你可以试试少喝咖啡，或者把时间提前到中午之前。不过你目前手机放客厅的效果已经不错了，深睡从16%涨到了22%，也可以先看看这个方向能走多远。",
+  "token_usage": 680,
+  "agent_loop_rounds": 2
+}

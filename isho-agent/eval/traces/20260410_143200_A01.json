@@ -1,0 +1,7 @@
+{
+  "case_id": "A01",
+  "tool_calls": [],
+  "response_text": "加班到几点？吃东西了吗？",
+  "token_usage": 320,
+  "agent_loop_rounds": 1
+}

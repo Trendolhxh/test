@@ -1,0 +1,12 @@
+{
+  "case_id": "A04",
+  "tool_calls": [
+    {"name": "get_strategy", "arguments": {"aspects": ["redlines", "action", "principles"]}},
+    {"name": "set_reminder", "arguments": {"time": "2026-03-25T23:00:00+08:00", "message": "该放下手机了，把它放到客厅充电吧", "repeat": "weekdays"}},
+    {"name": "send_feedback_card", "arguments": {"suggestion_id": "sug_20260325_001", "check_question": "昨晚闹钟响了之后，你有没有把手机放到客厅？", "completion_options": [{"label": "做到了", "value": "done"}, {"label": "部分做到", "value": "partial"}, {"label": "没做到", "value": "not_done"}], "follow_up_prompt": "有什么想补充的吗？（选填）", "scheduled_after": "2026-03-26T08:00:00+08:00"}},
+    {"name": "suggest_replies", "arguments": {"replies": ["好，试试看", "今天不太方便", "换个方法吧"]}}
+  ],
+  "response_text": "你目前手机放客厅的效果其实挺明显的，执行那几天入睡提前了45分钟，深睡也涨了3个百分点。可以继续这个方向：\n- 每晚11点闹钟响了把手机拿到客厅\n- 先从工作日开始，加班日不强求\n\n我帮你设了每个工作日晚上11点的提醒。",
+  "token_usage": 890,
+  "agent_loop_rounds": 2
+}
