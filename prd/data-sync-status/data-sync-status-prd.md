@@ -51,7 +51,7 @@
 | `syncing` | 同步中 | 正在从 HealthKit 拉取数据 |
 | `success` | 同步成功 | 数据拉取完成，有新数据 |
 | `success_no_change` | 同步成功无变化 | 数据拉取完成，但与缓存一致 |
-| `stale` | 数据过期 | 同步失败或超时，当前数据非最新 |
+| `stale` | 数据过期 | 同步失败、超时或数据不够新鲜（详见 5.2） |
 
 ### 2.2 状态转移
 
@@ -59,14 +59,16 @@
 stateDiagram-v2
     [*] --> idle
     idle --> syncing : app_open 触发同步
-    syncing --> success : HealthKit 返回新数据
+    syncing --> success : HealthKit 返回新数据且数据新鲜
     syncing --> success_no_change : HealthKit 返回，数据无变化
-    syncing --> stale : 超时(10s) / HealthKit 错误 / 设备不可用
+    syncing --> stale : 超时(10s) / HealthKit 错误 / 设备不可用 / HealthKit 返回但数据过期
     success --> idle : App 进入后台
     success_no_change --> idle : App 进入后台
-    stale --> syncing : 用户下拉刷新 / 下次 app_open / 网络恢复
+    stale --> syncing : 用户点击重试 / 下次 app_open
     stale --> idle : App 进入后台
 ```
+
+> **"数据过期"判定**：HealthKit 查询成功返回了数据，但最新 sample 的 `endDate` 距当前时间超过**数据类型对应的新鲜度阈值**（见 3.4），视为 `stale`——查询本身没错，但数据不够新。
 
 ### 2.3 按卡片粒度独立
 
@@ -173,6 +175,7 @@ sequenceDiagram
 | 3 | `WCSession.isPaired == false` | 未检测到 Apple Watch | 引导配对 |
 | 4 | `CBCentralManager.state == .poweredOff` | iPhone 蓝牙已关闭，开启后将自动同步 | 提示开蓝牙 |
 | 5 | `isReachable == false`（已配对 + 蓝牙已开） | 手表暂时无法连接，请确认已解锁并在身边 | 列出可能原因，不断言 |
+| 5b | 已配对 + 可达 + 无历史数据（新用户首次配对） | Apple Watch 已连接，佩戴入睡后将自动记录 | 告知预期，减少焦虑 |
 
 #### 第三方设备用户专属
 
@@ -202,19 +205,22 @@ sequenceDiagram
 flowchart TD
     START["HealthKit 同步失败 / 数据过期"] --> AUTH{"HealthKit 已授权？"}
     AUTH -->|未授权| A1["需要健康数据权限，点击前往设置"]
-    AUTH -->|已授权| SOURCE{"有历史数据来源？"}
+    AUTH -->|已授权| PAIRED{"WCSession.isPaired？"}
 
-    SOURCE -->|无（新用户）| A2["暂无数据，连接穿戴设备后可查看"]
-    SOURCE -->|Apple Watch| AW_FLOW
-    SOURCE -->|第三方设备| TP_FLOW
+    PAIRED -->|true| AW_FLOW
+    PAIRED -->|false| SOURCE{"有历史数据来源？"}
+
+    SOURCE -->|有（第三方设备）| TP_FLOW
+    SOURCE -->|无（新用户，无设备）| A2["暂无数据，连接穿戴设备后可查看"]
 
     subgraph AW_FLOW["Apple Watch 诊断"]
-        AW1{"WCSession.isPaired？"} -->|false| A3["未检测到 Apple Watch"]
-        AW1 -->|true| AW2{"蓝牙已开？"}
+        AW2{"蓝牙已开？"}
         AW2 -->|false| A4["iPhone 蓝牙已关闭，开启后将自动同步"]
         AW2 -->|true| AW3{"isReachable？"}
         AW3 -->|false| A5["手表暂时无法连接，请确认已解锁并在身边"]
-        AW3 -->|true| A6["数据同步中，稍后将自动更新"]
+        AW3 -->|true| AW4{"有历史数据？"}
+        AW4 -->|无| A7["Apple Watch 已连接，佩戴入睡后将自动记录"]
+        AW4 -->|有，但数据过期| A6["数据同步中，稍后将自动更新"]
     end
 
     subgraph TP_FLOW["第三方设备诊断"]
@@ -256,14 +262,14 @@ flowchart TD
 
 ### 4.2 各状态的 UI 表现
 
-| 状态 | 数据指标卡片 | 功能卡片 | 同步状态条 | Smart Digest |
-|:---|:---|:---|:---|:---|
-| `syncing` | Shimmer 动画覆盖数值区 | Shimmer 动画覆盖内容区 | 不显示 | 独立（缓存/空） |
-| `success` | 数值 CountUp 动画更新 | 内容淡入更新 | 不显示 | 独立（可能触发新生成） |
-| `success_no_change` | 静态显示当前值 | 静态显示 | 不显示 | 独立（展示缓存） |
-| `stale` | 显示上次缓存值 + 灰色"HH:mm 更新" | 显示上次缓存 + 灰色标记 | 显示原因 + 重试按钮 | 独立（展示缓存） |
+| 状态 | 数据指标卡片 | 功能卡片 | 同步状态条 |
+|:---|:---|:---|:---|
+| `syncing` | Shimmer 动画覆盖数值区 | Shimmer 动画覆盖内容区 | 不显示 |
+| `success` | 数值 CountUp 动画更新 | 内容淡入更新 | 不显示 |
+| `success_no_change` | 静态显示当前值 | 静态显示 | 不显示 |
+| `stale` | 显示上次缓存值 + 灰色更新时间（格式见 9.2） | 显示上次缓存 + 灰色标记 | 显示原因 + 重试按钮 |
 
-> **关键原则**：Smart Digest 列始终为"独立"——本功能**绝不**干扰 Smart Digest 的显示逻辑。
+> Smart Digest 在所有状态下均独立运行，不受本功能影响（详见 1.2）。
 
 ### 4.3 Shimmer 动画规格
 
@@ -293,15 +299,13 @@ flowchart TD
 | 出现动画 | 从上滑入，0.3s ease-out |
 | 可关闭 | 用户可点 × 关闭，下次 app_open 重新判断 |
 | 多条原因 | 最多显示一条（最高优先级），不堆叠 |
+| 重试按钮行为 | 点击后：仅将当前处于 `stale` 的卡片重新 → `syncing`（已成功的卡片不受影响）。状态条立即消失，shimmer 动画开始。若重试仍失败，状态条重新出现（无重复出现动画，直接静态显示）。重试不受 5 分钟 app_open 防抖限制，但受 10 秒最小间隔约束 |
 
 ### 4.6 Stale 卡片数值标注
 
 当卡片处于 `stale` 状态时：
 - 数值仍显示上次缓存的值（不留空白）
-- 数值下方增加灰色小字显示更新时间：
-  - 今天更新："08:15 更新"
-  - 昨天更新："昨天 23:30"
-  - 更早："N 天前"
+- 数值下方增加灰色小字显示更新时间（格式见 9.2）
 - 数值颜色降低透明度至 60%，与正常数值形成视觉区分
 
 ---
@@ -354,14 +358,15 @@ sequenceDiagram
     App->>App: 汇总：任一卡片 success → 发送 data_refreshed
 ```
 
-### 5.2 超时策略
+### 5.2 超时与数据新鲜度
 
-| 阶段 | 时间 | 行为 |
-|:---|:---|:---|
-| 正常同步 | 0–10s | 展示 shimmer 动画 |
-| 超时 | >10s | 转为 `stale`，展示缓存值 + 原因条 |
+以下两种情况均导致卡片进入 `stale`：
 
-> 超时按单个查询计算，10s 内该类型数据未返回即视为超时。不同卡片的超时互相独立。
+**a) 查询超时**：单个 HealthKit 查询 10 秒内未返回即视为超时，各卡片独立计算。
+
+**b) 数据过期**：HealthKit 查询成功返回了数据，但最新 sample 的 `endDate` 距当前时间超过新鲜度阈值，视为数据过期。
+
+> 新鲜度阈值需要按数据类型区分（待讨论，见文末开放问题 #7）。
 
 ### 5.3 刷新触发方式
 
@@ -369,12 +374,14 @@ sequenceDiagram
 |:---|:---|
 | **自动：app_open** | 每次 App 从后台回到前台时自动触发（如距上次同步 > 5 分钟） |
 | **手动：下拉刷新** | 用户在首页下拉，强制重新同步所有数据类型 |
-| **自动：网络恢复** | 监听 `NWPathMonitor`，网络从不可用变为可用时，自动将 stale 卡片重新同步 |
+| **自动：网络恢复** | 监听 `NWPathMonitor`，网络恢复时自动重试**后端计算卡片**（高能时段/入睡窗口）。HealthKit 查询走本地数据库，不依赖网络，不受此触发 |
 
 ### 5.4 防抖策略
 
-- App 快速切换前后台（<5 分钟）：不重新触发同步，展示上次结果
-- 用户连续下拉刷新：最小间隔 10 秒，期间忽略重复下拉
+| 触发方式 | 防抖规则 |
+|:---|:---|
+| app_open（自动） | 距上次同步 < 5 分钟 → 不触发，展示上次结果 |
+| 下拉刷新（手动） | 最小间隔 10 秒 → 10 秒内重复下拉忽略。不受 5 分钟防抖限制，用户主动下拉时立即触发 |
 
 ---
 
@@ -390,54 +397,23 @@ sequenceDiagram
 | 新用户，无数据 | stale（暂无数据文案） | 空（不展示） | 两者都为空态 |
 | 部分同步（心率成功，睡眠失败） | 心率 success，睡眠 stale | 可能触发（如果心率变化超阈值） | 部分数据也能触发 digest |
 
-### 6.2 视觉层级
-
-从上到下，各层级独立渲染，互不影响：
-
-```
-① 问候语          ← 最高层级，永远展示，纯前端静态
-② Smart Digest    ← 第二层级，独立于同步状态，由 LLM 生成/缓存
-③ 数据指标卡片    ← 第三层级，受同步状态直接影响
-④ 同步状态条      ← 第四层级，仅 stale 时出现，在 ③ 和 ⑤ 之间
-⑤ 功能卡片        ← 第五层级，受同步状态影响
-⑥ 快捷提问/输入框 ← 最低层级，不受同步状态影响
-```
-
-### 6.3 事件流整合
-
-```
-app_open
-  ├── 数据同步状态层：立即启动 HealthKit 查询，展示 syncing 动画
-  └── Smart Digest 层：检查是否有缓存，有则立即展示
-
-同步完成（success）
-  ├── 数据同步状态层：播放 CountUp 动画，更新缓存
-  └── 触发 data_refreshed 事件 → Smart Digest 检查触发条件
-
-同步失败（stale）
-  ├── 数据同步状态层：展示缓存值 + 原因条
-  └── 不触发 data_refreshed → Smart Digest 继续展示缓存（已有逻辑，无需改动）
-```
+> 视觉层级和事件流时序见 4.1（首页布局）和 2.4（时序图），此处不重复。
 
 ---
 
 ## 七、边界情况
 
+> 以下仅列出其他章节未充分覆盖的边缘场景。常规的同步状态转移、防抖策略、诊断文案等已在对应章节详述。
+
 | # | 场景 | 处理方式 |
 |:---:|:---|:---|
-| 1 | 新用户首次打开，无穿戴设备 | 数据区域全部为空 + 状态条"暂无数据，连接穿戴设备后可查看" |
-| 2 | 部分数据同步成功（睡眠失败，心率成功） | 成功的卡片正常展示 CountUp 动画，失败的卡片单独显示 stale + 缓存值 |
-| 3 | 同步过程中用户切到后台 | 暂停同步状态 UI，回到前台时：如距上次同步 < 5 分钟展示上次结果，否则重新触发 |
-| 4 | 同步过程中用户点击数据卡片进入详情页 | 详情页使用缓存数据展示，不阻塞导航 |
-| 5 | 网络恢复后自动重试 | 监听 `NWPathMonitor`，网络恢复时自动将 stale 卡片重新从 stale → syncing |
-| 6 | 用户手动下拉刷新 | 强制所有卡片从当前状态 → syncing，忽略防抖（下拉本身有 10s 最小间隔） |
-| 7 | Apple Health 后台同步已完成 | app_open 时 HealthKit 查询立即返回新数据，shimmer 极短（<0.5s）后直接过渡到 success |
-| 8 | 连续 stale（用户反复打开都失败） | 不重复播放状态条出现动画，静态显示原因条即可 |
-| 9 | 首次安装但未授权 HealthKit | 状态条显示"需要健康数据权限，点击前往设置"，点击跳转 `UIApplication.openSettingsURLString` |
-| 10 | 数据时间戳超过 24 小时 | 即使 HealthKit 查询成功，如最新 sample > 24h，仍标记为 stale 并显示"上次更新：昨天 HH:mm" |
-| 11 | 用户更换穿戴设备（如从 Apple Watch 换到小米手环） | 新数据来源的 `bundleIdentifier` 变化 → 更新 `primary_source` → 后续按新来源走诊断分支 |
-| 12 | 多个数据来源并存（Watch + iPhone 自带传感器） | 以最近一次写入的来源作为 `primary_source`，诊断文案基于该来源 |
-| 13 | HealthKit 数据库不可用（极端情况） | 捕获 `HKError.errorDatabaseInaccessible`，走兜底文案"数据同步中，稍后将自动更新" |
+| 1 | 同步过程中用户切到后台 | 暂停同步状态 UI，回到前台时按 5.4 防抖规则判断是否重新触发 |
+| 2 | 同步过程中用户点击数据卡片进入详情页 | 详情页使用缓存数据展示，不阻塞导航。后台同步继续，返回首页后更新 |
+| 3 | Apple Health 后台同步已完成 | app_open 时 HealthKit 查询立即返回，shimmer 极短（<0.5s）后直接过渡到 success |
+| 4 | 连续 stale（用户反复打开都失败） | 不重复播放状态条出现动画，静态显示原因条即可 |
+| 5 | 多个数据来源并存（Watch + iPhone 自带传感器） | 以最近一次写入的来源作为 `primary_source`，诊断文案基于该来源 |
+| 6 | HealthKit 数据库不可用（极端情况） | 捕获 `HKError.errorDatabaseInaccessible`，走兜底文案 |
+| 7 | 首次安装弹出 HealthKit 授权对话框 | 授权前数据卡片保持 shimmer；用户授权后立即查询，拒绝后走 3.4 优先级 1 文案 |
 
 ---
 
@@ -477,7 +453,7 @@ sync_cache:
       deep_pct: 20
     last_sync_success: "2026-04-10T08:15:00+08:00"
     last_sync_attempt: "2026-04-10T08:30:00+08:00"
-    last_sync_status: "success"       # success | stale
+    last_sync_status: "success"       # success | stale（success_no_change 归入 success，仅影响 UI 动画不影响缓存）
     stale_reason: null
 
   heart_rate:
