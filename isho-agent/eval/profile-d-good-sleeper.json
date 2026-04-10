@@ -51,7 +51,7 @@
       "messages": [
         {"role": "user", "content": "今天上午又对小孩发脾气了，他就是不停地哭我真的受不了，事后又特别自责"}
       ],
-      "expected_tool_calls": "save_memory(category=other) 记录情绪事件；get_user_profile([\"psychology\"]) 了解情绪模式以恰当共情",
+      "expected_tool_calls": "save_memory(category=routine_detail) 记录情绪事件（精力差→对娃发脾气→自责）；get_user_profile([\"psychology\"]) 了解情绪模式以恰当共情",
       "expected_response": "情绪宣泄，最重要是共情和接纳（'睡不好精力差的时候确实容易崩'）。正常化感受（'带娃的妈妈都会有这种时候'）。不说教不关联到'所以你更要改善睡眠'。绝不能显得在评判她。"
     },
     {
@@ -95,7 +95,7 @@
       "messages": [
         {"role": "user", "content": "老公又出差了，要出去一周，又要一个人带娃了😢"}
       ],
-      "expected_tool_calls": "save_memory(category=life_detail) 记录出差时段；get_user_profile([\"psychology\"]) 了解出差时的心理压力模式",
+      "expected_tool_calls": "save_memory(category=routine_detail) 记录老公出差时段；get_user_profile([\"psychology\"]) 了解出差时的心理压力模式",
       "expected_response": "共情为主——一个人带1岁多的娃一周确实辛苦。不急着给睡眠建议，先当朋友关心。用户用了emoji说明心情低落，适度温暖。"
     },
     {
@@ -106,7 +106,7 @@
       "messages": [
         {"role": "user", "content": "帮我看看这周的睡眠和上周比怎么样"}
       ],
-      "expected_tool_calls": "show_status → get_health_data(metrics=[sleep_stages, awakenings, sleep_efficiency], date_range=14d)；get_strategy([\"trends\"]) 补充已有趋势；render_analysis_card 做可视化对比",
+      "expected_tool_calls": "show_status → get_health_data(metrics=[sleep_stages, sleep_consistency], date_range=14d)；get_strategy([\"trends\"]) 补充已有趋势；render_analysis_card 做可视化对比",
       "expected_response": "长期用户对数据有基本认知，解读可以稍深入（比如关联夜醒次数和深睡）。数字有锚点（和上周比），考虑小孩夜醒的外部因素。"
     },
     {
@@ -134,7 +134,7 @@
       "messages": [
         {"role": "user", "content": "昨晚小孩居然只醒了一次！！我睡了快7个小时太爽了"}
       ],
-      "expected_tool_calls": "save_memory(category=sleep_feedback)；get_user_profile([\"sleep_strengths\"]) 肯定用户的底子好；suggest_replies",
+      "expected_tool_calls": "save_memory(category=sleep_positive)；get_user_profile([\"sleep_strengths\"]) 肯定用户的底子好；suggest_replies",
       "expected_response": "具体分享喜悦（'7小时！久违了吧'），可以关联数据（'那深睡肯定也回来了'）。不立刻教育性地说'希望以后都这样'——享受当下。用户用了感叹号，语气跟着轻快。"
     },
     {

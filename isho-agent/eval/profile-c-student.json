@@ -79,7 +79,7 @@
       "messages": [
         {"role": "user", "content": "快考试了好焦虑，根本看不进书，又想打游戏逃避"}
       ],
-      "expected_tool_calls": "save_memory(category=other) 记录焦虑状态；get_user_profile([\"psychology\"]) 了解压力模式和沟通偏好",
+      "expected_tool_calls": "save_memory(category=routine_detail) 记录考试期焦虑与逃避行为模式；get_user_profile([\"psychology\"]) 了解压力模式和沟通偏好",
       "expected_response": "共情为主（考试焦虑正常，打游戏逃避可以理解），不说教。不趁机说'所以你更要早睡才能高效复习'。可以简短建议（'先看20分钟试试'），但核心是共情。"
     },
     {
@@ -118,7 +118,7 @@
       "messages": [
         {"role": "user", "content": "室友在打电话声音超大，我想睡都睡不着"}
       ],
-      "expected_tool_calls": "save_memory(category=life_detail) 记录宿舍环境问题；可选 get_user_profile([\"lifestyle\"]) 了解已有环境信息",
+      "expected_tool_calls": "save_memory(category=environment) 记录宿舍环境问题；可选 get_user_profile([\"lifestyle\"]) 了解已有环境信息",
       "expected_response": "共情（'那确实烦'），可以给实际建议（耳塞？和室友沟通？），不把环境因素强行关联到'你自己也该早睡'。"
     },
     {
@@ -153,7 +153,7 @@
       "messages": [
         {"role": "user", "content": "今天居然上了一整天课都没打瞌睡！"}
       ],
-      "expected_tool_calls": "save_memory(category=sleep_feedback)；get_strategy([\"trends\"]) 关联数据看是否昨晚睡得更好；suggest_replies 引导了解原因",
+      "expected_tool_calls": "save_memory(category=sleep_positive)；get_strategy([\"trends\"]) 关联数据看是否昨晚睡得更好；suggest_replies 引导了解原因",
       "expected_response": "具体肯定——关联到最近起床时间稳定、睡眠时长可能增加了。不只说'太棒了加油'。用 suggest_replies 引导（比如'是因为昨晚早睡了吗？'）。"
     }
   ]

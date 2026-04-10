@@ -25,7 +25,7 @@
       "messages": [
         {"role": "user", "content": "我最近老是失眠，晚上怎么都睡不着"}
       ],
-      "expected_tool_calls": "save_memory(category=sleep_feedback)。不调 get_strategy（无干预历史）。",
+      "expected_tool_calls": "save_memory(category=sleep_negative)。不调 get_strategy（无干预历史）。",
       "expected_response": "共情，然后追问更多细节（'大概几点上床？'、'是躺在床上睡不着还是不想上床？'、'多久了？'），而不是直接给建议。画像为空时应先收集信息。"
     },
     {
@@ -62,7 +62,7 @@
       "messages": [
         {"role": "user", "content": "我是做设计的，经常要加班赶稿，有时候凌晨两三点才下班"}
       ],
-      "expected_tool_calls": "save_memory(category=life_detail)。不调 get_user_profile（画像还在建立中）。",
+      "expected_tool_calls": "save_memory(category=routine_detail)。不调 get_user_profile（画像还在建立中）。",
       "expected_response": "自然回应，表示理解，可以追问更多（'一周大概几天要加班到那么晚？'）来丰富画像。绝不能说'我记下了'。"
     },
     {
@@ -123,7 +123,7 @@
       "messages": [
         {"role": "user", "content": "天哪我居然还没睡！！！救命啊哈哈哈 😭😭😭"}
       ],
-      "expected_tool_calls": "不调用工具，或可选 save_memory(category=other) 记录沟通风格偏好",
+      "expected_tool_calls": "不调用工具，或可选 save_memory(category=preference) 记录沟通风格偏好",
       "expected_response": "用户风格活泼带emoji，agent可以适度跟随（比如用一两个emoji），但不堆砌。回复简短，可以轻松调侃但不说教。可以顺势关心（'怎么还没睡？'）。"
     }
   ]
