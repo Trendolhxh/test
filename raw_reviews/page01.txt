@@ -1,0 +1,159 @@
+REVIEW_START
+Name: Melissa
+Rating: 1
+Title: Not working.
+Text: I barely got my 8 sleep less than 2 months ago and it's not cooling. I reached out to the POCs - the Fragile team, and after some discussion, they said go straight to 8 sleep. This process is more complex than expected. Pretty bummed. I really wanted this to work.
+Date: 2026-04-12
+REVIEW_END
+
+REVIEW_START
+Name: customer
+Rating: 2
+Title: Basic features require a expensive subscription.
+Text: Basic features require a expensive subscription. Such as an alarm clock, it's crazy.
+Date: 2026-04-12
+REVIEW_END
+
+REVIEW_START
+Name: Evan Derby
+Rating: 1
+Title: Amazing product but TERRIBLE CUSTOMER SERVICE.
+Text: Amazing product but TERRIBLE CUSTOMER SERVICE. I needed to replace my POD3 cover after 3 years, purchased a new cover and it's faulty. I've been working with customer service for over 3 weeks to get a result with nothing. They never respond to emails, if they do it's at midnight, customer service is unable to ever contact supervisors or managers and when you are finally able to speak with a manager, they lie.
+Date: 2026-04-12
+REVIEW_END
+
+REVIEW_START
+Name: customer
+Rating: 3
+Title: When operational
+Text: When operational, the product is great.. but has the fatal flaw of having to use my phone ( and only my phone ) to operate it ?? Poor concept !!!
+Date: 2026-04-12
+REVIEW_END
+
+REVIEW_START
+Name: Matt R
+Rating: 1
+Title: Great Product when it works but poor durability
+Text: This is a great product when it works but if the cover fails a month outside of the standard 2 year warranty they will charge you £850 to replace it. The sensors on our cover stopped working. For a premium product such as this a lifespan of just over two years is poor so a warning to all considering buying this product.
+Date: 2026-04-12
+REVIEW_END
+
+REVIEW_START
+Name: customer
+Rating: 2
+Title: I felt like it didn't respond well when the ambient temperature changed
+Text: I felt like it didn't respond well when the ambient temperature changed by more that 3 or 4 degrees overnight. Also, I found it a bit obnoxious that you had to use the app for everything.
+Date: 2026-04-11
+REVIEW_END
+
+REVIEW_START
+Name: Amie
+Rating: 5
+Title: Best night sleep I have had in a long time.
+Text: Best night sleep I have had in a long time. The bed is brilliant.
+Date: 2026-04-11
+REVIEW_END
+
+REVIEW_START
+Name: Luke Zapalac
+Rating: 3
+Title: The Eight Sleep Pod leaves me feeling pretty neutral.
+Text: The Eight Sleep Pod leaves me feeling pretty neutral. While the temperature control is a nice feature, the base model is already quite expensive. On top of that, the add-ons, like the blanket, can cost thousands more, which really adds up. I also found that when cooling your side, the hub heats up a lot and ends up making the room hot, which is frustrating. Plus, the hub is bulky, so it's not ideal for smaller spaces. All in all, I'm not sure if I'll keep it. It's okay, but the overall value doesn't feel justified for me.
+Date: 2026-04-11
+REVIEW_END
+
+REVIEW_START
+Name: customer
+Rating: 5
+Title: Temperature is great and comfortable
+Text: Temperature is great and comfortable
+Date: 2026-04-10
+REVIEW_END
+
+REVIEW_START
+Name: Valued Customer
+Rating: 1
+Title: We are on our second eight sleep
+Text: We are on our second eight sleep. The first lasted just long enough to be out of warranty. The second worked for a short amount of time, then stopped working no matter what we did. We absolutely loved our 8sleeps when they worked, but are very disappointed in the quality of the product given amount of money we've spent.
+Date: 2026-04-10
+REVIEW_END
+
+REVIEW_START
+Name: Colin Goldsmith
+Rating: 5
+Title: Been a 8Sleep user since the pod 2
+Text: Been a 8Sleep user since the pod 2. We had a defective tube and Eight Sleep not only took care of replacing the entire mattress and everything had their cost, but made sure that the floor that was affected by the faulty tubing was repaired at their expense. Good customer service and taking care of your customers makes for a long term customer plus the product is amazing.
+Date: 2026-04-09
+REVIEW_END
+
+REVIEW_START
+Name: Merrell
+Rating: 5
+Title: My sleep has genuinely never been better
+Text: My sleep has genuinely never been better since using Eight Sleep. The cooling feature is a game changer for my incredibly hot bedroom, and I especially love that it adjusts during the night to keep me asleep. The gentle vibrating alarm is also a feature I wasn't expecting to love as much as I do!
+Date: 2026-04-09
+REVIEW_END
+
+REVIEW_START
+Name: Vanessa Francisco
+Rating: 5
+Title: Great for personalized comfort!
+Text: I've really loved my Eight Sleep pod. The temperature control has made the biggest difference in my sleep quality, especially since my partner and I prefer different sleep temperatures. The cooling pillow has also been a huge help for my migraines. The app is simple to use, and the sleeping tracking insights are a great bonus as someone who tracks health metrics. Overall, I think anyone could benefit from this product!
+Date: 2026-04-09
+REVIEW_END
+
+REVIEW_START
+Name: Carol Stewart
+Rating: 5
+Title: Eight sleep is value added!
+Text: Eight sleep has made a significant difference on my sleep and that of my husband's. The temperature control alone makes the bed so much more comfortable, and I love being able to tap the side of the bed in order to adjust temp. The mechanisms that track sleep patterns are very informative. The pod has been value added to our overall sleep health!
+Date: 2026-04-09
+REVIEW_END
+
+REVIEW_START
+Name: Kelly
+Rating: 5
+Title: Best thing since sliced bread.
+Text: I've been using my eight sleep for almost a year and it is the best thing since sliced bread! My husband and I have noticed a vast improvement in our quality of sleep. He's no longer snoring or tossing and turning over. I have mixed connective tissue disease and anyone who deals with chronic illness knows how vital heat is for the body. Thermal heat is great for muscle soreness, now I can't sleep without it. I love that I can adjust the temperature so I never overheat. I also struggle with perimenopause symptoms so it's nice to cool off when night sweats hit, then at a push of a button warm my bones, without pulling the covers off and on. Even our 8 month granddaughter loves sleeping on our warm bed. We haven't had any maintenance or leak issues. We moved the cover to a new home with no problem and it was easy to move in the provided bag and just as easy reconnect to Internet. We are very happy with our experience and have recommended to our friends and family. K.Hill
+Date: 2026-04-08
+REVIEW_END
+
+REVIEW_START
+Name: Audrey McBrien
+Rating: 5
+Title: 8/8 Sleep
+Text: The user interface on the app is very easy to navigate. The metrics are very insightful ranging from the quality of sleep to how that will impact the rest of my day. The temperature modality is easy to use and quickly warms up / cools down.
+Date: 2026-04-08
+REVIEW_END
+
+REVIEW_START
+Name: customer
+Rating: 1
+Title: The app no longer works.
+Text: The app no longer works. We have paid for a year, that is very poor. No reply to emails means no customer service. For an item costing this much, that is dreadful. I wouldn't recommend this to anyone
+Date: 2026-04-07
+REVIEW_END
+
+REVIEW_START
+Name: Kevin Buttler
+Rating: 1
+Title: I was so optimistic that this technology would have a marked improvement
+Text: I was so optimistic that this technology would have a marked improvement on my wife and I sleep. Unfortunately, it did not. The delivery process was a disaster. The technical support was subpar and we are sending the entire unit back as a 30 day trial disappointment.
+Date: 2026-04-07
+REVIEW_END
+
+REVIEW_START
+Name: Addison White
+Rating: 1
+Title: Can't have more than 2 members
+Text: We have two pods in the same house and we're attempting to add two more members to our account but could not do so. We were told we would be contacted in the next day by the team regarding a fix or update in plan. Once the conversation was completed we received and email to the wrong account, and it said to reach out to the internal team to create a tailored plan for us.
+Date: 2026-04-07
+REVIEW_END
+
+REVIEW_START
+Name: Rodrigo
+Rating: 5
+Title: The system works perfectly.
+Text: The system works perfectly.
+Date: 2026-04-07
+REVIEW_END
