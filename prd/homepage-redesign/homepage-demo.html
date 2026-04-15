@@ -351,6 +351,132 @@
     color: var(--night-text-secondary);
   }
 
+  /* ── Energy Tank Bar ── */
+  .energy-tank {
+    margin: 10px 0 8px;
+    position: relative;
+  }
+  .energy-tank-bar {
+    height: 28px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    transition: background 0.5s ease;
+  }
+  .iphone-frame.night-mode .energy-tank-bar {
+    background: rgba(255,255,255,0.06);
+  }
+  .energy-tank-fill {
+    height: 100%;
+    display: flex;
+    border-radius: 14px;
+    overflow: hidden;
+    transition: width 0.6s ease;
+  }
+  .energy-tank-consumed {
+    height: 100%;
+    background: rgba(52, 199, 89, 0.2);
+    transition: width 0.6s ease, background 0.5s ease;
+  }
+  .energy-tank-remaining {
+    height: 100%;
+    background: var(--brand-green);
+    transition: width 0.6s ease, background 0.5s ease;
+    position: relative;
+  }
+  /* Quality tiers for tank color */
+  .energy-tank-fill.tier-excellent .energy-tank-remaining {
+    background: linear-gradient(90deg, #34C759, #30D158);
+    box-shadow: 0 0 12px rgba(52, 199, 89, 0.4);
+  }
+  .energy-tank-fill.tier-excellent .energy-tank-consumed {
+    background: rgba(52, 199, 89, 0.25);
+  }
+  .energy-tank-fill.tier-normal .energy-tank-remaining {
+    background: var(--brand-green);
+  }
+  .energy-tank-fill.tier-poor .energy-tank-remaining {
+    background: var(--warning-orange);
+    box-shadow: 0 0 8px rgba(255, 149, 0, 0.3);
+  }
+  .energy-tank-fill.tier-poor .energy-tank-consumed {
+    background: rgba(255, 149, 0, 0.2);
+  }
+
+  /* 10h goal marker */
+  .energy-tank-goal {
+    position: absolute;
+    top: -3px; bottom: -3px;
+    width: 2px;
+    background: rgba(0,0,0,0.15);
+    z-index: 2;
+    transition: background 0.5s ease;
+  }
+  .energy-tank-goal::after {
+    content: '10h';
+    position: absolute; top: -16px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px; font-weight: 600;
+    color: rgba(0,0,0,0.3);
+    white-space: nowrap;
+    transition: color 0.5s ease;
+  }
+  .iphone-frame.night-mode .energy-tank-goal { background: rgba(255,255,255,0.15); }
+  .iphone-frame.night-mode .energy-tank-goal::after { color: rgba(255,255,255,0.3); }
+  .energy-tank-goal.reached { background: var(--brand-green); }
+  .energy-tank-goal.reached::after { color: var(--brand-green); }
+
+  /* Consumed / remaining labels */
+  .energy-tank-labels {
+    display: flex; justify-content: space-between;
+    font-size: 11px; margin-top: 4px;
+    transition: color 0.5s ease;
+  }
+  .energy-tank-labels .consumed {
+    color: var(--text-secondary);
+  }
+  .energy-tank-labels .remaining {
+    font-weight: 600;
+  }
+  .energy-tank-labels .remaining.green { color: var(--brand-green); }
+  .energy-tank-labels .remaining.orange { color: var(--warning-orange); }
+  .iphone-frame.night-mode .energy-tank-labels .consumed { color: var(--night-text-secondary); }
+
+  /* Quality tier message */
+  .energy-tier {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 10px;
+    margin-top: 8px;
+    font-size: 12px; font-weight: 500;
+    transition: all 0.5s ease;
+  }
+  .energy-tier.excellent {
+    background: rgba(52, 199, 89, 0.1);
+    color: var(--brand-green);
+  }
+  .energy-tier.normal {
+    background: rgba(0, 122, 255, 0.06);
+    color: #007AFF;
+  }
+  .energy-tier.poor {
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--warning-orange);
+  }
+  .iphone-frame.night-mode .energy-tier.excellent {
+    background: rgba(52, 199, 89, 0.15);
+    color: #4ADE80;
+  }
+  .iphone-frame.night-mode .energy-tier.normal {
+    background: rgba(0, 122, 255, 0.1);
+    color: #64B5F6;
+  }
+  .iphone-frame.night-mode .energy-tier.poor {
+    background: rgba(255, 149, 0, 0.15);
+    color: #FFB74D;
+  }
+  .energy-tier-icon { font-size: 14px; }
+
   /* Night mode: Sleep Readiness */
   .readiness-indicator {
     display: flex; align-items: center; gap: 12px;
@@ -1040,6 +1166,7 @@ var SCENES = [
     time: '8:30', isNight: false, greeting: '早上好',
     attribution: {
       high_energy_h: 7.5, high_energy_h_yesterday: 7.2, delta: 0.3,
+      consumed_h: 0, remaining_h: 7.5,
       factors: [
         { label: '入睡时间偏差', value: '准时入睡', contribution_h: 0.3, direction: 'positive' },
         { label: '昨夜睡眠时长', value: '7h12m', contribution_h: 0.2, direction: 'positive' },
@@ -1080,6 +1207,7 @@ var SCENES = [
     time: '9:15', isNight: false, greeting: '早上好',
     attribution: {
       high_energy_h: 5.2, high_energy_h_yesterday: 7.0, delta: -1.8,
+      consumed_h: 0, remaining_h: 5.2,
       factors: [
         { label: '入睡时间偏差', value: '比推荐晚 2h15min', contribution_h: -1.2, direction: 'negative' },
         { label: '深睡占比', value: '15% (-7%)', contribution_h: -0.4, direction: 'negative' },
@@ -1120,6 +1248,7 @@ var SCENES = [
     time: '14:20', isNight: false, greeting: '下午好',
     attribution: {
       high_energy_h: 7.5, high_energy_h_yesterday: 7.0, delta: 0.5,
+      consumed_h: 3.5, remaining_h: 4.0,
       factors: [
         { label: '昨夜睡眠时长', value: '7h40m', contribution_h: 0.3, direction: 'positive' },
         { label: '深睡占比', value: '24%', contribution_h: 0.2, direction: 'positive' },
@@ -1158,6 +1287,7 @@ var SCENES = [
     time: '16:45', isNight: false, greeting: '下午好',
     attribution: {
       high_energy_h: 3.5, high_energy_h_yesterday: 6.5, delta: -3.0,
+      consumed_h: 2.5, remaining_h: 1.0,
       factors: [
         { label: '入睡时间偏差', value: '比推荐晚 3h', contribution_h: -1.5, direction: 'negative' },
         { label: '昨夜睡眠时长', value: '4h50m', contribution_h: -0.8, direction: 'negative' },
@@ -1198,6 +1328,7 @@ var SCENES = [
     time: '19:30', isNight: false, greeting: '晚上好',
     attribution: {
       high_energy_h: 6.0, high_energy_h_yesterday: 6.2, delta: -0.2,
+      consumed_h: 4.5, remaining_h: 1.5,
       factors: [
         { label: '昨夜睡眠时长', value: '7h', contribution_h: 0.1, direction: 'positive' },
         { label: '深睡占比', value: '20%', contribution_h: 0, direction: 'neutral' },
@@ -1363,7 +1494,7 @@ var SCENES = [
 // RENDER: Core Metric (Layer 1)
 // ══════════════════════════════════════════
 function renderDayCoreMetric(scene) {
-  const a = scene.attribution;
+  var a = scene.attribution;
   if (!a) {
     $('core-metric').innerHTML =
       '<div class="empty-state"><div class="empty-state-icon">📊</div>' +
@@ -1371,15 +1502,48 @@ function renderDayCoreMetric(scene) {
       '<div class="empty-state-desc">连接 Apple Watch 或 Health 数据<br>即可查看高能时长</div></div>';
     return;
   }
-  const val = a.high_energy_h;
-  const d = a.delta;
-  const cls = d >= 1 ? 'positive' : d <= -1 ? 'negative' : (d > 0 ? 'positive' : d < 0 ? 'negative' : 'neutral');
-  const arrow = d > 0 ? '↑' : d < 0 ? '↓' : '';
-  const dSign = d > 0 ? '+' : '';
-  // Visual class for the big number: warning if <4h
-  const valColor = val < 4 ? 'color:var(--warning-orange)' : val >= 10 ? 'color:var(--brand-green)' : '';
+  var val = a.high_energy_h;
+  var d = a.delta;
+  var cls = d > 0 ? 'positive' : d < 0 ? 'negative' : 'neutral';
+  var arrow = d > 0 ? '↑' : d < 0 ? '↓' : '';
+  var dSign = d > 0 ? '+' : '';
+  var valColor = val < 4 ? 'color:var(--warning-orange)' : val >= 10 ? 'color:var(--brand-green)' : '';
 
-  const slotsHtml = scene.highWindows.map(function(w) {
+  // Quality tier
+  var tier, tierCls, tierIcon, tierMsg;
+  if (val >= 10) {
+    tier = 'excellent'; tierCls = 'excellent'; tierIcon = '💪'; tierMsg = '精力满格，好好利用今天！';
+  } else if (val >= 4) {
+    tier = 'normal'; tierCls = 'normal'; tierIcon = '👍'; tierMsg = '状态正常，坚持优化作息冲击 10h+';
+  } else {
+    tier = 'poor'; tierCls = 'poor'; tierIcon = '⚠️'; tierMsg = '精力偏低，注意休息和睡眠质量';
+  }
+
+  // Tank bar calculations
+  var consumed = a.consumed_h || 0;
+  var remaining = a.remaining_h != null ? a.remaining_h : val;
+  var maxRef = 12; // reference max for bar width
+  var totalPct = Math.min(val / maxRef * 100, 100);
+  var consumedPct = Math.min(consumed / maxRef * 100, 100);
+  var remainingPct = Math.min(remaining / maxRef * 100, 100);
+  var goalPct = (10 / maxRef * 100); // 10h goal marker position
+  var goalReached = val >= 10;
+  var remainColor = val < 4 ? 'orange' : 'green';
+
+  // Consumed / remaining label text
+  var tankLabelsHtml = '';
+  if (consumed > 0) {
+    tankLabelsHtml =
+      '<span class="consumed">已用 ' + consumed + 'h</span>' +
+      '<span class="remaining ' + remainColor + '">剩余 ' + remaining + 'h</span>';
+  } else {
+    tankLabelsHtml =
+      '<span class="consumed"></span>' +
+      '<span class="remaining ' + remainColor + '">全部可用 ' + val + 'h</span>';
+  }
+
+  // High window slots
+  var slotsHtml = scene.highWindows.map(function(w) {
     return '<span class="core-metric-slot">' + w.start + ' – ' + w.end + '</span>';
   }).join('');
 
@@ -1390,6 +1554,23 @@ function renderDayCoreMetric(scene) {
       '<span class="core-metric-unit">小时</span>' +
       '<span class="core-metric-delta ' + cls + '">' + arrow + ' ' + dSign + d + 'h</span>' +
     '</div>' +
+    // Tank bar
+    '<div class="energy-tank">' +
+      '<div class="energy-tank-bar">' +
+        '<div class="energy-tank-fill tier-' + tier + '" style="width:' + totalPct + '%">' +
+          (consumed > 0 ? '<div class="energy-tank-consumed" style="width:' + (consumed / val * 100).toFixed(1) + '%"></div>' : '') +
+          '<div class="energy-tank-remaining" style="width:' + (remaining / val * 100).toFixed(1) + '%"></div>' +
+        '</div>' +
+        '<div class="energy-tank-goal' + (goalReached ? ' reached' : '') + '" style="left:' + goalPct + '%"></div>' +
+      '</div>' +
+      '<div class="energy-tank-labels">' + tankLabelsHtml + '</div>' +
+    '</div>' +
+    // Quality tier
+    '<div class="energy-tier ' + tierCls + '">' +
+      '<span class="energy-tier-icon">' + tierIcon + '</span>' +
+      '<span>' + tierMsg + '</span>' +
+    '</div>' +
+    // High windows
     '<div class="core-metric-slots">' + slotsHtml + '</div>';
 }
 
