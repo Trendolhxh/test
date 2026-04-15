@@ -674,213 +674,211 @@
   }
 
   /* ══════════════════════════════════════════
-     TODAY TAB COMPONENTS
+     TODAY TAB — VERTICAL TIMELINE
      ══════════════════════════════════════════ */
 
-  /* ── Energy Timeline Container ── */
-  .energy-timeline-wrap {
-    background: var(--energy-gradient);
-    border: 1px solid #fff;
-    border-radius: 20px;
-    box-shadow: var(--energy-shadow);
-    padding: 14px 12px 10px;
-    margin-bottom: 14px;
+  /* ── Vertical Timeline Container ── */
+  .v-timeline {
     position: relative;
-    transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
-  }
-  .iphone-frame.night-mode .energy-timeline-wrap {
-    background: linear-gradient(180deg, rgba(60,50,120,0.4) 0%, rgba(40,35,90,0.3) 100%);
-    border-color: var(--night-border);
-    box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+    padding-left: 38px;  /* space for hour labels */
   }
 
-  .timeline-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 10px; padding: 0 4px;
-  }
-  .timeline-title {
-    font-size: 14px; font-weight: 600; color: var(--text-primary);
+  /* Hour label on the left */
+  .v-hour-label {
+    position: absolute; left: 0; width: 32px;
+    font-size: 11px; font-weight: 500; color: var(--text-secondary);
+    text-align: right; line-height: 1;
     transition: color 0.5s ease;
   }
-  .iphone-frame.night-mode .timeline-title { color: var(--night-text-primary); }
+  .iphone-frame.night-mode .v-hour-label { color: var(--night-text-secondary); }
 
+  /* Hour tick line */
+  .v-hour-tick {
+    position: absolute; left: 36px; right: 0; height: 1px;
+    background: rgba(0,0,0,0.06);
+    transition: background 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-hour-tick { background: rgba(255,255,255,0.06); }
+
+  /* ── Zone Blocks ── */
+  .v-zone {
+    position: relative;
+    border-radius: 14px;
+    margin-bottom: 2px;
+    padding: 12px 14px;
+    min-height: 50px;
+    transition: background 0.5s ease;
+  }
+  .v-zone-label {
+    font-size: 13px; font-weight: 600; margin-bottom: 2px;
+    transition: color 0.5s ease;
+  }
+  .v-zone-sub {
+    font-size: 11px; opacity: 0.7;
+    transition: color 0.5s ease;
+  }
+
+  /* Sleep zone */
+  .v-zone.sleep {
+    background: rgba(100, 80, 180, 0.2);
+    border: 1px solid rgba(100, 80, 180, 0.25);
+  }
+  .v-zone.sleep .v-zone-label { color: #B4BCEF; }
+  .v-zone.sleep .v-zone-sub { color: #9A8FD4; }
+  .iphone-frame.night-mode .v-zone.sleep {
+    background: rgba(100, 80, 180, 0.3);
+    border-color: rgba(120, 100, 200, 0.35);
+  }
+
+  /* Sleep stage bars (vertical, inside sleep zone) */
+  .v-sleep-stages {
+    position: absolute; right: 12px; top: 10px; bottom: 10px;
+    width: 28px; display: flex; flex-direction: column;
+    border-radius: 6px; overflow: hidden; gap: 1px;
+  }
+  .v-sleep-stage { width: 100%; transition: height 0.4s ease; }
+  .v-sleep-stage.deep { background: #5C6FE6; }
+  .v-sleep-stage.light { background: #B4BCEF; }
+  .v-sleep-stage.rem { background: #7ED4F5; }
+  .v-sleep-stage.awake { background: rgba(255,255,255,0.25); }
+
+  /* Grogginess zone */
+  .v-zone.grogginess {
+    background: rgba(80, 75, 90, 0.15);
+    border: 1px solid rgba(80, 75, 90, 0.15);
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q10 0 20 10 Q30 20 40 10' fill='none' stroke='rgba(128,128,128,0.12)' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 40px 20px;
+  }
+  .v-zone.grogginess .v-zone-label { color: var(--text-secondary); }
+  .iphone-frame.night-mode .v-zone.grogginess {
+    background-color: rgba(60, 55, 70, 0.3);
+    border-color: rgba(80, 75, 90, 0.25);
+  }
+  .iphone-frame.night-mode .v-zone.grogginess .v-zone-label { color: var(--night-text-secondary); }
+
+  /* High energy peak zone */
+  .v-zone.peak {
+    background: rgba(52, 199, 89, 0.1);
+    border: 1px solid rgba(52, 199, 89, 0.2);
+  }
+  .v-zone.peak .v-zone-label { color: var(--brand-green); }
+  .v-zone.peak .v-zone-sub { color: rgba(52, 199, 89, 0.7); }
+  .iphone-frame.night-mode .v-zone.peak {
+    background: rgba(52, 199, 89, 0.12);
+    border-color: rgba(52, 199, 89, 0.25);
+  }
+
+  /* Vertical energy curve inside peak zone */
+  .v-zone.peak .v-energy-svg {
+    position: absolute; left: 8px; top: 0; bottom: 0; width: 60px;
+    opacity: 0.5;
+  }
+
+  /* Low energy gap */
+  .v-zone.low {
+    background: transparent;
+    border: 1px dashed rgba(0,0,0,0.06);
+    min-height: 30px;
+  }
+  .iphone-frame.night-mode .v-zone.low { border-color: rgba(255,255,255,0.06); }
+  .v-zone.low .v-zone-label { color: var(--text-secondary); font-weight: 400; font-size: 12px; }
+  .iphone-frame.night-mode .v-zone.low .v-zone-label { color: var(--night-text-secondary); }
+
+  /* Wind-down zone */
+  .v-zone.winddown {
+    background: rgba(80, 70, 120, 0.1);
+    border: 1px solid rgba(80, 70, 120, 0.15);
+  }
+  .v-zone.winddown .v-zone-label { color: #8B7EC8; }
+  .iphone-frame.night-mode .v-zone.winddown {
+    background: rgba(80, 70, 120, 0.2);
+    border-color: rgba(100, 90, 150, 0.3);
+  }
+
+  /* Melatonin window zone */
+  .v-zone.melatonin {
+    background: linear-gradient(135deg, rgba(120, 100, 200, 0.2), rgba(80, 60, 160, 0.15));
+    border: 1px solid rgba(120, 100, 200, 0.3);
+  }
+  .v-zone.melatonin .v-zone-label { color: #B4BCEF; }
+  .v-zone.melatonin .v-zone-icon {
+    font-size: 28px; position: absolute; right: 14px; bottom: 10px; opacity: 0.4;
+  }
+  .iphone-frame.night-mode .v-zone.melatonin {
+    background: linear-gradient(135deg, rgba(120, 100, 200, 0.3), rgba(80, 60, 160, 0.25));
+    border-color: rgba(120, 100, 200, 0.4);
+  }
+
+  /* Sleep need (end marker) */
+  .v-sleep-need {
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 13px; font-weight: 500; color: var(--text-secondary);
+    transition: color 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-sleep-need { color: var(--night-text-secondary); }
+  .v-sleep-need strong {
+    display: block; font-size: 18px; font-weight: 700; color: var(--text-primary);
+    margin-top: 2px;
+    transition: color 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-sleep-need strong { color: var(--night-text-primary); }
+
+  /* ── Floating Pin Tags (right side) ── */
+  .v-pin-tag {
+    position: absolute; right: 0;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 10px;
+    font-size: 11px; font-weight: 500;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.2s ease;
+    z-index: 5;
+  }
+  .v-pin-tag:hover { transform: translateX(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+  .iphone-frame.night-mode .v-pin-tag {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.15);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .v-pin-tag .pin-tag-icon { font-size: 13px; }
+  .v-pin-tag .pin-tag-label { color: var(--text-primary); transition: color 0.5s ease; }
+  .iphone-frame.night-mode .v-pin-tag .pin-tag-label { color: var(--night-text-primary); }
+
+  .v-pin-tag.done { opacity: 0.5; }
+  .v-pin-tag.done .pin-tag-label { text-decoration: line-through; }
+  .v-pin-tag.skipped { opacity: 0.4; }
+  .v-pin-tag.skipped .pin-tag-label { text-decoration: line-through; }
+  .v-pin-tag.current { border-color: var(--brand-green); animation: pulse 2s ease-in-out infinite; }
+
+  /* ── Current Time Marker ── */
+  .v-now-marker {
+    position: relative;
+    height: 2px; background: #FF3B30;
+    margin: 0 -14px; z-index: 10;
+  }
+  .v-now-marker::before {
+    content: ''; position: absolute; left: 0; top: -4px;
+    width: 10px; height: 10px; border-radius: 50%; background: #FF3B30;
+  }
+  .v-now-label {
+    position: absolute; left: 14px; top: -8px;
+    font-size: 10px; font-weight: 600; color: #FF3B30;
+  }
+
+  /* ── Timeline State Badge ── */
   .timeline-state-badge {
+    display: inline-block;
     font-size: 11px; padding: 3px 8px; border-radius: 8px;
-    font-weight: 500;
+    font-weight: 500; margin-bottom: 10px;
   }
   .timeline-state-badge.predictive { background: rgba(52,199,89,0.1); color: var(--brand-green); }
   .timeline-state-badge.realtime { background: rgba(0,122,255,0.1); color: #007AFF; }
   .timeline-state-badge.review { background: rgba(142,142,147,0.1); color: #8E8E93; }
-
-  .energy-timeline-svg {
-    width: 100%;
-    height: 140px;
-    display: block;
-  }
-
-  /* Time axis labels */
-  .time-axis {
-    display: flex; justify-content: space-between;
-    padding: 4px 2px 0;
-  }
-  .time-axis-label {
-    font-size: 10px; color: var(--text-secondary);
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .time-axis-label { color: var(--night-text-secondary); }
-
-  /* ── Action Pins Section ── */
-  .action-pins-section {
-    margin-bottom: 14px;
-  }
-  .action-pins-title {
-    font-size: 13px; font-weight: 600; color: var(--text-secondary);
-    margin-bottom: 10px;
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .action-pins-title { color: var(--night-text-secondary); }
-
-  .action-pin {
-    display: flex; align-items: center;
-    padding: 12px 14px;
-    background: rgba(255,255,255,0.5);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.6);
-    border-radius: 14px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: all 0.25s ease;
-  }
-  .action-pin:hover { background: rgba(255,255,255,0.7); transform: translateY(-1px); }
-  .iphone-frame.night-mode .action-pin {
-    background: rgba(255,255,255,0.06);
-    border-color: var(--night-border);
-  }
-  .iphone-frame.night-mode .action-pin:hover { background: rgba(255,255,255,0.1); }
-
-  .pin-icon {
-    width: 40px; height: 40px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0;
-    background: rgba(0,0,0,0.03);
-    transition: background 0.5s ease;
-  }
-  .iphone-frame.night-mode .pin-icon { background: rgba(255,255,255,0.06); }
-
-  .pin-info { flex: 1; margin-left: 10px; min-width: 0; }
-  .pin-label {
-    font-size: 14px; font-weight: 500; color: var(--text-primary);
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .pin-label { color: var(--night-text-primary); }
-
-  .pin-time {
-    font-size: 12px; color: var(--text-secondary); margin-top: 1px;
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .pin-time { color: var(--night-text-secondary); }
-
-  .pin-right { text-align: right; margin-left: 8px; }
-  .pin-impact {
-    font-size: 12px; font-weight: 600; color: var(--brand-green);
-  }
-  .pin-dosage {
-    font-size: 11px; color: var(--text-secondary); margin-top: 1px;
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .pin-dosage { color: var(--night-text-secondary); }
-
-  /* Pin status indicators */
-  .pin-status {
-    width: 24px; height: 24px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; margin-left: 8px; flex-shrink: 0;
-  }
-  .pin-status.pending {
-    border: 2px solid rgba(0,0,0,0.15);
-    color: transparent;
-  }
-  .pin-status.current {
-    border: 2px solid var(--brand-green);
-    background: var(--brand-green-bg);
-    color: var(--brand-green);
-    animation: pulse 2s ease-in-out infinite;
-  }
-  .pin-status.done {
-    background: var(--brand-green);
-    color: #fff;
-  }
-  .pin-status.skipped {
-    background: rgba(0,0,0,0.08);
-    color: #8E8E93;
-  }
-  .iphone-frame.night-mode .pin-status.pending { border-color: rgba(255,255,255,0.15); }
-  .iphone-frame.night-mode .pin-status.skipped { background: rgba(255,255,255,0.08); }
-
-  .action-pin.done .pin-label,
-  .action-pin.skipped .pin-label { opacity: 0.5; }
-  .action-pin.skipped .pin-label { text-decoration: line-through; }
-
-  /* Pin expanded detail */
-  .pin-detail {
-    display: none;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(0,0,0,0.06);
-    transition: border-color 0.5s ease;
-  }
-  .iphone-frame.night-mode .pin-detail { border-top-color: rgba(255,255,255,0.06); }
-  .pin-detail.show { display: block; }
-
-  .pin-reason {
-    font-size: 12px; color: var(--text-secondary); line-height: 1.5;
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .pin-reason { color: var(--night-text-secondary); }
-
-  .pin-impact-detail {
-    margin-top: 4px; font-size: 12px;
-    font-weight: 600; color: var(--brand-green);
-  }
-
-  /* ── Sleep Window Marker ── */
-  .sleep-window-card {
-    background: linear-gradient(135deg, rgba(120,100,200,0.12), rgba(80,60,160,0.08));
-    border: 1px solid rgba(120,100,200,0.2);
-    border-radius: 16px;
-    padding: 14px;
-    margin-bottom: 14px;
-    display: flex; align-items: center; gap: 12px;
-    transition: background 0.5s ease, border-color 0.5s ease;
-  }
-  .iphone-frame.night-mode .sleep-window-card {
-    background: linear-gradient(135deg, rgba(120,100,200,0.2), rgba(80,60,160,0.15));
-    border-color: rgba(120,100,200,0.3);
-  }
-
-  .sleep-window-icon {
-    width: 44px; height: 44px; border-radius: 50%;
-    background: rgba(120,100,200,0.15);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; flex-shrink: 0;
-  }
-  .sleep-window-info { flex: 1; }
-  .sleep-window-label {
-    font-size: 13px; font-weight: 600; color: var(--text-primary);
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .sleep-window-label { color: var(--night-text-primary); }
-  .sleep-window-time {
-    font-size: 20px; font-weight: 700; color: var(--text-primary); margin-top: 2px;
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .sleep-window-time { color: var(--night-text-primary); }
-  .sleep-window-predict {
-    font-size: 11px; color: var(--text-secondary); margin-top: 2px;
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .sleep-window-predict { color: var(--night-text-secondary); }
 
   /* ── Bottom Input Bar ── */
   .bottom-bar {
@@ -1005,32 +1003,9 @@
 
     <!-- ══ Today Tab ══ -->
     <div class="tab-content" id="tab-today">
-      <!-- Energy Timeline -->
-      <div class="energy-timeline-wrap">
-        <div class="timeline-header">
-          <span class="timeline-title">24h 能量曲线</span>
-          <span class="timeline-state-badge" id="timeline-badge">预测态</span>
-        </div>
-        <svg class="energy-timeline-svg" id="energy-svg" viewBox="0 0 340 140" preserveAspectRatio="none"></svg>
-        <div class="time-axis" id="time-axis"></div>
-      </div>
-
-      <!-- Action Pins -->
-      <div class="action-pins-section">
-        <div class="action-pins-title">行动建议</div>
-        <div id="action-pins-list"></div>
-      </div>
-
-      <!-- Sleep Window -->
-      <div class="sleep-window-card" id="sleep-window-card">
-        <div class="sleep-window-icon">🌙</div>
-        <div class="sleep-window-info">
-          <div class="sleep-window-label">入睡窗口</div>
-          <div class="sleep-window-time" id="sw-time">22:30</div>
-          <div class="sleep-window-predict" id="sw-predict">明日预估高能 7.5h</div>
-        </div>
-      </div>
-
+      <span class="timeline-state-badge" id="timeline-badge">预测态</span>
+      <!-- Vertical 24h Timeline (dynamically rendered) -->
+      <div class="v-timeline" id="v-timeline"></div>
       <div style="height:20px;flex-shrink:0;"></div>
     </div>
   </div>
@@ -1066,48 +1041,6 @@ const $ = id => document.getElementById(id);
 function timeToMinutes(t) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
-}
-
-// Generate 48 energy curve points (every 30min, 05:30 → next day 05:00)
-function generateCurvePoints(highWindows, currentTime, sleepEnd, baseEnergy) {
-  baseEnergy = baseEnergy || 0.35;
-  const points = [];
-  const startMin = 5 * 60 + 30;
-  const curMin = timeToMinutes(currentTime);
-
-  for (let i = 0; i < 48; i++) {
-    const min = startMin + i * 30;
-    const dayMin = min % 1440;
-    const hour = Math.floor(dayMin / 60);
-    const hStr = String(hour).padStart(2, '0');
-    const mStr = String(dayMin % 60).padStart(2, '0');
-    const timeStr = hStr + ':' + mStr;
-
-    // Base circadian rhythm
-    const t = dayMin / 1440;
-    let energy = baseEnergy
-      + 0.35 * Math.sin(2 * Math.PI * (t - 0.15))
-      + 0.15 * Math.sin(4 * Math.PI * (t - 0.1));
-
-    // Boost in high-energy windows
-    for (const w of highWindows) {
-      const ws = timeToMinutes(w.start), we = timeToMinutes(w.end);
-      if (dayMin >= ws && dayMin <= we) {
-        energy = Math.max(energy, 0.72 + (Math.sin(dayMin * 0.1) * 0.08));
-      }
-    }
-
-    // Sleep period: low energy
-    const sleepEndMin = timeToMinutes(sleepEnd);
-    if (dayMin < sleepEndMin || dayMin >= 1410) {
-      energy = 0.05 + (Math.sin(i) * 0.03);
-    }
-
-    energy = Math.max(0.02, Math.min(0.98, energy));
-    const type = dayMin <= curMin ? 'actual' : 'predicted';
-    points.push({ time: timeStr, energy: Math.round(energy * 100) / 100, type: type });
-  }
-  return points;
 }
 
 // ══════════════════════════════════════════
@@ -1687,198 +1620,186 @@ function renderBodyData(scene) {
 }
 
 // ══════════════════════════════════════════
-// RENDER: Energy Curve (Today Tab)
+// RENDER: Vertical Timeline (Today Tab)
 // ══════════════════════════════════════════
-function catmullRomToBezier(points, tension) {
-  tension = tension || 0.3;
-  if (points.length < 2) return '';
-  var d = 'M ' + points[0].x + ',' + points[0].y;
-  for (var i = 0; i < points.length - 1; i++) {
-    var p0 = points[Math.max(i - 1, 0)];
-    var p1 = points[i];
-    var p2 = points[i + 1];
-    var p3 = points[Math.min(i + 2, points.length - 1)];
-    var cp1x = p1.x + (p2.x - p0.x) * tension;
-    var cp1y = p1.y + (p2.y - p0.y) * tension;
-    var cp2x = p2.x - (p3.x - p1.x) * tension;
-    var cp2y = p2.y - (p3.y - p1.y) * tension;
-    d += ' C ' + cp1x.toFixed(1) + ',' + cp1y.toFixed(1) +
-         ' ' + cp2x.toFixed(1) + ',' + cp2y.toFixed(1) +
-         ' ' + p2.x.toFixed(1) + ',' + p2.y.toFixed(1);
+var HOUR_H = 70; // pixels per hour
+
+function buildTimelineZones(scene) {
+  // Build ordered zone list from scene data
+  var zones = [];
+  var sleepEndMin = timeToMinutes(scene.sleepEnd);
+  var startH = 0; // midnight start for simplicity
+
+  // 1. Sleep zone (midnight → sleepEnd)
+  var sleepHours = sleepEndMin / 60;
+  zones.push({
+    type: 'sleep', label: '睡眠', startH: startH,
+    hours: Math.max(sleepHours, 1),
+    sub: scene.bodyData ? scene.bodyData.sleepH : '--',
+    data: scene.bodyData
+  });
+
+  // 2. Grogginess (sleepEnd → sleepEnd + 1.5h)
+  var grogStart = sleepHours;
+  zones.push({
+    type: 'grogginess', label: 'Grogginess',
+    startH: grogStart, hours: 1.5,
+    sub: '惯性期 ~90min'
+  });
+
+  // 3. High energy peaks + low gaps between them
+  var peakStart = grogStart + 1.5;
+  var windows = (scene.highWindows || []).slice().sort(function(a, b) {
+    return timeToMinutes(a.start) - timeToMinutes(b.start);
+  });
+
+  windows.forEach(function(w, idx) {
+    var ws = timeToMinutes(w.start) / 60;
+    var we = timeToMinutes(w.end) / 60;
+    // Low gap before this peak
+    if (ws > peakStart) {
+      zones.push({
+        type: 'low', label: '',
+        startH: peakStart, hours: ws - peakStart
+      });
+    }
+    var peakLabel = idx === 0 ? 'Morning Peak' : (idx === 1 ? 'Afternoon Peak' : 'Evening Peak');
+    if (we > 18) peakLabel = 'Evening Peak';
+    zones.push({
+      type: 'peak', label: peakLabel,
+      startH: ws, hours: we - ws,
+      sub: w.start + ' – ' + w.end
+    });
+    peakStart = we;
+  });
+
+  // 4. Low gap after last peak → wind-down
+  var swTime = scene.sleepWindow.time;
+  var swMin = swTime !== '--:--' ? timeToMinutes(swTime) : 23 * 60;
+  var winddownStart = swMin / 60 - 1.5;
+  if (peakStart < winddownStart) {
+    zones.push({
+      type: 'low', label: '',
+      startH: peakStart, hours: winddownStart - peakStart
+    });
   }
-  return d;
+
+  // 5. Wind-down
+  zones.push({
+    type: 'winddown', label: 'Wind-down',
+    startH: winddownStart, hours: 1,
+    sub: '入睡准备'
+  });
+
+  // 6. Melatonin window
+  zones.push({
+    type: 'melatonin', label: 'Melatonin Window',
+    startH: winddownStart + 1, hours: 1,
+    sub: swTime !== '--:--' ? '推荐 ' + swTime + ' 入睡' : '--',
+    predict: scene.sleepWindow.predict
+  });
+
+  return zones;
 }
 
-function renderEnergyCurve(scene) {
-  var svg = $('energy-svg');
+function renderVerticalTimeline(scene) {
+  var container = $('v-timeline');
   var badge = $('timeline-badge');
-  var timeAxis = $('time-axis');
 
   // Empty state
   if (!scene.highWindows || !scene.highWindows.length) {
-    svg.innerHTML =
-      '<text x="170" y="75" text-anchor="middle" font-size="13" fill="rgba(0,0,0,0.3)" font-family="var(--font)">连接设备后查看能量曲线</text>';
+    container.innerHTML =
+      '<div class="empty-state" style="padding:40px 16px">' +
+        '<div class="empty-state-icon">📋</div>' +
+        '<div class="empty-state-title">暂无时间轴数据</div>' +
+        '<div class="empty-state-desc">连接设备后查看 24h 能量时间轴</div>' +
+      '</div>';
     badge.textContent = '--';
     badge.className = 'timeline-state-badge';
-    timeAxis.innerHTML = '';
     return;
   }
-
-  var W = 340, H = 140;
-  var pad = { top: 15, bottom: 25, left: 5, right: 5 };
-  var cW = W - pad.left - pad.right;
-  var cH = H - pad.top - pad.bottom;
-
-  // Generate curve data
-  var curveData = generateCurvePoints(scene.highWindows, scene.curveCurrentTime, scene.sleepEnd);
-  var curMin = timeToMinutes(scene.curveCurrentTime);
-  var startMin = 5 * 60 + 30;
-
-  // Map to SVG coordinates
-  var pts = curveData.map(function(p, i) {
-    return {
-      x: pad.left + (i / (curveData.length - 1)) * cW,
-      y: pad.top + (1 - p.energy) * cH,
-      type: p.type,
-      energy: p.energy
-    };
-  });
-
-  // Build SVG content
-  var svgContent = '';
-
-  // Defs for gradients
-  svgContent += '<defs>' +
-    '<linearGradient id="highEnergyGrad" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="rgba(52,199,89,0.35)"/>' +
-      '<stop offset="100%" stop-color="rgba(52,199,89,0.05)"/>' +
-    '</linearGradient>' +
-    '<linearGradient id="sleepGrad" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="rgba(120,100,180,0.2)"/>' +
-      '<stop offset="100%" stop-color="rgba(120,100,180,0.05)"/>' +
-    '</linearGradient>' +
-  '</defs>';
-
-  // Grid lines (3 horizontal)
-  for (var g = 0; g < 3; g++) {
-    var gy = pad.top + (g + 0.5) / 3 * cH;
-    svgContent += '<line x1="' + pad.left + '" y1="' + gy + '" x2="' + (W - pad.right) + '" y2="' + gy + '" stroke="rgba(0,0,0,0.04)" stroke-width="0.5"/>';
-  }
-
-  // Sleep region (early hours)
-  var sleepEndMin = timeToMinutes(scene.sleepEnd);
-  var sleepEndX = pad.left + ((sleepEndMin - startMin + 1440) % 1440) / (24 * 60) * cW;
-  if (sleepEndX > pad.left) {
-    svgContent += '<rect x="' + pad.left + '" y="' + pad.top + '" width="' + (sleepEndX - pad.left) + '" height="' + cH + '" fill="url(#sleepGrad)" rx="4"/>';
-  }
-
-  // High energy window fills
-  scene.highWindows.forEach(function(w) {
-    var ws = timeToMinutes(w.start), we = timeToMinutes(w.end);
-    var x1 = pad.left + ((ws - startMin + 1440) % 1440) / (24 * 60) * cW;
-    var x2 = pad.left + ((we - startMin + 1440) % 1440) / (24 * 60) * cW;
-    svgContent += '<rect x="' + x1 + '" y="' + pad.top + '" width="' + (x2 - x1) + '" height="' + cH + '" fill="url(#highEnergyGrad)" rx="4"/>';
-  });
-
-  // Curve path
-  var curvePath = catmullRomToBezier(pts);
-
-  // Split rendering based on timeline state
-  if (scene.timelineState === 'predictive') {
-    svgContent += '<path d="' + curvePath + '" fill="none" stroke="rgba(52,199,89,0.6)" stroke-width="2" stroke-dasharray="4,3"/>';
-  } else if (scene.timelineState === 'review') {
-    svgContent += '<path d="' + curvePath + '" fill="none" stroke="rgba(52,199,89,0.7)" stroke-width="2"/>';
-  } else {
-    // Realtime: solid left of current, dashed right
-    // Use clip rects
-    var curX = pad.left + ((curMin - startMin + 1440) % 1440) / (24 * 60) * cW;
-    svgContent += '<clipPath id="clipActual"><rect x="0" y="0" width="' + curX + '" height="' + H + '"/></clipPath>' +
-      '<clipPath id="clipPredict"><rect x="' + curX + '" y="0" width="' + (W - curX) + '" height="' + H + '"/></clipPath>' +
-      '<path d="' + curvePath + '" fill="none" stroke="rgba(52,199,89,0.7)" stroke-width="2" clip-path="url(#clipActual)"/>' +
-      '<path d="' + curvePath + '" fill="none" stroke="rgba(52,199,89,0.5)" stroke-width="1.5" stroke-dasharray="4,3" clip-path="url(#clipPredict)"/>';
-
-    // Current time marker
-    svgContent += '<line x1="' + curX + '" y1="' + (pad.top - 5) + '" x2="' + curX + '" y2="' + (H - pad.bottom + 5) + '" stroke="#FF3B30" stroke-width="1" stroke-dasharray="3,2"/>' +
-      '<circle cx="' + curX + '" cy="' + (pad.top - 5) + '" r="3" fill="#FF3B30"/>' +
-      '<text x="' + curX + '" y="' + (H - pad.bottom + 18) + '" text-anchor="middle" font-size="9" fill="#FF3B30" font-family="var(--font)">现在</text>';
-  }
-
-  svg.innerHTML = svgContent;
 
   // Badge
   var stateMap = { predictive: '预测态', realtime: '实时态', review: '回顾态' };
   badge.textContent = stateMap[scene.timelineState] || '';
   badge.className = 'timeline-state-badge ' + scene.timelineState;
 
-  // Time axis labels
-  var labels = ['06', '09', '12', '15', '18', '21', '00'];
-  timeAxis.innerHTML = labels.map(function(l) {
-    return '<span class="time-axis-label">' + l + ':00</span>';
-  }).join('');
-}
+  var zones = buildTimelineZones(scene);
+  var curMin = timeToMinutes(scene.curveCurrentTime);
+  var html = '';
+  var yOffset = 0;
 
-// ══════════════════════════════════════════
-// RENDER: Action Pins (Today Tab)
-// ══════════════════════════════════════════
-function renderActionPins(scene) {
-  var list = $('action-pins-list');
-  if (!scene.suggestions || !scene.suggestions.length) {
-    list.innerHTML =
-      '<div class="empty-state" style="padding:20px">' +
-        '<div class="empty-state-icon">📋</div>' +
-        '<div class="empty-state-title">暂无行动建议</div>' +
-        '<div class="empty-state-desc">连接设备后，系统将生成个性化建议</div>' +
+  // Build pin lookup by hour
+  var pins = (scene.suggestions || []).slice();
+
+  zones.forEach(function(z) {
+    var zoneH = Math.round(z.hours * HOUR_H);
+    var isPast = scene.timelineState === 'review' || (scene.timelineState === 'realtime' && (z.startH + z.hours) * 60 <= curMin);
+    var pastCls = isPast ? ' opacity: 0.6;' : '';
+
+    // Hour labels
+    var startHour = Math.floor(z.startH);
+    var endHour = Math.floor(z.startH + z.hours);
+    for (var h = startHour; h <= endHour; h++) {
+      var labelY = yOffset + (h - z.startH) * HOUR_H;
+      if (labelY >= yOffset && h >= 0 && h <= 24) {
+        html += '<div class="v-hour-label" style="top:' + labelY + 'px">' + String(h % 24).padStart(2, '0') + '</div>';
+        html += '<div class="v-hour-tick" style="top:' + labelY + 'px"></div>';
+      }
+    }
+
+    // Zone block
+    html += '<div class="v-zone ' + z.type + '" style="height:' + zoneH + 'px;' + pastCls + '">';
+    html += '<div class="v-zone-label">' + z.label + '</div>';
+    if (z.sub) html += '<div class="v-zone-sub">' + z.sub + '</div>';
+
+    // Sleep stage bars
+    if (z.type === 'sleep' && z.data) {
+      html += '<div class="v-sleep-stages">' +
+        '<div class="v-sleep-stage deep" style="height:' + z.data.deep + '%"></div>' +
+        '<div class="v-sleep-stage light" style="height:' + z.data.light + '%"></div>' +
+        '<div class="v-sleep-stage rem" style="height:' + z.data.rem + '%"></div>' +
+        '<div class="v-sleep-stage awake" style="height:' + z.data.awake + '%"></div>' +
       '</div>';
-    return;
-  }
-
-  list.innerHTML = scene.suggestions.map(function(s) {
-    var statusIcon = '';
-    if (s.status === 'done') statusIcon = '✓';
-    else if (s.status === 'skipped') statusIcon = '—';
-    else if (s.status === 'current') statusIcon = '•';
-
-    var impactHtml = '';
-    if (s.impact_h !== null && s.impact_h !== undefined) {
-      impactHtml = '<div class="pin-impact">+' + s.impact_h + 'h</div>';
     }
-    var dosageHtml = s.dosage ? '<div class="pin-dosage">' + s.dosage + '</div>' : '';
 
-    var detailHtml = '';
-    if (s.reason) {
-      detailHtml =
-        '<div class="pin-detail" id="detail-' + s.id + '">' +
-          '<div class="pin-reason">' + s.reason + '</div>' +
-          (s.impact_h ? '<div class="pin-impact-detail">预估贡献 +' + s.impact_h + 'h 高能</div>' : '') +
+    // Melatonin moon icon
+    if (z.type === 'melatonin') {
+      html += '<div class="v-zone-icon">🌙</div>';
+      if (z.predict) html += '<div class="v-zone-sub" style="margin-top:4px">' + z.predict + '</div>';
+    }
+
+    html += '</div>';
+
+    // Floating pin tags in this zone's time range
+    var zStartMin = z.startH * 60, zEndMin = (z.startH + z.hours) * 60;
+    pins.forEach(function(p) {
+      var pMin = timeToMinutes(p.time.split(' ')[0]); // handle "17:00 - 18:00" format
+      if (pMin >= zStartMin && pMin < zEndMin) {
+        var pinY = yOffset + (pMin - zStartMin) / 60 * HOUR_H;
+        html += '<div class="v-pin-tag ' + p.status + '" style="top:' + pinY + 'px">' +
+          '<span class="pin-tag-icon">' + p.icon + '</span>' +
+          '<span class="pin-tag-label">' + p.label + '</span>' +
         '</div>';
+      }
+    });
+
+    // Current time marker
+    if (scene.timelineState === 'realtime' && curMin >= zStartMin && curMin < zEndMin) {
+      var nowY = yOffset + (curMin - zStartMin) / 60 * HOUR_H;
+      html += '<div class="v-now-marker" style="position:absolute;left:38px;right:0;top:' + nowY + 'px">' +
+        '<span class="v-now-label">现在</span></div>';
     }
 
-    return '<div class="action-pin ' + s.status + '" onclick="togglePinDetail(\'' + s.id + '\')">' +
-      '<div class="pin-icon">' + s.icon + '</div>' +
-      '<div class="pin-info">' +
-        '<div class="pin-label">' + s.label + '</div>' +
-        '<div class="pin-time">' + s.time + '</div>' +
-        detailHtml +
-      '</div>' +
-      '<div class="pin-right">' +
-        impactHtml + dosageHtml +
-      '</div>' +
-      '<div class="pin-status ' + s.status + '">' + statusIcon + '</div>' +
-    '</div>';
-  }).join('');
-}
+    yOffset += zoneH + 2; // 2px gap
+  });
 
-function togglePinDetail(id) {
-  var el = document.getElementById('detail-' + id);
-  if (el) el.classList.toggle('show');
-}
+  // Sleep need at bottom
+  var sleepNeedH = scene.bodyData ? scene.bodyData.sleepH : '8h';
+  html += '<div class="v-sleep-need">Sleep need<strong>' + sleepNeedH + '</strong></div>';
 
-// ══════════════════════════════════════════
-// RENDER: Sleep Window (Today Tab)
-// ══════════════════════════════════════════
-function renderSleepWindow(scene) {
-  $('sw-time').textContent = scene.sleepWindow.time;
-  $('sw-predict').textContent = scene.sleepWindow.predict;
+  container.style.height = yOffset + 60 + 'px';
+  container.innerHTML = html;
 }
 
 // ══════════════════════════════════════════
@@ -1940,9 +1861,7 @@ function applyScene(scene) {
   renderBodyData(scene);
 
   // ── Today Tab ──
-  renderEnergyCurve(scene);
-  renderActionPins(scene);
-  renderSleepWindow(scene);
+  renderVerticalTimeline(scene);
 
   // Default to status tab
   switchTab('status');
