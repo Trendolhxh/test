@@ -1056,3 +1056,918 @@
     </div>
   </div>
 </div>
+
+<script>
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+function timeToMinutes(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+// Generate 48 energy curve points (every 30min, 05:30 → next day 05:00)
+function generateCurvePoints(highWindows, currentTime, sleepEnd, baseEnergy) {
+  baseEnergy = baseEnergy || 0.35;
+  const points = [];
+  const startMin = 5 * 60 + 30;
+  const curMin = timeToMinutes(currentTime);
+
+  for (let i = 0; i < 48; i++) {
+    const min = startMin + i * 30;
+    const dayMin = min % 1440;
+    const hour = Math.floor(dayMin / 60);
+    const hStr = String(hour).padStart(2, '0');
+    const mStr = String(dayMin % 60).padStart(2, '0');
+    const timeStr = hStr + ':' + mStr;
+
+    // Base circadian rhythm
+    const t = dayMin / 1440;
+    let energy = baseEnergy
+      + 0.35 * Math.sin(2 * Math.PI * (t - 0.15))
+      + 0.15 * Math.sin(4 * Math.PI * (t - 0.1));
+
+    // Boost in high-energy windows
+    for (const w of highWindows) {
+      const ws = timeToMinutes(w.start), we = timeToMinutes(w.end);
+      if (dayMin >= ws && dayMin <= we) {
+        energy = Math.max(energy, 0.72 + (Math.sin(dayMin * 0.1) * 0.08));
+      }
+    }
+
+    // Sleep period: low energy
+    const sleepEndMin = timeToMinutes(sleepEnd);
+    if (dayMin < sleepEndMin || dayMin >= 1410) {
+      energy = 0.05 + (Math.sin(i) * 0.03);
+    }
+
+    energy = Math.max(0.02, Math.min(0.98, energy));
+    const type = dayMin <= curMin ? 'actual' : 'predicted';
+    points.push({ time: timeStr, energy: Math.round(energy * 100) / 100, type: type });
+  }
+  return points;
+}
+
+// ══════════════════════════════════════════
+// SCENES (will be continued in next blocks)
+// ══════════════════════════════════════════
+var SCENES = [
+  // ── Scene 1: Morning - Good Sleep ──
+  {
+    id: 'morning_good', name: '晨起 - 睡眠优质',
+    desc: '白天模式，高能时长充足，深睡异常好',
+    time: '8:30', isNight: false, greeting: '早上好',
+    attribution: {
+      high_energy_h: 7.5, high_energy_h_yesterday: 7.2, delta: 0.3,
+      factors: [
+        { label: '入睡时间偏差', value: '准时入睡', contribution_h: 0.3, direction: 'positive' },
+        { label: '昨夜睡眠时长', value: '7h12m', contribution_h: 0.2, direction: 'positive' },
+        { label: '昨日运动', value: '跑步 30min', contribution_h: 0.2, direction: 'positive' },
+        { label: '深睡占比', value: '28% (+6%)', contribution_h: 0.1, direction: 'positive' },
+        { label: '咖啡因摄入', value: '10:00 1杯', contribution_h: 0, direction: 'neutral' },
+      ],
+      notable_values: [
+        { label: '深睡占比 28%', context: '近 30 天最佳', type: 'positive' }
+      ]
+    },
+    digest: '昨夜深睡 28%，近一个月最好——今天的高能比昨天多了半小时',
+    questions: ['深睡为什么会波动', '近三天深睡趋势', '怎么保持这状态'],
+    suggestions: [
+      { id: 's1', icon: '☕', label: '喝咖啡', time: '10:30', dosage: '1 杯', reason: '10:30 前摄入咖啡因不影响晚间睡眠', impact_h: 0.3, status: 'pending' },
+      { id: 's2', icon: '🏃', label: '运动', time: '17:00 - 18:00', dosage: '30min', reason: '下午运动可提升傍晚高能时段', impact_h: 0.5, status: 'pending' },
+      { id: 's3', icon: '😴', label: '小睡', time: '13:30', dosage: '20min', reason: '午后小睡恢复注意力', impact_h: 0.2, status: 'pending' },
+      { id: 's4', icon: '🌙', label: '准备入睡', time: '23:00', dosage: null, reason: null, impact_h: null, status: 'pending' },
+    ],
+    highWindows: [{ start: '09:30', end: '11:45' }, { start: '18:45', end: '21:10' }],
+    sleepWindow: { time: '23:00', predict: '明日预估高能 7.8h' },
+    curveCurrentTime: '08:30', sleepEnd: '06:28',
+    timelineState: 'predictive',
+    bodyData: { hr: 62, hrv: 48, steps: 1200, spo2: 98, sleepH: '7h12m', sleepEff: '94%', deep: 28, light: 42, rem: 22, awake: 8 },
+  },
+
+  // ── Scene 2: Morning - Late Sleep ──
+  {
+    id: 'morning_bad', name: '晨起 - 入睡太晚',
+    desc: '白天模式，高能时长不足，入睡偏差大',
+    time: '9:15', isNight: false, greeting: '早上好',
+    attribution: {
+      high_energy_h: 5.2, high_energy_h_yesterday: 7.0, delta: -1.8,
+      factors: [
+        { label: '入睡时间偏差', value: '比推荐晚 2h15min', contribution_h: -1.2, direction: 'negative' },
+        { label: '深睡占比', value: '15% (-7%)', contribution_h: -0.4, direction: 'negative' },
+        { label: '昨夜睡眠时长', value: '5h30m', contribution_h: -0.3, direction: 'negative' },
+        { label: '昨日运动', value: '无', contribution_h: -0.1, direction: 'negative' },
+        { label: '咖啡因摄入', value: '16:00 1杯', contribution_h: 0.2, direction: 'positive' },
+      ],
+      notable_values: [
+        { label: '深睡占比 15%', context: '低于近 7 天均值', type: 'negative' }
+      ]
+    },
+    digest: '1:45 才躺下，深睡只有 15%——不过高能窗口 9:30 就开了，先干正事',
+    questions: ['晚睡对深睡影响多大', '深睡占比多少正常', '今晚怎么改善'],
+    suggestions: [
+      { id: 's1', icon: '☕', label: '喝咖啡', time: '09:30', dosage: '1 杯', reason: '补充精力，但注意下午别再喝', impact_h: 0.3, status: 'current' },
+      { id: 's2', icon: '😴', label: '小睡', time: '13:00', dosage: '25min', reason: '补偿昨夜睡眠不足', impact_h: 0.4, status: 'pending' },
+      { id: 's3', icon: '🧘', label: '冥想', time: '21:30', dosage: '10min', reason: '帮助提前放松准备入睡', impact_h: null, status: 'pending' },
+      { id: 's4', icon: '🌙', label: '准备入睡', time: '22:30', dosage: null, reason: null, impact_h: null, status: 'pending' },
+    ],
+    highWindows: [{ start: '09:30', end: '11:00' }, { start: '15:00', end: '16:30' }],
+    sleepWindow: { time: '22:30', predict: '明日预估高能 6.8h' },
+    curveCurrentTime: '09:15', sleepEnd: '07:45',
+    timelineState: 'predictive',
+    bodyData: { hr: 71, hrv: 35, steps: 800, spo2: 97, sleepH: '5h30m', sleepEff: '78%', deep: 15, light: 48, rem: 25, awake: 12 },
+  },
+
+  // ── Scene 3: Afternoon - High Energy Remaining ──
+  {
+    id: 'afternoon_high', name: '下午 - 高能剩余多',
+    desc: '白天模式，剩余高能充足',
+    time: '14:20', isNight: false, greeting: '下午好',
+    attribution: {
+      high_energy_h: 7.5, high_energy_h_yesterday: 7.0, delta: 0.5,
+      factors: [
+        { label: '昨夜睡眠时长', value: '7h40m', contribution_h: 0.3, direction: 'positive' },
+        { label: '深睡占比', value: '24%', contribution_h: 0.2, direction: 'positive' },
+        { label: '昨日运动', value: '快走 40min', contribution_h: 0.2, direction: 'positive' },
+        { label: '入睡时间偏差', value: '准时', contribution_h: 0.1, direction: 'positive' },
+        { label: '咖啡因摄入', value: '09:00 1杯', contribution_h: 0, direction: 'neutral' },
+      ],
+      notable_values: []
+    },
+    digest: '还剩 4 小时高能，2-4 点是你的主场——那个需求文档该写了',
+    questions: ['高能时段怎么算的', '今天高能窗口变了吗', '高能时段怎么用好'],
+    suggestions: [
+      { id: 's1', icon: '☕', label: '喝咖啡', time: '09:00', dosage: '1 杯', reason: '晨间咖啡因提神', impact_h: 0.3, status: 'done' },
+      { id: 's2', icon: '🏃', label: '运动', time: '17:00 - 18:00', dosage: '30min', reason: '下午运动可提升傍晚高能时段', impact_h: 0.5, status: 'pending' },
+      { id: 's3', icon: '🧘', label: '冥想', time: '22:00', dosage: '10min', reason: '睡前放松', impact_h: null, status: 'pending' },
+      { id: 's4', icon: '🌙', label: '准备入睡', time: '23:30', dosage: null, reason: null, impact_h: null, status: 'pending' },
+    ],
+    highWindows: [{ start: '09:30', end: '12:00' }, { start: '14:00', end: '16:30' }, { start: '19:00', end: '21:00' }],
+    sleepWindow: { time: '23:30', predict: '明日预估高能 7.5h' },
+    curveCurrentTime: '14:20', sleepEnd: '06:20',
+    timelineState: 'realtime',
+    bodyData: { hr: 76, hrv: 45, steps: 5800, spo2: 98, sleepH: '7h40m', sleepEff: '92%', deep: 24, light: 44, rem: 24, awake: 8 },
+  },
+
+  // ── Scene 4: Afternoon - Energy Depleted ──
+  {
+    id: 'afternoon_depleted', name: '下午 - 高能耗尽',
+    desc: '白天模式，高能不足 4h（警示）',
+    time: '16:45', isNight: false, greeting: '下午好',
+    attribution: {
+      high_energy_h: 3.5, high_energy_h_yesterday: 6.5, delta: -3.0,
+      factors: [
+        { label: '入睡时间偏差', value: '比推荐晚 3h', contribution_h: -1.5, direction: 'negative' },
+        { label: '昨夜睡眠时长', value: '4h50m', contribution_h: -0.8, direction: 'negative' },
+        { label: '深睡占比', value: '12%', contribution_h: -0.5, direction: 'negative' },
+        { label: '昨日运动', value: '无', contribution_h: -0.2, direction: 'negative' },
+        { label: '咖啡因摄入', value: '15:00 2杯', contribution_h: 0, direction: 'neutral' },
+      ],
+      notable_values: [
+        { label: '睡眠时长 4h50m', context: '严重不足，低于推荐值', type: 'negative' }
+      ]
+    },
+    digest: '高能额度已经用完了，大脑进入节能模式——剩下的时间适合做不费脑的事',
+    questions: ['怎么判断完全没电了', '咖啡能续命多久', '现在做点什么能恢复'],
+    suggestions: [
+      { id: 's1', icon: '☕', label: '喝咖啡', time: '09:30', dosage: '1 杯', reason: '晨间提神', impact_h: 0.3, status: 'done' },
+      { id: 's2', icon: '☕', label: '喝咖啡', time: '15:00', dosage: '1 杯', reason: '下午续命', impact_h: 0.2, status: 'done' },
+      { id: 's3', icon: '🏃', label: '运动', time: '14:00 - 15:00', dosage: '30min', reason: '提升下午精力', impact_h: 0.5, status: 'skipped' },
+      { id: 's4', icon: '🌙', label: '准备入睡', time: '22:30', dosage: null, reason: null, impact_h: null, status: 'pending' },
+    ],
+    highWindows: [{ start: '09:00', end: '11:30' }],
+    sleepWindow: { time: '22:30', predict: '明日预估高能 5.5h' },
+    curveCurrentTime: '16:45', sleepEnd: '07:10',
+    timelineState: 'realtime',
+    bodyData: { hr: 88, hrv: 28, steps: 3200, spo2: 97, sleepH: '4h50m', sleepEff: '72%', deep: 12, light: 50, rem: 20, awake: 18 },
+  },
+
+  // ── Scene 5: Evening - Low Activity ──
+  {
+    id: 'evening_low', name: '傍晚 - 活动量偏低',
+    desc: '白天模式，高能已用完，活动消耗不足',
+    time: '19:30', isNight: false, greeting: '晚上好',
+    attribution: {
+      high_energy_h: 6.0, high_energy_h_yesterday: 6.2, delta: -0.2,
+      factors: [
+        { label: '昨夜睡眠时长', value: '7h', contribution_h: 0.1, direction: 'positive' },
+        { label: '深睡占比', value: '20%', contribution_h: 0, direction: 'neutral' },
+        { label: '昨日运动', value: '无', contribution_h: -0.2, direction: 'negative' },
+        { label: '入睡时间偏差', value: '晚 15min', contribution_h: -0.1, direction: 'negative' },
+        { label: '咖啡因摄入', value: '无', contribution_h: 0, direction: 'neutral' },
+      ],
+      notable_values: []
+    },
+    digest: '今天只消耗了 320 大卡，你的椅子比你更累——睡前可以动一动',
+    questions: ['消耗低影响睡眠吗', '睡前适合什么活动', '推荐个放松运动'],
+    suggestions: [
+      { id: 's1', icon: '☕', label: '喝咖啡', time: '09:00', dosage: '1 杯', reason: '晨间提神', impact_h: 0.3, status: 'done' },
+      { id: 's2', icon: '🏃', label: '运动', time: '17:00 - 18:00', dosage: '30min', reason: '提升傍晚精力', impact_h: 0.5, status: 'skipped' },
+      { id: 's3', icon: '🧘', label: '冥想', time: '22:00', dosage: '10min', reason: '睡前放松', impact_h: null, status: 'pending' },
+      { id: 's4', icon: '🌙', label: '准备入睡', time: '23:00', dosage: null, reason: null, impact_h: null, status: 'pending' },
+    ],
+    highWindows: [{ start: '09:30', end: '12:00' }, { start: '15:00', end: '17:00' }],
+    sleepWindow: { time: '23:00', predict: '明日预估高能 6.5h' },
+    curveCurrentTime: '19:30', sleepEnd: '06:30',
+    timelineState: 'realtime',
+    bodyData: { hr: 75, hrv: 40, steps: 3500, spo2: 98, sleepH: '7h', sleepEff: '88%', deep: 20, light: 46, rem: 24, awake: 10 },
+  },
+
+  // ── Scene 6: Night - Ready 🟢 ──
+  {
+    id: 'night_ready', name: '夜晚 - 已准备好 🟢',
+    desc: '夜间模式，入睡准备度：已准备好',
+    time: '22:50', isNight: true, greeting: '夜深了',
+    sleepReadiness: {
+      level: 'ready', estimated_min: null, suggestion: null,
+      predicted_tomorrow_h: 7.5, recommended_bedtime: '23:00',
+      factors: [
+        { label: '心率趋势', value: '持续下降中（58bpm）', direction: 'positive' },
+        { label: '距上次咖啡因', value: '12h', direction: 'positive' },
+        { label: '距上次运动', value: '5h', direction: 'positive' },
+        { label: '当日活动量', value: '步数 8234', direction: 'positive' },
+      ]
+    },
+    digest: '静息心率已经降到 58 了，身体比你先准备好了',
+    questions: ['低心率说明什么', '现在多快能睡着', '明天精力预估准吗'],
+    suggestions: [
+      { id: 's1', icon: '☕', label: '喝咖啡', time: '09:00', dosage: '1 杯', reason: '晨间提神', impact_h: 0.3, status: 'done' },
+      { id: 's2', icon: '🏃', label: '运动', time: '17:00 - 18:00', dosage: '30min', reason: '提升精力', impact_h: 0.5, status: 'done' },
+      { id: 's3', icon: '🧘', label: '冥想', time: '22:00', dosage: '10min', reason: '睡前放松', impact_h: null, status: 'done' },
+      { id: 's4', icon: '🌙', label: '准备入睡', time: '23:00', dosage: null, reason: null, impact_h: null, status: 'current' },
+    ],
+    highWindows: [{ start: '09:30', end: '12:00' }, { start: '18:30', end: '21:00' }],
+    sleepWindow: { time: '23:00', predict: '明日预估高能 7.5h' },
+    curveCurrentTime: '22:50', sleepEnd: '06:28',
+    timelineState: 'review',
+    bodyData: { hr: 58, hrv: 52, steps: 8234, spo2: 98, sleepH: '7h12m', sleepEff: '93%', deep: 24, light: 44, rem: 22, awake: 10 },
+  },
+
+  // ── Scene 7: Night - Almost Ready 🟡 ──
+  {
+    id: 'night_almost', name: '夜晚 - 接近准备好 🟡',
+    desc: '夜间模式，入睡准备度：接近准备好',
+    time: '22:30', isNight: true, greeting: '夜深了',
+    sleepReadiness: {
+      level: 'almost', estimated_min: 25, suggestion: null,
+      predicted_tomorrow_h: 7.0, recommended_bedtime: '23:00',
+      factors: [
+        { label: '心率趋势', value: '缓慢下降中（65bpm）', direction: 'positive' },
+        { label: '距上次咖啡因', value: '8h', direction: 'positive' },
+        { label: '距上次运动', value: '2h', direction: 'negative' },
+        { label: '当日活动量', value: '步数 6500', direction: 'positive' },
+      ]
+    },
+    digest: '心率还在慢慢降，距上次运动才 2 小时——再等 25 分钟会更容易入睡',
+    questions: ['运动后多久适合睡觉', '怎么加速放松', '明天有重要的事怎么准备'],
+    suggestions: [
+      { id: 's1', icon: '☕', label: '喝咖啡', time: '09:00', dosage: '1 杯', reason: '晨间提神', impact_h: 0.3, status: 'done' },
+      { id: 's2', icon: '🏃', label: '运动', time: '20:00 - 20:30', dosage: '30min', reason: '晚间跑步', impact_h: 0.3, status: 'done' },
+      { id: 's3', icon: '🧘', label: '冥想', time: '22:30', dosage: '10min', reason: '帮助从运动状态过渡到休息', impact_h: null, status: 'current' },
+      { id: 's4', icon: '🌙', label: '准备入睡', time: '23:00', dosage: null, reason: null, impact_h: null, status: 'pending' },
+    ],
+    highWindows: [{ start: '09:30', end: '12:00' }, { start: '18:00', end: '20:30' }],
+    sleepWindow: { time: '23:00', predict: '明日预估高能 7.0h' },
+    curveCurrentTime: '22:30', sleepEnd: '06:30',
+    timelineState: 'review',
+    bodyData: { hr: 65, hrv: 42, steps: 6500, spo2: 98, sleepH: '7h', sleepEff: '90%', deep: 22, light: 44, rem: 24, awake: 10 },
+  },
+
+  // ── Scene 8: Night - Not Ready 🔴 ──
+  {
+    id: 'night_not_ready', name: '夜晚 - 还需准备 🔴',
+    desc: '夜间模式，入睡准备度：还需准备',
+    time: '23:15', isNight: true, greeting: '夜深了',
+    sleepReadiness: {
+      level: 'not_ready', estimated_min: null,
+      suggestion: '试试 5 分钟呼吸练习',
+      predicted_tomorrow_h: 5.8, recommended_bedtime: '23:00',
+      factors: [
+        { label: '心率趋势', value: '偏高（78bpm）', direction: 'negative' },
+        { label: '距上次咖啡因', value: '4h', direction: 'negative' },
+        { label: '距上次运动', value: '无运动', direction: 'negative' },
+        { label: '当日活动量', value: '步数 2800', direction: 'negative' },
+      ]
+    },
+    digest: '心率还在 78，咖啡因 4 小时前才喝——身体还没进入休息模式',
+    questions: ['睡前咖啡因影响多大', '呼吸练习怎么做', '推迟入睡明天会怎样'],
+    suggestions: [
+      { id: 's1', icon: '☕', label: '喝咖啡', time: '09:30', dosage: '1 杯', reason: '晨间提神', impact_h: 0.3, status: 'done' },
+      { id: 's2', icon: '☕', label: '喝咖啡', time: '19:00', dosage: '1 杯', reason: '晚间续命（不推荐）', impact_h: 0.1, status: 'done' },
+      { id: 's3', icon: '🧘', label: '呼吸练习', time: '23:15', dosage: '5min', reason: '降低心率，帮助入睡', impact_h: null, status: 'current' },
+      { id: 's4', icon: '🌙', label: '准备入睡', time: '23:30', dosage: null, reason: null, impact_h: null, status: 'pending' },
+    ],
+    highWindows: [{ start: '10:00', end: '12:00' }, { start: '15:00', end: '16:30' }],
+    sleepWindow: { time: '23:30', predict: '明日预估高能 5.8h' },
+    curveCurrentTime: '23:15', sleepEnd: '07:00',
+    timelineState: 'review',
+    bodyData: { hr: 78, hrv: 30, steps: 2800, spo2: 97, sleepH: '6h20m', sleepEff: '80%', deep: 16, light: 48, rem: 22, awake: 14 },
+  },
+
+  // ── Scene 9: New User - No Data ──
+  {
+    id: 'new_user', name: '新用户 - 无数据',
+    desc: '无任何健康数据，展示空状态引导',
+    time: '10:00', isNight: false, greeting: '你好',
+    attribution: null,
+    digest: '',
+    questions: [],
+    suggestions: [],
+    highWindows: [],
+    sleepWindow: { time: '--:--', predict: '连接设备后可查看' },
+    curveCurrentTime: '10:00', sleepEnd: '06:00',
+    timelineState: 'predictive',
+    bodyData: null,
+  },
+];
+
+// ══════════════════════════════════════════
+// RENDER: Core Metric (Layer 1)
+// ══════════════════════════════════════════
+function renderDayCoreMetric(scene) {
+  const a = scene.attribution;
+  if (!a) {
+    $('core-metric').innerHTML =
+      '<div class="empty-state"><div class="empty-state-icon">📊</div>' +
+      '<div class="empty-state-title">暂无精力数据</div>' +
+      '<div class="empty-state-desc">连接 Apple Watch 或 Health 数据<br>即可查看高能时长</div></div>';
+    return;
+  }
+  const val = a.high_energy_h;
+  const d = a.delta;
+  const cls = d >= 1 ? 'positive' : d <= -1 ? 'negative' : (d > 0 ? 'positive' : d < 0 ? 'negative' : 'neutral');
+  const arrow = d > 0 ? '↑' : d < 0 ? '↓' : '';
+  const dSign = d > 0 ? '+' : '';
+  // Visual class for the big number: warning if <4h
+  const valColor = val < 4 ? 'color:var(--warning-orange)' : val >= 10 ? 'color:var(--brand-green)' : '';
+
+  const slotsHtml = scene.highWindows.map(function(w) {
+    return '<span class="core-metric-slot">' + w.start + ' – ' + w.end + '</span>';
+  }).join('');
+
+  $('core-metric').innerHTML =
+    '<div class="core-metric-label">今日高能时长</div>' +
+    '<div class="core-metric-row">' +
+      '<span class="core-metric-value" style="' + valColor + ';animation:countPop 0.45s ease">' + val + '</span>' +
+      '<span class="core-metric-unit">小时</span>' +
+      '<span class="core-metric-delta ' + cls + '">' + arrow + ' ' + dSign + d + 'h</span>' +
+    '</div>' +
+    '<div class="core-metric-slots">' + slotsHtml + '</div>';
+}
+
+function renderNightCoreMetric(scene) {
+  const r = scene.sleepReadiness;
+  var dotEmoji, dotCls, statusText;
+  if (r.level === 'ready') {
+    dotEmoji = '🟢'; dotCls = 'ready'; statusText = '已准备好';
+  } else if (r.level === 'almost') {
+    dotEmoji = '🟡'; dotCls = 'almost'; statusText = '接近准备好';
+  } else {
+    dotEmoji = '🔴'; dotCls = 'not-ready'; statusText = '还需准备';
+  }
+
+  var subText = '';
+  if (r.level === 'almost' && r.estimated_min) {
+    subText = '预计约 ' + r.estimated_min + ' 分钟后进入最佳状态';
+  } else if (r.level === 'not_ready' && r.suggestion) {
+    subText = r.suggestion;
+  }
+
+  $('core-metric').innerHTML =
+    '<div class="core-metric-label">入睡准备度</div>' +
+    '<div class="readiness-indicator">' +
+      '<div class="readiness-dot ' + dotCls + '">' + dotEmoji + '</div>' +
+      '<div><div class="readiness-text">' + statusText + '</div>' +
+        (subText ? '<div class="readiness-sub">' + subText + '</div>' : '') +
+      '</div>' +
+    '</div>' +
+    '<div class="readiness-details">' +
+      '<div class="readiness-detail-item">' +
+        '<div class="readiness-detail-label">明日高能预估</div>' +
+        '<div class="readiness-detail-value">' + r.predicted_tomorrow_h + 'h</div>' +
+      '</div>' +
+      '<div class="readiness-detail-item">' +
+        '<div class="readiness-detail-label">推荐入睡</div>' +
+        '<div class="readiness-detail-value">' + r.recommended_bedtime + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ══════════════════════════════════════════
+// RENDER: Smart Digest (Layer 2)
+// ══════════════════════════════════════════
+function renderDigest(scene) {
+  var el = $('smart-digest');
+  if (!scene.digest) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'block';
+  el.innerHTML =
+    '<div class="smart-digest-header">' +
+      '<span class="smart-digest-icon">✨</span>' +
+      '<span class="smart-digest-label">Smart Digest</span>' +
+    '</div>' +
+    '<div class="smart-digest-text">' + scene.digest + '</div>';
+}
+
+// ══════════════════════════════════════════
+// RENDER: Attribution (Layer 3)
+// ══════════════════════════════════════════
+function renderAttribution(scene) {
+  var section = $('attribution-section');
+  var list = $('attribution-list');
+
+  // Night mode: use sleepReadiness factors (direction only, no numeric bars)
+  if (scene.isNight && scene.sleepReadiness) {
+    section.style.display = 'block';
+    section.querySelector('.section-title').textContent = '入睡准备度归因';
+    var factors = scene.sleepReadiness.factors;
+    list.innerHTML = factors.map(function(f) {
+      var dirIcon = f.direction === 'positive' ? '✓' : '✗';
+      var dirCls = f.direction;
+      return '<div class="attr-row">' +
+        '<div class="attr-info">' +
+          '<div class="attr-label">' + f.label + '</div>' +
+          '<div class="attr-value">' + f.value + '</div>' +
+        '</div>' +
+        '<div class="attr-direction ' + dirCls + '">' + dirIcon + '</div>' +
+      '</div>';
+    }).join('');
+    return;
+  }
+
+  // Day mode: attribution with contribution bars
+  if (!scene.attribution) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  section.querySelector('.section-title').textContent = '归因分析';
+  var factors = scene.attribution.factors;
+  var maxC = Math.max.apply(null, factors.map(function(f) { return Math.abs(f.contribution_h); }).concat([0.1]));
+
+  list.innerHTML = factors.map(function(f) {
+    var pct = Math.abs(f.contribution_h) / maxC * 45;
+    var barStyle, barPos;
+    if (f.direction === 'positive') {
+      barPos = 'left:50%;';
+      barStyle = barPos + 'width:' + pct + '%;';
+    } else if (f.direction === 'negative') {
+      barPos = 'right:50%;';
+      barStyle = barPos + 'width:' + pct + '%;';
+    } else {
+      barStyle = 'left:48%;width:4%;';
+    }
+    var sign = f.contribution_h > 0 ? '+' : '';
+    var contribText = f.contribution_h === 0 ? '—' : sign + f.contribution_h + 'h';
+    return '<div class="attr-row">' +
+      '<div class="attr-info">' +
+        '<div class="attr-label">' + f.label + '</div>' +
+        '<div class="attr-value">' + f.value + '</div>' +
+      '</div>' +
+      '<div class="attr-bar-wrap">' +
+        '<div class="attr-bar-center"></div>' +
+        '<div class="attr-bar ' + f.direction + '" style="' + barStyle + '"></div>' +
+      '</div>' +
+      '<span class="attr-contrib ' + f.direction + '">' + contribText + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// RENDER: Notable Values (Layer 4) + Quick Questions
+// ══════════════════════════════════════════
+function renderNotableValues(scene) {
+  var section = $('notable-section');
+  var notables = (scene.attribution && scene.attribution.notable_values) || [];
+  if (!notables.length) {
+    section.style.display = 'none';
+  } else {
+    section.style.display = 'block';
+    section.innerHTML =
+      '<div class="section-title">值得注意的值</div>' +
+      notables.map(function(n) {
+        return '<div class="notable-card ' + n.type + '">' +
+          '<div class="notable-card-title">' + n.label + '</div>' +
+          '<div class="notable-card-desc">' + n.context + '</div>' +
+        '</div>';
+      }).join('');
+  }
+}
+
+function renderQuickQuestions(scene) {
+  var el = $('quick-questions');
+  if (!scene.questions || !scene.questions.length || !scene.digest) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'flex';
+  el.innerHTML = scene.questions.map(function(q) {
+    return '<div class="qq-btn">' + q + '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// RENDER: Body Data (Layer 5)
+// ══════════════════════════════════════════
+function miniLineChart(data, color, w, h) {
+  w = w || 120; h = h || 36;
+  var max = Math.max.apply(null, data);
+  var min = Math.min.apply(null, data);
+  var range = max - min || 1;
+  var pts = data.map(function(v, i) {
+    var x = (i / (data.length - 1)) * w;
+    var y = h - 3 - ((v - min) / range) * (h - 6);
+    return x + ',' + y;
+  });
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" class="mini-chart">' +
+    '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>';
+}
+
+function miniBarChart(data, color, w, h) {
+  w = w || 120; h = h || 36;
+  var max = Math.max.apply(null, data);
+  var barW = (w - (data.length - 1) * 4) / data.length;
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" class="mini-chart">' +
+    data.map(function(v, i) {
+      var bh = (v / max) * (h - 4);
+      var x = i * (barW + 4);
+      var y = h - bh;
+      return '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + bh + '" rx="2" fill="' + color + '" opacity="0.7"/>';
+    }).join('') +
+    '</svg>';
+}
+
+function renderBodyData(scene) {
+  var grid = $('body-data-grid');
+  var section = $('body-data-section');
+
+  if (!scene.bodyData) {
+    section.style.display = 'block';
+    grid.innerHTML =
+      '<div class="body-data-card full-width">' +
+        '<div class="empty-state"><div class="empty-state-icon">⌚</div>' +
+        '<div class="empty-state-title">暂无身体数据</div>' +
+        '<div class="empty-state-desc">连接 Apple Watch 后自动同步</div></div>' +
+      '</div>';
+    return;
+  }
+
+  section.style.display = 'block';
+  var d = scene.bodyData;
+  // Generate mock trend data
+  var hrTrend = [68, 72, 65, 70, d.hr, 66, 64, 62, d.hr, 70, 68, d.hr];
+  var hrvTrend = [d.hrv - 5, d.hrv - 2, d.hrv + 3, d.hrv, d.hrv + 1, d.hrv - 3, d.hrv + 2];
+  var sleepTrend = [6.5, 7.2, 6.8, 7.5, 7.0, 6.2, parseFloat(d.sleepH)];
+
+  grid.innerHTML =
+    // Heart Rate
+    '<div class="body-data-card">' +
+      '<div class="body-card-header">' +
+        '<span class="body-card-label">❤️ 心率</span>' +
+        '<span class="body-card-unit">bpm</span>' +
+      '</div>' +
+      '<div class="body-card-value">' + d.hr + '</div>' +
+      miniLineChart(hrTrend, '#FF3B30') +
+    '</div>' +
+    // HRV
+    '<div class="body-data-card">' +
+      '<div class="body-card-header">' +
+        '<span class="body-card-label">💓 HRV</span>' +
+        '<span class="body-card-unit">ms</span>' +
+      '</div>' +
+      '<div class="body-card-value">' + d.hrv + '</div>' +
+      miniLineChart(hrvTrend, '#5C6FE6') +
+    '</div>' +
+    // Activity
+    '<div class="body-data-card">' +
+      '<div class="body-card-header">' +
+        '<span class="body-card-label">🚶 活动</span>' +
+        '<span class="body-card-unit">步</span>' +
+      '</div>' +
+      '<div class="body-card-value">' + d.steps.toLocaleString() + '</div>' +
+      '<div style="height:6px;background:rgba(0,0,0,0.04);border-radius:3px;margin-top:8px;overflow:hidden">' +
+        '<div style="height:100%;width:' + Math.min(d.steps / 10000 * 100, 100) + '%;background:var(--brand-green);border-radius:3px;transition:width 0.5s"></div>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--text-secondary);margin-top:3px">目标 10,000 步</div>' +
+    '</div>' +
+    // SpO2
+    '<div class="body-data-card">' +
+      '<div class="body-card-header">' +
+        '<span class="body-card-label">🫁 血氧</span>' +
+        '<span class="body-card-unit">%</span>' +
+      '</div>' +
+      '<div class="body-card-value">' + d.spo2 + '</div>' +
+      '<div style="font-size:11px;color:var(--text-secondary);margin-top:8px">正常范围 95-100%</div>' +
+    '</div>' +
+    // Sleep Duration
+    '<div class="body-data-card full-width">' +
+      '<div class="body-card-header">' +
+        '<span class="body-card-label">🌙 睡眠</span>' +
+        '<span class="body-card-unit">' + d.sleepH + ' · 效率 ' + d.sleepEff + '</span>' +
+      '</div>' +
+      miniBarChart(sleepTrend, '#8B7EC8') +
+      '<div class="sleep-stages-bar">' +
+        '<div class="sleep-stage deep" style="width:' + d.deep + '%"></div>' +
+        '<div class="sleep-stage light" style="width:' + d.light + '%"></div>' +
+        '<div class="sleep-stage rem" style="width:' + d.rem + '%"></div>' +
+        '<div class="sleep-stage awake" style="width:' + d.awake + '%"></div>' +
+      '</div>' +
+      '<div class="sleep-stages-legend">' +
+        '<span class="legend-item"><span class="legend-dot" style="background:#5C6FE6"></span>深睡 ' + d.deep + '%</span>' +
+        '<span class="legend-item"><span class="legend-dot" style="background:#B4BCEF"></span>浅睡 ' + d.light + '%</span>' +
+        '<span class="legend-item"><span class="legend-dot" style="background:#7ED4F5"></span>REM ' + d.rem + '%</span>' +
+        '<span class="legend-item"><span class="legend-dot" style="background:#E5E5EA"></span>清醒 ' + d.awake + '%</span>' +
+      '</div>' +
+    '</div>';
+}
+
+// ══════════════════════════════════════════
+// RENDER: Energy Curve (Today Tab)
+// ══════════════════════════════════════════
+function catmullRomToBezier(points, tension) {
+  tension = tension || 0.3;
+  if (points.length < 2) return '';
+  var d = 'M ' + points[0].x + ',' + points[0].y;
+  for (var i = 0; i < points.length - 1; i++) {
+    var p0 = points[Math.max(i - 1, 0)];
+    var p1 = points[i];
+    var p2 = points[i + 1];
+    var p3 = points[Math.min(i + 2, points.length - 1)];
+    var cp1x = p1.x + (p2.x - p0.x) * tension;
+    var cp1y = p1.y + (p2.y - p0.y) * tension;
+    var cp2x = p2.x - (p3.x - p1.x) * tension;
+    var cp2y = p2.y - (p3.y - p1.y) * tension;
+    d += ' C ' + cp1x.toFixed(1) + ',' + cp1y.toFixed(1) +
+         ' ' + cp2x.toFixed(1) + ',' + cp2y.toFixed(1) +
+         ' ' + p2.x.toFixed(1) + ',' + p2.y.toFixed(1);
+  }
+  return d;
+}
+
+function renderEnergyCurve(scene) {
+  var svg = $('energy-svg');
+  var badge = $('timeline-badge');
+  var timeAxis = $('time-axis');
+
+  // Empty state
+  if (!scene.highWindows || !scene.highWindows.length) {
+    svg.innerHTML =
+      '<text x="170" y="75" text-anchor="middle" font-size="13" fill="rgba(0,0,0,0.3)" font-family="var(--font)">连接设备后查看能量曲线</text>';
+    badge.textContent = '--';
+    badge.className = 'timeline-state-badge';
+    timeAxis.innerHTML = '';
+    return;
+  }
+
+  var W = 340, H = 140;
+  var pad = { top: 15, bottom: 25, left: 5, right: 5 };
+  var cW = W - pad.left - pad.right;
+  var cH = H - pad.top - pad.bottom;
+
+  // Generate curve data
+  var curveData = generateCurvePoints(scene.highWindows, scene.curveCurrentTime, scene.sleepEnd);
+  var curMin = timeToMinutes(scene.curveCurrentTime);
+  var startMin = 5 * 60 + 30;
+
+  // Map to SVG coordinates
+  var pts = curveData.map(function(p, i) {
+    return {
+      x: pad.left + (i / (curveData.length - 1)) * cW,
+      y: pad.top + (1 - p.energy) * cH,
+      type: p.type,
+      energy: p.energy
+    };
+  });
+
+  // Build SVG content
+  var svgContent = '';
+
+  // Defs for gradients
+  svgContent += '<defs>' +
+    '<linearGradient id="highEnergyGrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="rgba(52,199,89,0.35)"/>' +
+      '<stop offset="100%" stop-color="rgba(52,199,89,0.05)"/>' +
+    '</linearGradient>' +
+    '<linearGradient id="sleepGrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="rgba(120,100,180,0.2)"/>' +
+      '<stop offset="100%" stop-color="rgba(120,100,180,0.05)"/>' +
+    '</linearGradient>' +
+  '</defs>';
+
+  // Grid lines (3 horizontal)
+  for (var g = 0; g < 3; g++) {
+    var gy = pad.top + (g + 0.5) / 3 * cH;
+    svgContent += '<line x1="' + pad.left + '" y1="' + gy + '" x2="' + (W - pad.right) + '" y2="' + gy + '" stroke="rgba(0,0,0,0.04)" stroke-width="0.5"/>';
+  }
+
+  // Sleep region (early hours)
+  var sleepEndMin = timeToMinutes(scene.sleepEnd);
+  var sleepEndX = pad.left + ((sleepEndMin - startMin + 1440) % 1440) / (24 * 60) * cW;
+  if (sleepEndX > pad.left) {
+    svgContent += '<rect x="' + pad.left + '" y="' + pad.top + '" width="' + (sleepEndX - pad.left) + '" height="' + cH + '" fill="url(#sleepGrad)" rx="4"/>';
+  }
+
+  // High energy window fills
+  scene.highWindows.forEach(function(w) {
+    var ws = timeToMinutes(w.start), we = timeToMinutes(w.end);
+    var x1 = pad.left + ((ws - startMin + 1440) % 1440) / (24 * 60) * cW;
+    var x2 = pad.left + ((we - startMin + 1440) % 1440) / (24 * 60) * cW;
+    svgContent += '<rect x="' + x1 + '" y="' + pad.top + '" width="' + (x2 - x1) + '" height="' + cH + '" fill="url(#highEnergyGrad)" rx="4"/>';
+  });
+
+  // Curve path
+  var curvePath = catmullRomToBezier(pts);
+
+  // Split rendering based on timeline state
+  if (scene.timelineState === 'predictive') {
+    svgContent += '<path d="' + curvePath + '" fill="none" stroke="rgba(52,199,89,0.6)" stroke-width="2" stroke-dasharray="4,3"/>';
+  } else if (scene.timelineState === 'review') {
+    svgContent += '<path d="' + curvePath + '" fill="none" stroke="rgba(52,199,89,0.7)" stroke-width="2"/>';
+  } else {
+    // Realtime: solid left of current, dashed right
+    // Use clip rects
+    var curX = pad.left + ((curMin - startMin + 1440) % 1440) / (24 * 60) * cW;
+    svgContent += '<clipPath id="clipActual"><rect x="0" y="0" width="' + curX + '" height="' + H + '"/></clipPath>' +
+      '<clipPath id="clipPredict"><rect x="' + curX + '" y="0" width="' + (W - curX) + '" height="' + H + '"/></clipPath>' +
+      '<path d="' + curvePath + '" fill="none" stroke="rgba(52,199,89,0.7)" stroke-width="2" clip-path="url(#clipActual)"/>' +
+      '<path d="' + curvePath + '" fill="none" stroke="rgba(52,199,89,0.5)" stroke-width="1.5" stroke-dasharray="4,3" clip-path="url(#clipPredict)"/>';
+
+    // Current time marker
+    svgContent += '<line x1="' + curX + '" y1="' + (pad.top - 5) + '" x2="' + curX + '" y2="' + (H - pad.bottom + 5) + '" stroke="#FF3B30" stroke-width="1" stroke-dasharray="3,2"/>' +
+      '<circle cx="' + curX + '" cy="' + (pad.top - 5) + '" r="3" fill="#FF3B30"/>' +
+      '<text x="' + curX + '" y="' + (H - pad.bottom + 18) + '" text-anchor="middle" font-size="9" fill="#FF3B30" font-family="var(--font)">现在</text>';
+  }
+
+  svg.innerHTML = svgContent;
+
+  // Badge
+  var stateMap = { predictive: '预测态', realtime: '实时态', review: '回顾态' };
+  badge.textContent = stateMap[scene.timelineState] || '';
+  badge.className = 'timeline-state-badge ' + scene.timelineState;
+
+  // Time axis labels
+  var labels = ['06', '09', '12', '15', '18', '21', '00'];
+  timeAxis.innerHTML = labels.map(function(l) {
+    return '<span class="time-axis-label">' + l + ':00</span>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// RENDER: Action Pins (Today Tab)
+// ══════════════════════════════════════════
+function renderActionPins(scene) {
+  var list = $('action-pins-list');
+  if (!scene.suggestions || !scene.suggestions.length) {
+    list.innerHTML =
+      '<div class="empty-state" style="padding:20px">' +
+        '<div class="empty-state-icon">📋</div>' +
+        '<div class="empty-state-title">暂无行动建议</div>' +
+        '<div class="empty-state-desc">连接设备后，系统将生成个性化建议</div>' +
+      '</div>';
+    return;
+  }
+
+  list.innerHTML = scene.suggestions.map(function(s) {
+    var statusIcon = '';
+    if (s.status === 'done') statusIcon = '✓';
+    else if (s.status === 'skipped') statusIcon = '—';
+    else if (s.status === 'current') statusIcon = '•';
+
+    var impactHtml = '';
+    if (s.impact_h !== null && s.impact_h !== undefined) {
+      impactHtml = '<div class="pin-impact">+' + s.impact_h + 'h</div>';
+    }
+    var dosageHtml = s.dosage ? '<div class="pin-dosage">' + s.dosage + '</div>' : '';
+
+    var detailHtml = '';
+    if (s.reason) {
+      detailHtml =
+        '<div class="pin-detail" id="detail-' + s.id + '">' +
+          '<div class="pin-reason">' + s.reason + '</div>' +
+          (s.impact_h ? '<div class="pin-impact-detail">预估贡献 +' + s.impact_h + 'h 高能</div>' : '') +
+        '</div>';
+    }
+
+    return '<div class="action-pin ' + s.status + '" onclick="togglePinDetail(\'' + s.id + '\')">' +
+      '<div class="pin-icon">' + s.icon + '</div>' +
+      '<div class="pin-info">' +
+        '<div class="pin-label">' + s.label + '</div>' +
+        '<div class="pin-time">' + s.time + '</div>' +
+        detailHtml +
+      '</div>' +
+      '<div class="pin-right">' +
+        impactHtml + dosageHtml +
+      '</div>' +
+      '<div class="pin-status ' + s.status + '">' + statusIcon + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function togglePinDetail(id) {
+  var el = document.getElementById('detail-' + id);
+  if (el) el.classList.toggle('show');
+}
+
+// ══════════════════════════════════════════
+// RENDER: Sleep Window (Today Tab)
+// ══════════════════════════════════════════
+function renderSleepWindow(scene) {
+  $('sw-time').textContent = scene.sleepWindow.time;
+  $('sw-predict').textContent = scene.sleepWindow.predict;
+}
+
+// ══════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════
+var currentTab = 'status';
+
+function switchTab(tabName) {
+  currentTab = tabName;
+
+  // Update phone tab bar
+  document.querySelectorAll('.tab-bar-item').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.tab === tabName);
+  });
+  var pill = $('tab-pill');
+  if (tabName === 'today') pill.classList.add('right');
+  else pill.classList.remove('right');
+
+  // Toggle content
+  $('tab-status').classList.toggle('active', tabName === 'status');
+  $('tab-today').classList.toggle('active', tabName === 'today');
+
+  // Update control panel toggle buttons
+  document.querySelectorAll('.tab-toggle-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tab === tabName);
+  });
+}
+
+// ══════════════════════════════════════════
+// APPLY SCENE (master orchestrator)
+// ══════════════════════════════════════════
+var currentScene = null;
+
+function applyScene(scene) {
+  currentScene = scene;
+  var phone = $('phone');
+
+  // Time & greeting
+  $('sys-time').textContent = scene.time;
+  $('greeting').textContent = scene.greeting;
+
+  // Day / Night mode
+  if (scene.isNight) {
+    phone.classList.add('night-mode');
+  } else {
+    phone.classList.remove('night-mode');
+  }
+
+  // ── Status Tab ──
+  if (scene.isNight && scene.sleepReadiness) {
+    renderNightCoreMetric(scene);
+  } else {
+    renderDayCoreMetric(scene);
+  }
+  renderDigest(scene);
+  renderAttribution(scene);
+  renderNotableValues(scene);
+  renderQuickQuestions(scene);
+  renderBodyData(scene);
+
+  // ── Today Tab ──
+  renderEnergyCurve(scene);
+  renderActionPins(scene);
+  renderSleepWindow(scene);
+
+  // Default to status tab
+  switchTab('status');
+}
+
+// ══════════════════════════════════════════
+// CONTROL PANEL: Generate Scene Buttons
+// ══════════════════════════════════════════
+(function init() {
+  var btnGroup = $('scene-buttons');
+  SCENES.forEach(function(scene, i) {
+    var btn = document.createElement('button');
+    btn.className = 'scene-btn' + (i === 0 ? ' active' : '');
+    btn.innerHTML = scene.name + '<span>' + scene.desc + '</span>';
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.scene-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      applyScene(scene);
+    });
+    btnGroup.appendChild(btn);
+  });
+
+  // Apply first scene
+  applyScene(SCENES[0]);
+})();
+</script>
+</body>
+</html>
