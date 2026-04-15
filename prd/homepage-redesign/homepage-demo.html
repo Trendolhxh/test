@@ -516,44 +516,56 @@
   }
 
   /* ── Layer 2: Smart Digest ── */
-  .smart-digest {
-    padding: 12px 14px;
-    background: rgba(255,255,255,0.5);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.8);
+  /* ── Layer 2: Insight Card (digest + notable merged) ── */
+  .insight-card {
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.7);
     border-radius: 14px;
-    margin-bottom: 14px;
-    cursor: pointer;
+    margin-bottom: 12px;
     transition: all 0.3s ease;
   }
-  .smart-digest:hover { background: rgba(255,255,255,0.7); transform: translateY(-1px); }
-  .iphone-frame.night-mode .smart-digest {
+  .iphone-frame.night-mode .insight-card {
     background: rgba(255,255,255,0.06);
     border-color: var(--night-border);
   }
-  .iphone-frame.night-mode .smart-digest:hover { background: rgba(255,255,255,0.1); }
-
-  .smart-digest-header {
-    display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+  .insight-summary {
+    display: flex; align-items: flex-start; gap: 8px;
   }
-  .smart-digest-icon { font-size: 14px; }
-  .smart-digest-label {
-    font-size: 11px; font-weight: 500; color: var(--text-secondary);
+  .insight-icon { font-size: 14px; margin-top: 2px; flex-shrink: 0; }
+  .insight-text {
+    font-size: 13px; line-height: 1.5; color: var(--text-secondary);
     transition: color 0.5s ease;
   }
-  .iphone-frame.night-mode .smart-digest-label { color: var(--night-text-secondary); }
-
-  .smart-digest-text {
-    font-size: 14px; line-height: 1.6; color: var(--text-primary);
-    font-weight: 400;
+  .iphone-frame.night-mode .insight-text { color: var(--night-text-secondary); }
+  .insight-notable {
+    display: inline;
+    font-weight: 600; color: var(--text-primary);
     transition: color 0.5s ease;
   }
-  .iphone-frame.night-mode .smart-digest-text { color: var(--night-text-primary); }
+  .insight-notable.positive { color: #1a8a3e; }
+  .insight-notable.negative { color: #c47600; }
+  .iphone-frame.night-mode .insight-notable { color: var(--night-text-primary); }
+  .iphone-frame.night-mode .insight-notable.positive { color: #5cdb7a; }
+  .iphone-frame.night-mode .insight-notable.negative { color: #ffb340; }
+  .insight-questions {
+    display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;
+  }
+  .insight-q {
+    font-size: 11px; padding: 4px 10px; border-radius: 12px;
+    background: rgba(0,0,0,0.04); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .insight-q:hover { background: rgba(0,0,0,0.08); }
+  .iphone-frame.night-mode .insight-q {
+    background: rgba(255,255,255,0.08); color: var(--night-text-secondary);
+  }
 
-  /* ── Layer 3: Attribution ── */
+  /* ── Layer 3: Attribution (collapsible) ── */
   .attribution-section {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .section-title {
     font-size: 13px; font-weight: 600; color: var(--text-secondary);
@@ -561,6 +573,40 @@
     transition: color 0.5s ease;
   }
   .iphone-frame.night-mode .section-title { color: var(--night-text-secondary); }
+
+  .attr-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.35);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-user-select: none; user-select: none;
+  }
+  .attr-toggle:hover { background: rgba(255,255,255,0.55); }
+  .iphone-frame.night-mode .attr-toggle {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--night-border);
+  }
+  .iphone-frame.night-mode .attr-toggle:hover { background: rgba(255,255,255,0.08); }
+  .attr-toggle-label {
+    font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    transition: color 0.5s ease;
+  }
+  .iphone-frame.night-mode .attr-toggle-label { color: var(--night-text-secondary); }
+  .attr-toggle-arrow {
+    font-size: 16px; font-weight: 600; color: var(--text-secondary);
+    transition: transform 0.25s ease, color 0.5s ease;
+    display: inline-block;
+  }
+  .attr-toggle.expanded .attr-toggle-arrow { transform: rotate(90deg); }
+  .iphone-frame.night-mode .attr-toggle-arrow { color: var(--night-text-secondary); }
+  .attr-body {
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding-top: 8px;
+  }
 
   .attr-row {
     display: flex; align-items: center;
@@ -627,71 +673,7 @@
   .attr-direction.positive { background: var(--brand-green-bg); color: var(--brand-green); }
   .attr-direction.negative { background: var(--warning-orange-bg); color: var(--warning-orange); }
 
-  /* ── Layer 4: Notable Values ── */
-  .notable-section { margin-bottom: 14px; }
-
-  .notable-card {
-    padding: 12px 14px;
-    border-radius: 14px;
-    margin-bottom: 8px;
-    border-left: 3px solid;
-    transition: background 0.5s ease;
-  }
-  .notable-card.positive {
-    background: rgba(52, 199, 89, 0.06);
-    border-left-color: var(--brand-green);
-  }
-  .notable-card.negative {
-    background: rgba(255, 149, 0, 0.06);
-    border-left-color: var(--warning-orange);
-  }
-  .iphone-frame.night-mode .notable-card.positive { background: rgba(52, 199, 89, 0.1); }
-  .iphone-frame.night-mode .notable-card.negative { background: rgba(255, 149, 0, 0.1); }
-
-  .notable-card-title {
-    font-size: 14px; font-weight: 600; margin-bottom: 2px;
-    transition: color 0.5s ease;
-  }
-  .notable-card.positive .notable-card-title { color: #1a8a3e; }
-  .notable-card.negative .notable-card-title { color: #c47600; }
-  .iphone-frame.night-mode .notable-card.positive .notable-card-title { color: #5cdb7a; }
-  .iphone-frame.night-mode .notable-card.negative .notable-card-title { color: #ffb340; }
-
-  .notable-card-desc {
-    font-size: 12px; color: var(--text-secondary);
-    transition: color 0.5s ease;
-  }
-  .iphone-frame.night-mode .notable-card-desc { color: var(--night-text-secondary); }
-
-  /* Quick Questions */
-  .quick-questions {
-    display: flex; gap: 8px; overflow-x: auto;
-    margin-bottom: 14px;
-    -ms-overflow-style: none; scrollbar-width: none;
-  }
-  .quick-questions::-webkit-scrollbar { display: none; }
-
-  .qq-btn {
-    flex-shrink: 0;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.9);
-    color: #000; padding: 8px 14px; border-radius: 18px;
-    font-size: 13px; font-weight: 400; cursor: pointer;
-    box-shadow: 0 2px 8px rgba(217,232,249,0.4);
-    transition: all 0.2s; font-family: var(--font);
-  }
-  .qq-btn:hover { background: #fff; transform: translateY(-1px); }
-  .iphone-frame.night-mode .qq-btn {
-    background: rgba(255,255,255,0.08);
-    border-color: var(--night-border);
-    color: #fff;
-    box-shadow: none;
-  }
-  .iphone-frame.night-mode .qq-btn:hover { background: rgba(255,255,255,0.14); }
-
-  /* ── Layer 5: Body Data ── */
+  /* ── Layer 4: Body Data ── */
   .body-data-section { margin-bottom: 14px; }
 
   .body-data-grid {
@@ -1091,20 +1073,21 @@
       <!-- Layer 1: Core Metric -->
       <div class="core-metric" id="core-metric"></div>
 
-      <!-- Layer 2: Smart Digest -->
-      <div class="smart-digest" id="smart-digest" style="display:none;"></div>
+      <!-- Layer 2: Insight (digest + notable values merged) -->
+      <div class="insight-card" id="insight-card" style="display:none;"></div>
 
-      <!-- Layer 3: Attribution -->
+      <!-- Layer 3: Attribution (collapsed by default) -->
       <div class="attribution-section" id="attribution-section">
-        <div class="section-title">归因分析</div>
-        <div id="attribution-list"></div>
+        <div class="attr-toggle" id="attr-toggle">
+          <span class="attr-toggle-label">归因分析</span>
+          <span class="attr-toggle-arrow">›</span>
+        </div>
+        <div class="attr-body" id="attr-body" style="display:none;">
+          <div id="attribution-list"></div>
+        </div>
       </div>
 
-      <!-- Layer 4: Notable Values + Quick Questions -->
-      <div class="notable-section" id="notable-section" style="display:none;"></div>
-      <div class="quick-questions" id="quick-questions" style="display:none;"></div>
-
-      <!-- Layer 5: Body Data -->
+      <!-- Layer 4: Body Data -->
       <div class="body-data-section" id="body-data-section">
         <div class="section-title">身体数据</div>
         <div class="body-data-grid" id="body-data-grid"></div>
@@ -1613,68 +1596,99 @@ function renderNightCoreMetric(scene) {
 }
 
 // ══════════════════════════════════════════
-// RENDER: Smart Digest (Layer 2)
+// RENDER: Insight Card (digest + notables merged)
 // ══════════════════════════════════════════
-function renderDigest(scene) {
-  var el = $('smart-digest');
-  if (!scene.digest) {
+function renderInsight(scene) {
+  var el = $('insight-card');
+  var digest = scene.digest || '';
+  var notables = (scene.attribution && scene.attribution.notable_values) || [];
+  var questions = scene.questions || [];
+
+  if (!digest && !notables.length) {
     el.style.display = 'none';
     return;
   }
   el.style.display = 'block';
-  el.innerHTML =
-    '<div class="smart-digest-header">' +
-      '<span class="smart-digest-icon">✨</span>' +
-      '<span class="smart-digest-label">Smart Digest</span>' +
-    '</div>' +
-    '<div class="smart-digest-text">' + scene.digest + '</div>';
+
+  // Build a single insight line: digest text + inline notable highlights
+  var html = '<div class="insight-summary">';
+  html += '<span class="insight-icon">✨</span>';
+  html += '<div class="insight-text">';
+
+  if (digest) {
+    html += digest;
+  }
+
+  // Append notable values as inline highlights
+  if (notables.length) {
+    notables.forEach(function(n) {
+      if (digest) html += ' · ';
+      html += '<span class="insight-notable ' + n.type + '">' + n.label + '</span>';
+      html += ' <span style="opacity:0.7">' + n.context + '</span>';
+    });
+  }
+
+  html += '</div></div>';
+
+  // Quick questions as small tags
+  if (questions.length) {
+    html += '<div class="insight-questions">';
+    questions.forEach(function(q) {
+      html += '<span class="insight-q">' + q + '</span>';
+    });
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
 }
 
 // ══════════════════════════════════════════
-// RENDER: Attribution (Layer 3)
+// RENDER: Attribution (collapsible)
 // ══════════════════════════════════════════
 function renderAttribution(scene) {
   var section = $('attribution-section');
   var list = $('attribution-list');
+  var toggle = $('attr-toggle');
+  var body = $('attr-body');
 
-  // Night mode: use sleepReadiness factors (direction only, no numeric bars)
+  // Night mode: use sleepReadiness factors
   if (scene.isNight && scene.sleepReadiness) {
     section.style.display = 'block';
-    section.querySelector('.section-title').textContent = '入睡准备度归因';
+    toggle.querySelector('.attr-toggle-label').textContent = '入睡准备度归因';
     var factors = scene.sleepReadiness.factors;
     list.innerHTML = factors.map(function(f) {
       var dirIcon = f.direction === 'positive' ? '✓' : '✗';
-      var dirCls = f.direction;
       return '<div class="attr-row">' +
         '<div class="attr-info">' +
           '<div class="attr-label">' + f.label + '</div>' +
           '<div class="attr-value">' + f.value + '</div>' +
         '</div>' +
-        '<div class="attr-direction ' + dirCls + '">' + dirIcon + '</div>' +
+        '<div class="attr-direction ' + f.direction + '">' + dirIcon + '</div>' +
       '</div>';
     }).join('');
+    // Reset collapsed state
+    toggle.classList.remove('expanded');
+    body.style.display = 'none';
     return;
   }
 
-  // Day mode: attribution with contribution bars
+  // Day mode
   if (!scene.attribution) {
     section.style.display = 'none';
     return;
   }
   section.style.display = 'block';
-  section.querySelector('.section-title').textContent = '归因分析';
+  toggle.querySelector('.attr-toggle-label').textContent = '归因分析';
   var factors = scene.attribution.factors;
   var maxC = Math.max.apply(null, factors.map(function(f) { return Math.abs(f.contribution_h); }).concat([0.1]));
 
   list.innerHTML = factors.map(function(f) {
     var pct = Math.abs(f.contribution_h) / maxC * 45;
-    var barStyle, barPos;
+    var barStyle;
     if (f.direction === 'positive') {
-      barPos = 'left:50%;';
-      barStyle = barPos + 'width:' + pct + '%;';
+      barStyle = 'left:50%;width:' + pct + '%;';
     } else if (f.direction === 'negative') {
-      barPos = 'right:50%;';
-      barStyle = barPos + 'width:' + pct + '%;';
+      barStyle = 'right:50%;width:' + pct + '%;';
     } else {
       barStyle = 'left:48%;width:4%;';
     }
@@ -1692,39 +1706,10 @@ function renderAttribution(scene) {
       '<span class="attr-contrib ' + f.direction + '">' + contribText + '</span>' +
     '</div>';
   }).join('');
-}
 
-// ══════════════════════════════════════════
-// RENDER: Notable Values (Layer 4) + Quick Questions
-// ══════════════════════════════════════════
-function renderNotableValues(scene) {
-  var section = $('notable-section');
-  var notables = (scene.attribution && scene.attribution.notable_values) || [];
-  if (!notables.length) {
-    section.style.display = 'none';
-  } else {
-    section.style.display = 'block';
-    section.innerHTML =
-      '<div class="section-title">值得注意的值</div>' +
-      notables.map(function(n) {
-        return '<div class="notable-card ' + n.type + '">' +
-          '<div class="notable-card-title">' + n.label + '</div>' +
-          '<div class="notable-card-desc">' + n.context + '</div>' +
-        '</div>';
-      }).join('');
-  }
-}
-
-function renderQuickQuestions(scene) {
-  var el = $('quick-questions');
-  if (!scene.questions || !scene.questions.length || !scene.digest) {
-    el.style.display = 'none';
-    return;
-  }
-  el.style.display = 'flex';
-  el.innerHTML = scene.questions.map(function(q) {
-    return '<div class="qq-btn">' + q + '</div>';
-  }).join('');
+  // Reset collapsed state on scene change
+  toggle.classList.remove('expanded');
+  body.style.display = 'none';
 }
 
 // ══════════════════════════════════════════
@@ -2080,10 +2065,8 @@ function applyScene(scene) {
   } else {
     renderDayCoreMetric(scene);
   }
-  renderDigest(scene);
+  renderInsight(scene);
   renderAttribution(scene);
-  renderNotableValues(scene);
-  renderQuickQuestions(scene);
   renderBodyData(scene);
 
   // ── Today Tab ──
@@ -2108,6 +2091,20 @@ function applyScene(scene) {
       applyScene(scene);
     });
     btnGroup.appendChild(btn);
+  });
+
+  // Attribution collapse toggle
+  $('attr-toggle').addEventListener('click', function() {
+    var toggle = $('attr-toggle');
+    var body = $('attr-body');
+    var expanded = toggle.classList.contains('expanded');
+    if (expanded) {
+      toggle.classList.remove('expanded');
+      body.style.display = 'none';
+    } else {
+      toggle.classList.add('expanded');
+      body.style.display = 'block';
+    }
   });
 
   // Apply first scene
