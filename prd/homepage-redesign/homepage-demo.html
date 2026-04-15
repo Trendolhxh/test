@@ -700,129 +700,115 @@
   }
   .iphone-frame.night-mode .v-hour-tick { background: rgba(255,255,255,0.06); }
 
-  /* ── Zone Blocks ── */
-  .v-zone {
-    position: relative;
-    border-radius: 14px;
-    margin-bottom: 2px;
-    padding: 12px 14px;
-    min-height: 50px;
-    transition: background 0.5s ease;
-  }
-  .v-zone-label {
-    font-size: 13px; font-weight: 600; margin-bottom: 2px;
-    transition: color 0.5s ease;
-  }
-  .v-zone-sub {
-    font-size: 11px; opacity: 0.7;
-    transition: color 0.5s ease;
+  /* ── Full-Height Energy SVG Overlay ── */
+  .v-energy-svg {
+    position: absolute;
+    left: 38px; top: 0; right: 0;
+    pointer-events: none;
   }
 
-  /* Sleep zone */
-  .v-zone.sleep {
+  /* High-energy band (green highlight) */
+  .v-energy-svg .high-band {
+    fill: rgba(52, 199, 89, 0.08);
+    transition: fill 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-energy-svg .high-band {
+    fill: rgba(52, 199, 89, 0.12);
+  }
+
+  /* High-energy band label */
+  .v-high-label {
+    position: absolute; left: 44px;
+    font-size: 11px; font-weight: 600; color: var(--brand-green);
+    opacity: 0.8; transition: color 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-high-label { color: #4ADE80; }
+
+  /* Sleep band (purple) */
+  .v-energy-svg .sleep-band {
+    fill: rgba(100, 80, 180, 0.15);
+    transition: fill 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-energy-svg .sleep-band {
+    fill: rgba(100, 80, 180, 0.25);
+  }
+
+  /* Sleep window band (end of day) */
+  .v-energy-svg .sleep-window-band {
+    fill: rgba(100, 80, 180, 0.12);
+    transition: fill 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-energy-svg .sleep-window-band {
+    fill: rgba(100, 80, 180, 0.2);
+  }
+
+  /* Energy curve line */
+  .v-energy-svg .energy-curve {
+    fill: none;
+    stroke: var(--brand-green);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-energy-svg .energy-curve {
+    stroke: #4ADE80;
+  }
+  .v-energy-svg .energy-curve.predictive {
+    stroke-dasharray: 6 4;
+    opacity: 0.6;
+  }
+
+  /* Energy curve fill area */
+  .v-energy-svg .energy-fill {
+    fill: rgba(52, 199, 89, 0.06);
+    transition: fill 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-energy-svg .energy-fill {
+    fill: rgba(52, 199, 89, 0.1);
+  }
+
+  /* Sleep info overlay */
+  .v-sleep-info {
+    position: absolute; left: 44px;
+    font-size: 12px; font-weight: 500;
+    transition: color 0.5s ease;
+  }
+  .v-sleep-info .sleep-label { color: #9A8FD4; font-weight: 600; font-size: 13px; }
+  .v-sleep-info .sleep-detail { color: var(--text-secondary); font-size: 11px; margin-top: 2px; }
+  .iphone-frame.night-mode .v-sleep-info .sleep-label { color: #B4BCEF; }
+  .iphone-frame.night-mode .v-sleep-info .sleep-detail { color: var(--night-text-secondary); }
+
+  /* Sleep window marker */
+  .v-sleep-window {
+    position: absolute; left: 44px; right: 10px;
+    padding: 8px 12px;
+    background: rgba(100, 80, 180, 0.12);
+    border-radius: 10px;
+    border: 1px solid rgba(100, 80, 180, 0.2);
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-sleep-window {
     background: rgba(100, 80, 180, 0.2);
-    border: 1px solid rgba(100, 80, 180, 0.25);
+    border-color: rgba(120, 100, 200, 0.3);
   }
-  .v-zone.sleep .v-zone-label { color: #B4BCEF; }
-  .v-zone.sleep .v-zone-sub { color: #9A8FD4; }
-  .iphone-frame.night-mode .v-zone.sleep {
-    background: rgba(100, 80, 180, 0.3);
-    border-color: rgba(120, 100, 200, 0.35);
-  }
-
-  /* Sleep stage bars (vertical, inside sleep zone) */
-  .v-sleep-stages {
-    position: absolute; right: 12px; top: 10px; bottom: 10px;
-    width: 28px; display: flex; flex-direction: column;
-    border-radius: 6px; overflow: hidden; gap: 1px;
-  }
-  .v-sleep-stage { width: 100%; transition: height 0.4s ease; }
-  .v-sleep-stage.deep { background: #5C6FE6; }
-  .v-sleep-stage.light { background: #B4BCEF; }
-  .v-sleep-stage.rem { background: #7ED4F5; }
-  .v-sleep-stage.awake { background: rgba(255,255,255,0.25); }
-
-  /* Grogginess zone */
-  .v-zone.grogginess {
-    background: rgba(80, 75, 90, 0.15);
-    border: 1px solid rgba(80, 75, 90, 0.15);
-    background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q10 0 20 10 Q30 20 40 10' fill='none' stroke='rgba(128,128,128,0.12)' stroke-width='1'/%3E%3C/svg%3E");
-    background-size: 40px 20px;
-  }
-  .v-zone.grogginess .v-zone-label { color: var(--text-secondary); }
-  .iphone-frame.night-mode .v-zone.grogginess {
-    background-color: rgba(60, 55, 70, 0.3);
-    border-color: rgba(80, 75, 90, 0.25);
-  }
-  .iphone-frame.night-mode .v-zone.grogginess .v-zone-label { color: var(--night-text-secondary); }
-
-  /* High energy peak zone */
-  .v-zone.peak {
-    background: rgba(52, 199, 89, 0.1);
-    border: 1px solid rgba(52, 199, 89, 0.2);
-  }
-  .v-zone.peak .v-zone-label { color: var(--brand-green); }
-  .v-zone.peak .v-zone-sub { color: rgba(52, 199, 89, 0.7); }
-  .iphone-frame.night-mode .v-zone.peak {
-    background: rgba(52, 199, 89, 0.12);
-    border-color: rgba(52, 199, 89, 0.25);
-  }
-
-  /* Vertical energy curve inside peak zone */
-  .v-zone.peak .v-energy-svg {
-    position: absolute; left: 8px; top: 0; bottom: 0; width: 60px;
-    opacity: 0.5;
-  }
-
-  /* Low energy gap */
-  .v-zone.low {
-    background: transparent;
-    border: 1px dashed rgba(0,0,0,0.06);
-    min-height: 30px;
-  }
-  .iphone-frame.night-mode .v-zone.low { border-color: rgba(255,255,255,0.06); }
-  .v-zone.low .v-zone-label { color: var(--text-secondary); font-weight: 400; font-size: 12px; }
-  .iphone-frame.night-mode .v-zone.low .v-zone-label { color: var(--night-text-secondary); }
-
-  /* Wind-down zone */
-  .v-zone.winddown {
-    background: rgba(80, 70, 120, 0.1);
-    border: 1px solid rgba(80, 70, 120, 0.15);
-  }
-  .v-zone.winddown .v-zone-label { color: #8B7EC8; }
-  .iphone-frame.night-mode .v-zone.winddown {
-    background: rgba(80, 70, 120, 0.2);
-    border-color: rgba(100, 90, 150, 0.3);
-  }
-
-  /* Melatonin window zone */
-  .v-zone.melatonin {
-    background: linear-gradient(135deg, rgba(120, 100, 200, 0.2), rgba(80, 60, 160, 0.15));
-    border: 1px solid rgba(120, 100, 200, 0.3);
-  }
-  .v-zone.melatonin .v-zone-label { color: #B4BCEF; }
-  .v-zone.melatonin .v-zone-icon {
-    font-size: 28px; position: absolute; right: 14px; bottom: 10px; opacity: 0.4;
-  }
-  .iphone-frame.night-mode .v-zone.melatonin {
-    background: linear-gradient(135deg, rgba(120, 100, 200, 0.3), rgba(80, 60, 160, 0.25));
-    border-color: rgba(120, 100, 200, 0.4);
-  }
-
-  /* Sleep need (end marker) */
-  .v-sleep-need {
-    padding: 12px 14px;
-    text-align: center;
-    font-size: 13px; font-weight: 500; color: var(--text-secondary);
+  .v-sleep-window .sw-icon { font-size: 18px; }
+  .v-sleep-window .sw-text {
+    font-size: 12px; font-weight: 500; color: #9A8FD4;
     transition: color 0.5s ease;
   }
-  .iphone-frame.night-mode .v-sleep-need { color: var(--night-text-secondary); }
-  .v-sleep-need strong {
-    display: block; font-size: 18px; font-weight: 700; color: var(--text-primary);
-    margin-top: 2px;
+  .v-sleep-window .sw-text strong {
+    font-size: 14px; font-weight: 700; color: #7B68C8;
     transition: color 0.5s ease;
   }
-  .iphone-frame.night-mode .v-sleep-need strong { color: var(--night-text-primary); }
+  .iphone-frame.night-mode .v-sleep-window .sw-text { color: #B4BCEF; }
+  .iphone-frame.night-mode .v-sleep-window .sw-text strong { color: #C4B8F0; }
+  .v-sleep-window .sw-predict {
+    font-size: 10px; color: var(--text-secondary); margin-top: 2px;
+    transition: color 0.5s ease;
+  }
+  .iphone-frame.night-mode .v-sleep-window .sw-predict { color: var(--night-text-secondary); }
 
   /* ── Floating Pin Tags (right side) ── */
   .v-pin-tag {
@@ -1074,6 +1060,13 @@ var SCENES = [
       { id: 's4', icon: '🌙', label: '准备入睡', time: '23:00', dosage: null, reason: null, impact_h: null, status: 'pending' },
     ],
     highWindows: [{ start: '09:30', end: '11:45' }, { start: '18:45', end: '21:10' }],
+    energyCurve: [
+      [0,5],[1,5],[2,8],[3,10],[4,12],[5,15],[6,18],[6.5,30],[7,45],[7.5,55],
+      [8,65],[8.5,72],[9,78],[9.5,88],[10,92],[10.5,95],[11,90],[11.5,82],[12,60],
+      [12.5,50],[13,45],[13.5,42],[14,48],[14.5,52],[15,55],[15.5,50],[16,48],
+      [16.5,50],[17,55],[17.5,60],[18,65],[18.5,72],[19,85],[19.5,90],[20,88],
+      [20.5,82],[21,70],[21.5,55],[22,40],[22.5,28],[23,18],[23.5,10],[24,5]
+    ],
     sleepWindow: { time: '23:00', predict: '明日预估高能 7.8h' },
     curveCurrentTime: '08:30', sleepEnd: '06:28',
     timelineState: 'predictive',
@@ -1107,6 +1100,13 @@ var SCENES = [
       { id: 's4', icon: '🌙', label: '准备入睡', time: '22:30', dosage: null, reason: null, impact_h: null, status: 'pending' },
     ],
     highWindows: [{ start: '09:30', end: '11:00' }, { start: '15:00', end: '16:30' }],
+    energyCurve: [
+      [0,5],[1,5],[2,5],[3,8],[4,8],[5,10],[6,12],[6.5,15],[7,20],[7.5,30],
+      [8,40],[8.5,50],[9,60],[9.5,78],[10,82],[10.5,80],[11,68],[11.5,55],
+      [12,45],[12.5,38],[13,32],[13.5,35],[14,42],[14.5,55],[15,75],[15.5,78],
+      [16,72],[16.5,58],[17,45],[17.5,40],[18,35],[18.5,30],[19,28],[19.5,25],
+      [20,22],[20.5,20],[21,18],[21.5,15],[22,12],[22.5,8],[23,5],[23.5,5],[24,5]
+    ],
     sleepWindow: { time: '22:30', predict: '明日预估高能 6.8h' },
     curveCurrentTime: '09:15', sleepEnd: '07:45',
     timelineState: 'predictive',
@@ -1138,6 +1138,13 @@ var SCENES = [
       { id: 's4', icon: '🌙', label: '准备入睡', time: '23:30', dosage: null, reason: null, impact_h: null, status: 'pending' },
     ],
     highWindows: [{ start: '09:30', end: '12:00' }, { start: '14:00', end: '16:30' }, { start: '19:00', end: '21:00' }],
+    energyCurve: [
+      [0,5],[1,5],[2,8],[3,10],[4,12],[5,15],[6,22],[6.5,35],[7,48],[7.5,58],
+      [8,68],[8.5,75],[9,80],[9.5,88],[10,92],[10.5,95],[11,93],[11.5,88],[12,78],
+      [12.5,62],[13,50],[13.5,55],[14,72],[14.5,82],[15,88],[15.5,90],[16,85],
+      [16.5,72],[17,58],[17.5,50],[18,48],[18.5,55],[19,78],[19.5,85],[20,88],
+      [20.5,80],[21,65],[21.5,50],[22,38],[22.5,28],[23,18],[23.5,12],[24,5]
+    ],
     sleepWindow: { time: '23:30', predict: '明日预估高能 7.5h' },
     curveCurrentTime: '14:20', sleepEnd: '06:20',
     timelineState: 'realtime',
@@ -1171,6 +1178,13 @@ var SCENES = [
       { id: 's4', icon: '🌙', label: '准备入睡', time: '22:30', dosage: null, reason: null, impact_h: null, status: 'pending' },
     ],
     highWindows: [{ start: '09:00', end: '11:30' }],
+    energyCurve: [
+      [0,5],[1,5],[2,5],[3,8],[4,10],[5,12],[6,15],[6.5,18],[7,25],[7.5,35],
+      [8,48],[8.5,58],[9,72],[9.5,80],[10,82],[10.5,78],[11,72],[11.5,60],
+      [12,48],[12.5,38],[13,30],[13.5,25],[14,22],[14.5,20],[15,18],[15.5,20],
+      [16,22],[16.5,20],[17,18],[17.5,15],[18,14],[18.5,12],[19,12],[19.5,10],
+      [20,10],[20.5,8],[21,8],[21.5,8],[22,5],[22.5,5],[23,5],[23.5,5],[24,5]
+    ],
     sleepWindow: { time: '22:30', predict: '明日预估高能 5.5h' },
     curveCurrentTime: '16:45', sleepEnd: '07:10',
     timelineState: 'realtime',
@@ -1202,6 +1216,13 @@ var SCENES = [
       { id: 's4', icon: '🌙', label: '准备入睡', time: '23:00', dosage: null, reason: null, impact_h: null, status: 'pending' },
     ],
     highWindows: [{ start: '09:30', end: '12:00' }, { start: '15:00', end: '17:00' }],
+    energyCurve: [
+      [0,5],[1,5],[2,8],[3,10],[4,12],[5,15],[6,20],[6.5,30],[7,42],[7.5,52],
+      [8,60],[8.5,68],[9,75],[9.5,85],[10,90],[10.5,92],[11,88],[11.5,80],[12,65],
+      [12.5,52],[13,42],[13.5,38],[14,42],[14.5,55],[15,72],[15.5,78],[16,75],
+      [16.5,65],[17,52],[17.5,42],[18,35],[18.5,28],[19,22],[19.5,18],[20,15],
+      [20.5,12],[21,10],[21.5,8],[22,8],[22.5,5],[23,5],[23.5,5],[24,5]
+    ],
     sleepWindow: { time: '23:00', predict: '明日预估高能 6.5h' },
     curveCurrentTime: '19:30', sleepEnd: '06:30',
     timelineState: 'realtime',
@@ -1232,6 +1253,13 @@ var SCENES = [
       { id: 's4', icon: '🌙', label: '准备入睡', time: '23:00', dosage: null, reason: null, impact_h: null, status: 'current' },
     ],
     highWindows: [{ start: '09:30', end: '12:00' }, { start: '18:30', end: '21:00' }],
+    energyCurve: [
+      [0,5],[1,5],[2,8],[3,10],[4,12],[5,15],[6,22],[6.5,35],[7,48],[7.5,58],
+      [8,65],[8.5,72],[9,80],[9.5,90],[10,93],[10.5,95],[11,90],[11.5,82],[12,68],
+      [12.5,55],[13,45],[13.5,40],[14,42],[14.5,45],[15,48],[15.5,50],[16,52],
+      [16.5,55],[17,58],[17.5,62],[18,68],[18.5,78],[19,88],[19.5,92],[20,90],
+      [20.5,82],[21,68],[21.5,52],[22,38],[22.5,25],[23,15],[23.5,8],[24,5]
+    ],
     sleepWindow: { time: '23:00', predict: '明日预估高能 7.5h' },
     curveCurrentTime: '22:50', sleepEnd: '06:28',
     timelineState: 'review',
@@ -1262,6 +1290,13 @@ var SCENES = [
       { id: 's4', icon: '🌙', label: '准备入睡', time: '23:00', dosage: null, reason: null, impact_h: null, status: 'pending' },
     ],
     highWindows: [{ start: '09:30', end: '12:00' }, { start: '18:00', end: '20:30' }],
+    energyCurve: [
+      [0,5],[1,5],[2,8],[3,10],[4,12],[5,15],[6,20],[6.5,32],[7,45],[7.5,55],
+      [8,62],[8.5,70],[9,78],[9.5,85],[10,90],[10.5,92],[11,88],[11.5,80],[12,65],
+      [12.5,52],[13,42],[13.5,38],[14,40],[14.5,42],[15,45],[15.5,48],[16,50],
+      [16.5,55],[17,60],[17.5,65],[18,72],[18.5,82],[19,88],[19.5,85],[20,78],
+      [20.5,62],[21,48],[21.5,35],[22,25],[22.5,18],[23,12],[23.5,8],[24,5]
+    ],
     sleepWindow: { time: '23:00', predict: '明日预估高能 7.0h' },
     curveCurrentTime: '22:30', sleepEnd: '06:30',
     timelineState: 'review',
@@ -1293,6 +1328,13 @@ var SCENES = [
       { id: 's4', icon: '🌙', label: '准备入睡', time: '23:30', dosage: null, reason: null, impact_h: null, status: 'pending' },
     ],
     highWindows: [{ start: '10:00', end: '12:00' }, { start: '15:00', end: '16:30' }],
+    energyCurve: [
+      [0,5],[1,5],[2,5],[3,8],[4,8],[5,10],[6,12],[6.5,15],[7,22],[7.5,30],
+      [8,38],[8.5,48],[9,55],[9.5,62],[10,75],[10.5,80],[11,78],[11.5,72],[12,60],
+      [12.5,48],[13,38],[13.5,32],[14,35],[14.5,45],[15,68],[15.5,72],[16,68],
+      [16.5,55],[17,42],[17.5,35],[18,28],[18.5,22],[19,18],[19.5,15],[20,12],
+      [20.5,10],[21,10],[21.5,8],[22,8],[22.5,5],[23,5],[23.5,5],[24,5]
+    ],
     sleepWindow: { time: '23:30', predict: '明日预估高能 5.8h' },
     curveCurrentTime: '23:15', sleepEnd: '07:00',
     timelineState: 'review',
@@ -1309,6 +1351,7 @@ var SCENES = [
     questions: [],
     suggestions: [],
     highWindows: [],
+    energyCurve: [],
     sleepWindow: { time: '--:--', predict: '连接设备后可查看' },
     curveCurrentTime: '10:00', sleepEnd: '06:00',
     timelineState: 'predictive',
@@ -1624,82 +1667,24 @@ function renderBodyData(scene) {
 // ══════════════════════════════════════════
 var HOUR_H = 70; // pixels per hour
 
-function buildTimelineZones(scene) {
-  // Build ordered zone list from scene data
-  var zones = [];
-  var sleepEndMin = timeToMinutes(scene.sleepEnd);
-  var startH = 0; // midnight start for simplicity
-
-  // 1. Sleep zone (midnight → sleepEnd)
-  var sleepHours = sleepEndMin / 60;
-  zones.push({
-    type: 'sleep', label: '睡眠', startH: startH,
-    hours: Math.max(sleepHours, 1),
-    sub: scene.bodyData ? scene.bodyData.sleepH : '--',
-    data: scene.bodyData
-  });
-
-  // 2. Grogginess (sleepEnd → sleepEnd + 1.5h)
-  var grogStart = sleepHours;
-  zones.push({
-    type: 'grogginess', label: 'Grogginess',
-    startH: grogStart, hours: 1.5,
-    sub: '惯性期 ~90min'
-  });
-
-  // 3. High energy peaks + low gaps between them
-  var peakStart = grogStart + 1.5;
-  var windows = (scene.highWindows || []).slice().sort(function(a, b) {
-    return timeToMinutes(a.start) - timeToMinutes(b.start);
-  });
-
-  windows.forEach(function(w, idx) {
-    var ws = timeToMinutes(w.start) / 60;
-    var we = timeToMinutes(w.end) / 60;
-    // Low gap before this peak
-    if (ws > peakStart) {
-      zones.push({
-        type: 'low', label: '',
-        startH: peakStart, hours: ws - peakStart
-      });
-    }
-    var peakLabel = idx === 0 ? 'Morning Peak' : (idx === 1 ? 'Afternoon Peak' : 'Evening Peak');
-    if (we > 18) peakLabel = 'Evening Peak';
-    zones.push({
-      type: 'peak', label: peakLabel,
-      startH: ws, hours: we - ws,
-      sub: w.start + ' – ' + w.end
-    });
-    peakStart = we;
-  });
-
-  // 4. Low gap after last peak → wind-down
-  var swTime = scene.sleepWindow.time;
-  var swMin = swTime !== '--:--' ? timeToMinutes(swTime) : 23 * 60;
-  var winddownStart = swMin / 60 - 1.5;
-  if (peakStart < winddownStart) {
-    zones.push({
-      type: 'low', label: '',
-      startH: peakStart, hours: winddownStart - peakStart
-    });
+// Catmull-Rom spline → cubic Bezier SVG path
+function catmullRomPath(points) {
+  if (points.length < 2) return '';
+  var d = 'M' + points[0][0].toFixed(1) + ',' + points[0][1].toFixed(1);
+  for (var i = 0; i < points.length - 1; i++) {
+    var p0 = points[Math.max(0, i - 1)];
+    var p1 = points[i];
+    var p2 = points[i + 1];
+    var p3 = points[Math.min(points.length - 1, i + 2)];
+    var cp1x = p1[0] + (p2[0] - p0[0]) / 6;
+    var cp1y = p1[1] + (p2[1] - p0[1]) / 6;
+    var cp2x = p2[0] - (p3[0] - p1[0]) / 6;
+    var cp2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += ' C' + cp1x.toFixed(1) + ',' + cp1y.toFixed(1) +
+         ' ' + cp2x.toFixed(1) + ',' + cp2y.toFixed(1) +
+         ' ' + p2[0].toFixed(1) + ',' + p2[1].toFixed(1);
   }
-
-  // 5. Wind-down
-  zones.push({
-    type: 'winddown', label: 'Wind-down',
-    startH: winddownStart, hours: 1,
-    sub: '入睡准备'
-  });
-
-  // 6. Melatonin window
-  zones.push({
-    type: 'melatonin', label: 'Melatonin Window',
-    startH: winddownStart + 1, hours: 1,
-    sub: swTime !== '--:--' ? '推荐 ' + swTime + ' 入睡' : '--',
-    predict: scene.sleepWindow.predict
-  });
-
-  return zones;
+  return d;
 }
 
 function renderVerticalTimeline(scene) {
@@ -1707,7 +1692,7 @@ function renderVerticalTimeline(scene) {
   var badge = $('timeline-badge');
 
   // Empty state
-  if (!scene.highWindows || !scene.highWindows.length) {
+  if (!scene.energyCurve || !scene.energyCurve.length) {
     container.innerHTML =
       '<div class="empty-state" style="padding:40px 16px">' +
         '<div class="empty-state-icon">📋</div>' +
@@ -1724,81 +1709,141 @@ function renderVerticalTimeline(scene) {
   badge.textContent = stateMap[scene.timelineState] || '';
   badge.className = 'timeline-state-badge ' + scene.timelineState;
 
-  var zones = buildTimelineZones(scene);
+  // Timeline range
+  var sleepEndH = timeToMinutes(scene.sleepEnd) / 60;
+  var swTime = scene.sleepWindow.time;
+  var swH = swTime !== '--:--' ? timeToMinutes(swTime) / 60 : 23;
+  var endH = Math.min(swH + 1, 24);
+  var totalPx = endH * HOUR_H;
   var curMin = timeToMinutes(scene.curveCurrentTime);
+
+  // SVG coordinate space
+  var svgW = 300;
+  var curveMaxX = svgW * 0.55;
+  var curveMinX = 8;
+
   var html = '';
-  var yOffset = 0;
 
-  // Build pin lookup by hour
-  var pins = (scene.suggestions || []).slice();
+  // ── Hour labels & tick lines ──
+  for (var h = 0; h <= endH; h++) {
+    var y = h * HOUR_H;
+    html += '<div class="v-hour-label" style="top:' + y + 'px">' +
+      String(h % 24).padStart(2, '0') + '</div>';
+    html += '<div class="v-hour-tick" style="top:' + y + 'px"></div>';
+  }
 
-  zones.forEach(function(z) {
-    var zoneH = Math.round(z.hours * HOUR_H);
-    var isPast = scene.timelineState === 'review' || (scene.timelineState === 'realtime' && (z.startH + z.hours) * 60 <= curMin);
-    var pastCls = isPast ? ' opacity: 0.6;' : '';
+  // ── SVG energy overlay ──
+  var svg = '<svg class="v-energy-svg" width="100%" height="' + totalPx +
+    '" viewBox="0 0 ' + svgW + ' ' + totalPx + '" preserveAspectRatio="none">';
 
-    // Hour labels
-    var startHour = Math.floor(z.startH);
-    var endHour = Math.floor(z.startH + z.hours);
-    for (var h = startHour; h <= endHour; h++) {
-      var labelY = yOffset + (h - z.startH) * HOUR_H;
-      if (labelY >= yOffset && h >= 0 && h <= 24) {
-        html += '<div class="v-hour-label" style="top:' + labelY + 'px">' + String(h % 24).padStart(2, '0') + '</div>';
-        html += '<div class="v-hour-tick" style="top:' + labelY + 'px"></div>';
-      }
-    }
+  // Clip paths for realtime split (solid past / dashed future)
+  if (scene.timelineState === 'realtime') {
+    var nowSvgY = (curMin / 60) * HOUR_H;
+    svg += '<defs>' +
+      '<clipPath id="clip-past"><rect x="0" y="0" width="' + svgW +
+        '" height="' + nowSvgY.toFixed(1) + '"/></clipPath>' +
+      '<clipPath id="clip-future"><rect x="0" y="' + nowSvgY.toFixed(1) +
+        '" width="' + svgW + '" height="' + (totalPx - nowSvgY).toFixed(1) +
+        '"/></clipPath></defs>';
+  }
 
-    // Zone block
-    html += '<div class="v-zone ' + z.type + '" style="height:' + zoneH + 'px;' + pastCls + '">';
-    html += '<div class="v-zone-label">' + z.label + '</div>';
-    if (z.sub) html += '<div class="v-zone-sub">' + z.sub + '</div>';
+  // Sleep band (midnight → sleepEnd)
+  var sleepBandH = sleepEndH * HOUR_H;
+  svg += '<rect class="sleep-band" x="0" y="0" width="' + svgW +
+    '" height="' + sleepBandH.toFixed(1) + '" rx="10"/>';
 
-    // Sleep stage bars
-    if (z.type === 'sleep' && z.data) {
-      html += '<div class="v-sleep-stages">' +
-        '<div class="v-sleep-stage deep" style="height:' + z.data.deep + '%"></div>' +
-        '<div class="v-sleep-stage light" style="height:' + z.data.light + '%"></div>' +
-        '<div class="v-sleep-stage rem" style="height:' + z.data.rem + '%"></div>' +
-        '<div class="v-sleep-stage awake" style="height:' + z.data.awake + '%"></div>' +
-      '</div>';
-    }
-
-    // Melatonin moon icon
-    if (z.type === 'melatonin') {
-      html += '<div class="v-zone-icon">🌙</div>';
-      if (z.predict) html += '<div class="v-zone-sub" style="margin-top:4px">' + z.predict + '</div>';
-    }
-
-    html += '</div>';
-
-    // Floating pin tags in this zone's time range
-    var zStartMin = z.startH * 60, zEndMin = (z.startH + z.hours) * 60;
-    pins.forEach(function(p) {
-      var pMin = timeToMinutes(p.time.split(' ')[0]); // handle "17:00 - 18:00" format
-      if (pMin >= zStartMin && pMin < zEndMin) {
-        var pinY = yOffset + (pMin - zStartMin) / 60 * HOUR_H;
-        html += '<div class="v-pin-tag ' + p.status + '" style="top:' + pinY + 'px">' +
-          '<span class="pin-tag-icon">' + p.icon + '</span>' +
-          '<span class="pin-tag-label">' + p.label + '</span>' +
-        '</div>';
-      }
-    });
-
-    // Current time marker
-    if (scene.timelineState === 'realtime' && curMin >= zStartMin && curMin < zEndMin) {
-      var nowY = yOffset + (curMin - zStartMin) / 60 * HOUR_H;
-      html += '<div class="v-now-marker" style="position:absolute;left:38px;right:0;top:' + nowY + 'px">' +
-        '<span class="v-now-label">现在</span></div>';
-    }
-
-    yOffset += zoneH + 2; // 2px gap
+  // High-energy bands (green highlights)
+  (scene.highWindows || []).forEach(function(w) {
+    var y1 = (timeToMinutes(w.start) / 60) * HOUR_H;
+    var y2 = (timeToMinutes(w.end) / 60) * HOUR_H;
+    svg += '<rect class="high-band" x="0" y="' + y1.toFixed(1) +
+      '" width="' + svgW + '" height="' + (y2 - y1).toFixed(1) + '" rx="10"/>';
   });
 
-  // Sleep need at bottom
-  var sleepNeedH = scene.bodyData ? scene.bodyData.sleepH : '8h';
-  html += '<div class="v-sleep-need">Sleep need<strong>' + sleepNeedH + '</strong></div>';
+  // Sleep window band
+  if (swTime !== '--:--') {
+    var swBandY = swH * HOUR_H;
+    svg += '<rect class="sleep-window-band" x="0" y="' + swBandY.toFixed(1) +
+      '" width="' + svgW + '" height="' + HOUR_H + '" rx="10"/>';
+  }
 
-  container.style.height = yOffset + 60 + 'px';
+  // Energy curve: map [hour, value] → [x, y] in SVG coords
+  var curvePoints = [];
+  scene.energyCurve.forEach(function(pt) {
+    var hour = pt[0], val = pt[1];
+    if (hour >= 0 && hour <= endH) {
+      var py = hour * HOUR_H;
+      var px = curveMinX + (val / 100) * (curveMaxX - curveMinX);
+      curvePoints.push([px, py]);
+    }
+  });
+
+  if (curvePoints.length >= 2) {
+    var pathD = catmullRomPath(curvePoints);
+
+    // Filled area (curve → left edge)
+    var fillD = pathD +
+      ' L' + curveMinX + ',' + curvePoints[curvePoints.length - 1][1].toFixed(1) +
+      ' L' + curveMinX + ',' + curvePoints[0][1].toFixed(1) + ' Z';
+    svg += '<path class="energy-fill" d="' + fillD + '"/>';
+
+    // Curve line — style depends on timeline state
+    if (scene.timelineState === 'realtime') {
+      svg += '<path class="energy-curve" d="' + pathD + '" clip-path="url(#clip-past)"/>';
+      svg += '<path class="energy-curve predictive" d="' + pathD + '" clip-path="url(#clip-future)"/>';
+    } else if (scene.timelineState === 'predictive') {
+      svg += '<path class="energy-curve predictive" d="' + pathD + '"/>';
+    } else {
+      svg += '<path class="energy-curve" d="' + pathD + '"/>';
+    }
+  }
+
+  svg += '</svg>';
+  html += svg;
+
+  // ── Sleep info overlay ──
+  if (scene.bodyData) {
+    var sleepInfoY = Math.max(sleepEndH * HOUR_H / 2 - 15, 10);
+    html += '<div class="v-sleep-info" style="top:' + sleepInfoY + 'px">' +
+      '<div class="sleep-label">😴 睡眠 ' + scene.bodyData.sleepH + '</div>' +
+      '<div class="sleep-detail">效率 ' + scene.bodyData.sleepEff + '</div></div>';
+  }
+
+  // ── High energy window labels ──
+  (scene.highWindows || []).forEach(function(w) {
+    var wStartMin = timeToMinutes(w.start);
+    var labelY = (wStartMin / 60) * HOUR_H + 6;
+    html += '<div class="v-high-label" style="top:' + labelY + 'px">' +
+      '⚡ 高能 ' + w.start + '-' + w.end + '</div>';
+  });
+
+  // ── Floating pin tags (right side) ──
+  (scene.suggestions || []).forEach(function(p) {
+    var pMin = timeToMinutes(p.time.split(' ')[0]);
+    var pinY = (pMin / 60) * HOUR_H;
+    html += '<div class="v-pin-tag ' + p.status + '" style="top:' + pinY + 'px">' +
+      '<span class="pin-tag-icon">' + p.icon + '</span>' +
+      '<span class="pin-tag-label">' + p.label + '</span></div>';
+  });
+
+  // ── Current time marker ──
+  if (scene.timelineState === 'realtime') {
+    var nowY = (curMin / 60) * HOUR_H;
+    html += '<div class="v-now-marker" style="position:absolute;left:38px;right:0;top:' +
+      nowY + 'px"><span class="v-now-label">现在</span></div>';
+  }
+
+  // ── Sleep window card ──
+  if (swTime !== '--:--') {
+    var swCardY = swH * HOUR_H + 8;
+    html += '<div class="v-sleep-window" style="top:' + swCardY + 'px">' +
+      '<span class="sw-icon">🌙</span><div>' +
+      '<div class="sw-text">入睡窗口 <strong>' + swTime + '</strong></div>' +
+      '<div class="sw-predict">' + scene.sleepWindow.predict + '</div>' +
+      '</div></div>';
+  }
+
+  container.style.height = totalPx + 60 + 'px';
   container.innerHTML = html;
 }
 
