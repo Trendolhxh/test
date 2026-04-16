@@ -1,0 +1,118 @@
+/* ══════════════════════════════════════
+   ENERGY CURVE
+   ══════════════════════════════════════ */
+.energy-curve-wrap {
+  background: rgba(255,255,255,0.45); backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px); border-radius: 16px;
+  padding: 16px 10px 10px; margin-bottom: 14px; position: relative;
+}
+.phone.night-mode .energy-curve-wrap { background: rgba(255,255,255,0.06); }
+.curve-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 6px; margin-bottom: 10px;
+}
+.curve-title { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+.phone.night-mode .curve-title { color: #fff; }
+.curve-legend { display: flex; gap: 12px; }
+.legend-item {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; color: #888;
+}
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.legend-dot.high { background: linear-gradient(135deg, #34C759, #60C0D0); }
+.legend-dot.low  { background: #ddd; }
+.energy-curve-svg { width: 100%; height: 140px; display: block; }
+.curve-time-labels {
+  display: flex; justify-content: space-between;
+  padding: 4px 4px 0; font-size: 10px; color: #aaa;
+}
+.phone.night-mode .curve-time-labels { color: rgba(255,255,255,0.3); }
+
+/* ══════════════════════════════════════
+   ACTION PINS
+   ══════════════════════════════════════ */
+.action-pins {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;
+}
+.action-pin {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.45); backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px); border-radius: 14px; padding: 12px 14px;
+  cursor: pointer; transition: all 0.2s; position: relative;
+}
+.action-pin:hover { background: rgba(255,255,255,0.6); }
+.phone.night-mode .action-pin { background: rgba(255,255,255,0.06); }
+.action-pin.done { opacity: 0.5; }
+.action-pin.skipped { opacity: 0.4; }
+.action-pin.done .pin-label,
+.action-pin.skipped .pin-label { text-decoration: line-through; }
+.pin-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.pin-icon.caffeine   { background: rgba(255,149,0,0.1); }
+.pin-icon.exercise   { background: rgba(52,199,89,0.1); }
+.pin-icon.nap        { background: rgba(94,92,230,0.1); }
+.pin-icon.meditation { background: rgba(100,210,255,0.1); }
+.pin-icon.sleep      { background: rgba(90,195,215,0.1); }
+.pin-info { flex: 1; min-width: 0; }
+.pin-label { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.phone.night-mode .pin-label { color: #fff; }
+.pin-time { font-size: 12px; color: #888; margin-top: 1px; }
+.phone.night-mode .pin-time { color: rgba(255,255,255,0.4); }
+.pin-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pin-dosage {
+  font-size: 12px; font-weight: 500; color: #555;
+  background: rgba(0,0,0,0.04); padding: 3px 8px; border-radius: 8px;
+}
+.phone.night-mode .pin-dosage {
+  background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5);
+}
+.pin-impact {
+  font-size: 11px; font-weight: 600; color: #34C759;
+}
+.pin-status { font-size: 16px; }
+
+/* Pin expanded detail */
+.pin-detail {
+  display: none; margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.pin-detail.show { display: block; }
+.pin-detail-text { font-size: 12px; color: #666; line-height: 1.6; }
+.phone.night-mode .pin-detail-text { color: rgba(255,255,255,0.5); }
+
+/* ══════════════════════════════════════
+   SLEEP WINDOW CARD
+   ══════════════════════════════════════ */
+.sleep-window-card {
+  background: linear-gradient(135deg, rgba(90,195,215,0.15), rgba(160,136,232,0.12));
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 16px;
+  padding: 16px; margin-bottom: 14px; cursor: pointer;
+  transition: transform 0.15s;
+}
+.sleep-window-card:active { transform: scale(0.98); }
+.phone.night-mode .sleep-window-card {
+  background: linear-gradient(135deg, rgba(90,195,215,0.1), rgba(160,136,232,0.08));
+  border-color: rgba(255,255,255,0.1);
+}
+.sw-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.sw-icon { font-size: 20px; }
+.sw-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
+.phone.night-mode .sw-title { color: #fff; }
+.sw-body {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sw-times { display: flex; gap: 20px; }
+.sw-time-item .sw-time-label { font-size: 11px; color: #888; }
+.sw-time-item .sw-time-val { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+.phone.night-mode .sw-time-item .sw-time-val { color: #fff; }
+.sw-predict { text-align: right; font-size: 11.5px; color: #888; }
+.sw-predict strong {
+  font-size: 16px; color: #1a1a1a; display: block;
+}
+.phone.night-mode .sw-predict strong { color: #fff; }
+.sw-arrow { color: #bbb; font-size: 18px; }

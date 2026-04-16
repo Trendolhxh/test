@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>首页改版 - 交互原型</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="status-tab.css">
+<link rel="stylesheet" href="today-tab.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     CONTROLS PANEL (left sidebar)
+     ═══════════════════════════════════ -->
+<div class="controls">
+  <h3>📱 Tab 切换</h3>
+  <div class="btn-group">
+    <button class="active" onclick="switchTab('status')">状态 Tab</button>
+    <button onclick="switchTab('today')">今日 Tab</button>
+  </div>
+
+  <h3>🌤 状态 Tab 场景</h3>
+  <div class="btn-group" id="status-scenes">
+    <button class="active" onclick="switchScene('morning')">☀️ 晨起（正常）</button>
+    <button onclick="switchScene('morning_up')">📈 晨起（高能↑大幅）</button>
+    <button onclick="switchScene('morning_down')">📉 晨起（高能↓大幅）</button>
+    <button onclick="switchScene('daytime')">🕐 日间查看</button>
+    <button onclick="switchScene('night_ready')">🟢 夜间 · 已准备好</button>
+    <button onclick="switchScene('night_almost')">🟡 夜间 · 接近准备好</button>
+    <button onclick="switchScene('night_not_ready')">🔴 夜间 · 未准备好</button>
+  </div>
+
+  <h3>📅 今日 Tab 场景</h3>
+  <div class="btn-group" id="today-scenes">
+    <button class="active" onclick="switchTodayScene('forecast')">🌅 预测态（晨起）</button>
+    <button onclick="switchTodayScene('realtime')">⏱ 实时进度态</button>
+    <button onclick="switchTodayScene('review')">🌙 回顾态（夜间）</button>
+  </div>
+
+  <h3>⚙️ 特殊状态</h3>
+  <div class="btn-group">
+    <button onclick="switchScene('syncing')">⏳ 数据同步中</button>
+    <button onclick="switchScene('first_use')">🆕 首次使用</button>
+  </div>
+
+  <div class="state-desc" id="state-desc">
+    晨起场景：用户起床后打开 App，查看今日高能时长预估和行动建议。
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     PHONE FRAME
+     ═══════════════════════════════════ -->
+<div class="phone" id="phone">
+  <div class="phone-notch"></div>
+  <div class="phone-statusbar">
+    <span id="status-time">9:41</span>
+    <span class="icons">
+      <svg width="16" height="11" viewBox="0 0 16 11"><rect x="0" y="7" width="3" height="4" rx="0.5" fill="currentColor"/><rect x="4.5" y="4.5" width="3" height="6.5" rx="0.5" fill="currentColor"/><rect x="9" y="2" width="3" height="9" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="2.5" height="11" rx="0.5" fill="currentColor"/></svg>
+      <svg width="15" height="11" viewBox="0 0 15 11"><path d="M7.5 3.2C5.5 3.2 3.7 4 2.4 5.3L1 3.9C2.7 2.2 5 1.2 7.5 1.2s4.8 1 6.5 2.7L12.6 5.3C11.3 4 9.5 3.2 7.5 3.2zm3.7 4L9.8 8.6c-.6-.6-1.4-.9-2.3-.9s-1.7.3-2.3.9L3.8 7.2C4.8 6.2 6.1 5.6 7.5 5.6s2.7.6 3.7 1.6zM7.5 9.8c-.5 0-1 .2-1.3.6l1.3 1.4 1.3-1.4c-.3-.4-.8-.6-1.3-.6z" fill="currentColor"/></svg>
+      <svg width="25" height="11" viewBox="0 0 25 11"><rect x="0" y="0.5" width="21" height="10" rx="2.5" stroke="currentColor" stroke-width="1" fill="none"/><rect x="22" y="3.5" width="2" height="4" rx="0.8" fill="currentColor" opacity="0.4"/><rect x="1.5" y="2" width="18" height="7" rx="1.5" fill="currentColor"/></svg>
+    </span>
+  </div>
+
+  <!-- Sync Bar -->
+  <div class="sync-bar" id="sync-bar">
+    <span class="bar-icon"><span class="spinner-inline"></span></span>
+    <span class="bar-text">数据同步中...</span>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-btn-status" onclick="switchTab('status')">状态</button>
+    <button class="tab-btn" id="tab-btn-today" onclick="switchTab('today')">今日</button>
+  </div>
+
+  <!-- Scrollable Content -->
+  <div class="content">
+
+    <!-- ═══ STATUS TAB ═══ -->
+    <div class="tab-content active" id="tab-status">
+
+      <!-- Layer 1: Day Core Metric -->
+      <div class="core-metric" id="day-metric">
+        <div class="greeting" id="greeting">早上好</div>
+        <div class="metric-value-wrap">
+          <span class="metric-main-value" id="metric-value">7.5</span>
+          <span class="metric-unit">h</span>
+        </div>
+        <div class="metric-delta positive" id="metric-delta">↑ +0.3h vs 昨天</div>
+        <div class="metric-label">今日预估高能时长</div>
+        <div class="metric-windows" id="metric-windows">
+          <span class="metric-window-item"><span class="metric-window-dot"></span>09:30–11:45</span>
+          <span class="metric-window-item"><span class="metric-window-dot"></span>18:45–21:10</span>
+        </div>
+      </div>
+
+      <!-- Layer 1: Night Core Metric (hidden by default) -->
+      <div class="core-metric" id="night-metric" style="display:none">
+        <div class="greeting" id="greeting-night">晚上好</div>
+        <div class="readiness-ring-wrap">
+          <svg viewBox="0 0 140 140" id="readiness-ring">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+            <circle cx="70" cy="70" r="60" fill="none" stroke-width="8" stroke-linecap="round"
+              id="readiness-arc" stroke="#34C759" stroke-dasharray="377" stroke-dashoffset="0"
+              transform="rotate(-90 70 70)"/>
+          </svg>
+          <div class="readiness-center">
+            <div class="readiness-icon" id="readiness-icon">🟢</div>
+            <div class="readiness-label" id="readiness-label">已准备好</div>
+            <div class="readiness-sub" id="readiness-sub"></div>
+          </div>
+        </div>
+        <div class="tomorrow-preview">
+          推荐 <span id="rec-bedtime">22:30</span> 入睡 · 明日预估高能 <strong id="tomorrow-he">7.5h</strong>
+        </div>
+      </div>
+
+      <!-- Layer 2: Smart Digest -->
+      <div class="smart-digest" id="smart-digest">
+        <span class="digest-arrow">展开对话 ›</span>
+        <div class="digest-text" id="digest-text">
+          昨晚深睡 22% 回到健康区间，HRV 也涨了 3ms——今天上午是你的主场
+        </div>
+      </div>
+
+      <!-- Layer 3: Attribution -->
+      <div class="attribution-section" id="attribution-section">
+        <div class="section-title">影响因素</div>
+        <div class="attr-list" id="attr-list"></div>
+      </div>
+
+      <!-- Layer 4: Notable Values -->
+      <div class="notable-section" id="notable-section" style="display:none">
+        <div class="section-title">值得注意</div>
+        <div id="notable-cards"></div>
+      </div>
+
+      <!-- Quick Questions -->
+      <div class="quick-questions" id="quick-questions"></div>
+
+      <!-- Layer 5: Body Data -->
+      <div class="body-data-section" id="body-data">
+        <div class="data-group-title">当前身体数据</div>
+        <div class="data-cards" id="current-data-cards"></div>
+        <div class="data-group-title">睡眠数据</div>
+        <div class="data-cards" id="sleep-data-cards"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TODAY TAB ═══ -->
+    <div class="tab-content" id="tab-today">
+
+      <!-- Energy Curve -->
+      <div class="energy-curve-wrap">
+        <div class="curve-header">
+          <span class="curve-title">24 小时能量</span>
+          <div class="curve-legend">
+            <span class="legend-item"><span class="legend-dot high"></span>高能</span>
+            <span class="legend-item"><span class="legend-dot low"></span>预测</span>
+          </div>
+        </div>
+        <svg class="energy-curve-svg" id="energy-curve" viewBox="0 0 346 140" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="highEnergyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(52,199,89,0.3)"/>
+              <stop offset="100%" stop-color="rgba(52,199,89,0.02)"/>
+            </linearGradient>
+            <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(90,195,215,0.2)"/>
+              <stop offset="100%" stop-color="rgba(90,195,215,0.02)"/>
+            </linearGradient>
+          </defs>
+          <!-- Sleep zone background -->
+          <rect id="sleep-zone" x="0" y="0" width="30" height="140" fill="rgba(94,92,230,0.06)" rx="0"/>
+          <!-- Threshold line -->
+          <line x1="0" y1="55" x2="346" y2="55" stroke="rgba(52,199,89,0.12)" stroke-width="1" stroke-dasharray="4,4"/>
+          <!-- Base area fill -->
+          <path id="curve-area" d="" fill="url(#curveGrad)"/>
+          <!-- High energy fills -->
+          <g id="high-energy-fills"></g>
+          <!-- Curve line (actual) -->
+          <path id="curve-line-actual" d="" fill="none" stroke="rgba(80,190,210,0.7)" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Curve line (predicted/future) -->
+          <path id="curve-line-predicted" d="" fill="none" stroke="rgba(80,190,210,0.35)" stroke-width="2" stroke-dasharray="6,4" stroke-linecap="round"/>
+          <!-- Action pin markers -->
+          <g id="curve-pins"></g>
+          <!-- Now line -->
+          <line id="now-line" x1="0" y1="0" x2="0" y2="140" stroke="rgba(255,55,95,0.4)" stroke-width="1.5" stroke-dasharray="4,3" style="display:none"/>
+          <text id="now-label" x="0" y="10" fill="#FF375F" font-size="9" font-weight="600" text-anchor="middle" style="display:none">现在</text>
+        </svg>
+        <div class="curve-time-labels">
+          <span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>00</span>
+        </div>
+      </div>
+
+      <!-- Action Pins List -->
+      <div class="section-title" style="margin: 0 0 10px; color: #999;">今日建议</div>
+      <div class="action-pins" id="action-pins"></div>
+
+      <!-- Sleep Window Card -->
+      <div class="sleep-window-card" id="sleep-window-card">
+        <div class="sw-header">
+          <span class="sw-icon">🌙</span>
+          <span class="sw-title">入睡窗口</span>
+          <span style="flex:1"></span>
+          <span class="sw-arrow">›</span>
+        </div>
+        <div class="sw-body">
+          <div class="sw-times">
+            <div class="sw-time-item">
+              <div class="sw-time-label">就寝</div>
+              <div class="sw-time-val" id="sw-bedtime">22:30</div>
+            </div>
+            <div class="sw-time-item">
+              <div class="sw-time-label">起床</div>
+              <div class="sw-time-val" id="sw-wake">06:15</div>
+            </div>
+          </div>
+          <div class="sw-predict">
+            明日高能
+            <strong id="sw-predict-val">7.5h</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /phone -->
+
+<script src="mock-data.js"></script>
+<script src="render-status.js"></script>
+<script src="render-today.js"></script>
+<script src="state.js"></script>
+</body>
+</html>
