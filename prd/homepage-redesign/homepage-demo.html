@@ -588,6 +588,19 @@
     border-radius: 4px; font-weight: 500;
     letter-spacing: 0.3px;
   }
+  /* v1.3：简化版——仅文字，无数值、无进度条 */
+  .night-recap-strip.night-recap-strip-simple {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+  .night-recap-strip-simple .night-recap-strip-sep {
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+  }
+  .night-recap-strip-simple .night-recap-strip-zero-chip {
+    margin-left: 0;
+  }
 
   /* ── 入睡准备度：状态词 + 推荐入睡时间（并排，无分值） ── */
   .sleep-readiness-state-row {
@@ -1268,6 +1281,12 @@
   .iphone-frame.night-mode .today-dock-chip:hover {
     background: rgba(255,255,255,0.14); color: var(--night-text-primary);
   }
+  /* "+" 前缀：表示 dock chips 是"添加到今天安排"的动作入口 */
+  .today-dock-chip-prefix {
+    display: inline-block; margin-right: 4px;
+    font-weight: 600; color: var(--brand-green);
+    font-size: 13px; line-height: 1;
+  }
 
   /* Dock 收起态（生成中 / 生成完毕） */
   .today-dock.state-generating .today-dock-default,
@@ -1563,6 +1582,78 @@
   .timeline-state-badge.realtime { background: rgba(0,122,255,0.1); color: #007AFF; }
   .timeline-state-badge.review { background: rgba(142,142,147,0.1); color: #8E8E93; }
 
+  /* ── 今日 Tab 顶部「恒定锚点胶囊」：跨 Tab 共享核心指标的浓缩版 ── */
+  .today-core-capsule {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; margin-bottom: 12px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  body.night-mode-global .today-core-capsule,
+  .phone.night-mode .today-core-capsule {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.08);
+  }
+  .today-core-capsule-label {
+    font-size: 11.5px; color: var(--text-secondary);
+    letter-spacing: 0.2px;
+  }
+  .night-mode .today-core-capsule-label {
+    color: var(--night-text-secondary);
+  }
+  .today-core-capsule-main {
+    display: flex; align-items: baseline; gap: 4px;
+  }
+  .today-core-capsule-value {
+    font-size: 22px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+  }
+  .night-mode .today-core-capsule-value {
+    color: var(--night-text-primary);
+  }
+  .today-core-capsule-unit {
+    font-size: 12px; color: var(--text-secondary);
+  }
+  .night-mode .today-core-capsule-unit {
+    color: var(--night-text-secondary);
+  }
+  .today-core-capsule-delta {
+    font-size: 11px; padding: 2px 6px;
+    border-radius: 6px; font-weight: 500;
+  }
+  .today-core-capsule-delta.positive { color: var(--brand-green); background: rgba(52,199,89,0.1); }
+  .today-core-capsule-delta.negative { color: var(--warning-orange); background: rgba(255,149,0,0.1); }
+  .today-core-capsule-delta.neutral  { color: #8E8E93; background: rgba(142,142,147,0.1); }
+  .today-core-capsule-spacer { flex: 1; }
+  .today-core-capsule-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+  }
+  .today-core-capsule-dot.cool-white   { background: #E8F0F5; color: rgba(220,232,245,0.6); }
+  .today-core-capsule-dot.amber-yellow { background: #F5C85C; color: rgba(245,200,92,0.6); }
+  .today-core-capsule-dot.amber-orange { background: #F59848; color: rgba(245,152,72,0.6); }
+  .today-core-capsule-bedtime {
+    font-size: 11px; color: var(--text-secondary);
+  }
+  .night-mode .today-core-capsule-bedtime {
+    color: var(--night-text-secondary);
+  }
+  .today-core-capsule-bedtime b {
+    color: var(--text-primary); font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .night-mode .today-core-capsule-bedtime b {
+    color: var(--night-text-primary);
+  }
+  .today-core-capsule.empty {
+    justify-content: center; color: var(--text-secondary);
+    font-size: 12px; padding: 14px;
+  }
+
   /* ── Bottom Input Bar ── */
   .bottom-bar {
     position: relative; z-index: 10;
@@ -1668,7 +1759,7 @@
       <!-- Layer 3: Attribution (collapsed by default) -->
       <div class="attribution-section" id="attribution-section">
         <div class="attr-toggle" id="attr-toggle">
-          <span class="attr-toggle-label">归因分析</span>
+          <span class="attr-toggle-label">为什么是这样</span>
           <span class="attr-toggle-arrow">›</span>
         </div>
         <div class="attr-body" id="attr-body" style="display:none;">
@@ -1687,7 +1778,9 @@
 
     <!-- ══ Today Tab ══ -->
     <div class="tab-content" id="tab-today">
-      <span class="timeline-state-badge" id="timeline-badge">预测态</span>
+      <!-- 恒定锚点胶囊：跨 Tab 共享的核心指标（白天=今日高能时长，夜间=入睡准备度） -->
+      <div class="today-core-capsule" id="today-core-capsule"></div>
+      <span class="timeline-state-badge" id="timeline-badge">今天计划</span>
       <!-- 今日特色总结（顶部一句 data-driven 判断，见 PRD §7.3） -->
       <div id="today-highlight-slot"></div>
       <!-- Vertical 24h Timeline (dynamically rendered) -->
@@ -2072,7 +2165,7 @@ var SCENES = [
         { name: '睡眠压力', form: 'unidirectional', direction: 'higher_better',
           value: 13.5, unit: 'h', track_min: 6, track_max: 24,
           ideal_min: 14, ideal_max: 20,
-          deviation_side: 'low', status_word: '略浅' },
+          deviation_side: 'low', status_word: '接近充足' },
       ],
       attributions: [
         { sub_score: 'f_W', category_label: '近端唤起', evidence_layer: 'T2_inferred',
@@ -2083,7 +2176,7 @@ var SCENES = [
           deduction_points: 5, actionable_now: true },
       ]
     },
-    digest: '心率还在慢慢降，距上次运动才 2 小时——再等 25 分钟会更容易入睡',
+    digest: '心率正在慢慢下降，距上次运动约 2 小时——放松类活动会让过渡更顺',
     questions: ['运动后多久适合睡觉', '怎么加速放松', '明天有重要的事怎么准备'],
     suggestions: [
       { id: 's1', icon: '☕', label: '喝咖啡', time: '09:00', dosage: '1 杯', reason: '晨间提神', impact_h: 0.3, status: 'done' },
@@ -2127,7 +2220,7 @@ var SCENES = [
         { name: '睡眠压力', form: 'unidirectional', direction: 'higher_better',
           value: 11, unit: 'h', track_min: 6, track_max: 24,
           ideal_min: 14, ideal_max: 20,
-          deviation_side: 'low', status_word: '偏浅' },
+          deviation_side: 'low', status_word: '仍需累积' },
       ],
       attributions: [
         { sub_score: 'f_W', category_label: '近端唤起', evidence_layer: 'T3_behavior',
@@ -2200,14 +2293,14 @@ function renderDayCoreMetric(scene) {
   var dSign = d > 0 ? '+' : '';
   var valColor = val < 4 ? 'color:var(--warning-orange)' : val >= 10 ? 'color:var(--brand-green)' : '';
 
-  // Quality tier
-  var tier, tierCls, tierIcon, tierMsg;
+  // Quality tier (仅用于槽内色阶；不再输出文字 CTA)
+  var tier;
   if (val >= 10) {
-    tier = 'excellent'; tierCls = 'excellent'; tierIcon = '💪'; tierMsg = '精力满格，好好利用今天！';
+    tier = 'excellent';
   } else if (val >= 4) {
-    tier = 'normal'; tierCls = 'normal'; tierIcon = '👍'; tierMsg = '状态正常，坚持优化作息冲击 10h+';
+    tier = 'normal';
   } else {
-    tier = 'poor'; tierCls = 'poor'; tierIcon = '⚠️'; tierMsg = '精力偏低，注意休息和睡眠质量';
+    tier = 'poor';
   }
 
   // Tank bar calculations
@@ -2221,16 +2314,12 @@ function renderDayCoreMetric(scene) {
   var goalReached = val >= 10;
   var remainColor = val < 4 ? 'orange' : 'green';
 
-  // Consumed / remaining label text
+  // Consumed / remaining label text —— 仅在已消耗时展示"已用/剩余"，避免与顶部主数字重复
   var tankLabelsHtml = '';
   if (consumed > 0) {
     tankLabelsHtml =
       '<span class="consumed">已用 ' + consumed + 'h</span>' +
       '<span class="remaining ' + remainColor + '">剩余 ' + remaining + 'h</span>';
-  } else {
-    tankLabelsHtml =
-      '<span class="consumed"></span>' +
-      '<span class="remaining ' + remainColor + '">全部可用 ' + val + 'h</span>';
   }
 
   // High window slots
@@ -2254,12 +2343,7 @@ function renderDayCoreMetric(scene) {
         '</div>' +
         '<div class="energy-tank-goal' + (goalReached ? ' reached' : '') + '" style="left:' + goalPct + '%"></div>' +
       '</div>' +
-      '<div class="energy-tank-labels">' + tankLabelsHtml + '</div>' +
-    '</div>' +
-    // Quality tier
-    '<div class="energy-tier ' + tierCls + '">' +
-      '<span class="energy-tier-icon">' + tierIcon + '</span>' +
-      '<span>' + tierMsg + '</span>' +
+      (tankLabelsHtml ? '<div class="energy-tank-labels">' + tankLabelsHtml + '</div>' : '') +
     '</div>' +
     // High windows
     '<div class="core-metric-slots">' + slotsHtml + '</div>';
@@ -2310,26 +2394,19 @@ function renderCompass(c) {
   return html;
 }
 
-// v1.2：布局对齐白天高能时长 —— 顶部先显示"今日高能时长 · 已归零"过渡条，
-// 然后进入入睡准备度（3 状态信号灯 + 状态词 + 推荐入睡），不展示分值/子分/明日预估。
+// v1.3：夜间顶部过渡条只保留"今日高能 · 已结束"文字，
+// 不再展示具体 todayH 数值（避免与"今日高能时长"主指标语义冲突，
+// 且 23:00 之后回顾数据意义有限）。然后进入入睡准备度。
 function renderNightCoreMetric(scene) {
   var r = scene.sleepReadiness;
   var b = bandInfo(r.band);
 
-  // ── 顶部：今日高能时长已归零过渡条（复用白天能量槽视觉语言，去饱和） ──
-  var todayH = (r.today_high_energy_h != null) ? r.today_high_energy_h : null;
-  var recapValueHtml = todayH != null
-    ? '<b>' + todayH + 'h</b><span class="night-recap-strip-zero-chip">已归零</span>'
-    : '<span class="night-recap-strip-zero-chip">已归零</span>';
+  // ── 顶部：已结束过渡条（纯文字，无数值） ──
   var recapHtml =
-    '<div class="night-recap-strip">' +
-      '<div class="night-recap-strip-head">' +
-        '<span class="night-recap-strip-label">今日高能时长</span>' +
-        '<span class="night-recap-strip-value">' + recapValueHtml + '</span>' +
-      '</div>' +
-      '<div class="night-recap-strip-bar">' +
-        '<div class="night-recap-strip-bar-fill" style="width:0%"></div>' +
-      '</div>' +
+    '<div class="night-recap-strip night-recap-strip-simple">' +
+      '<span class="night-recap-strip-label">今日高能</span>' +
+      '<span class="night-recap-strip-sep">·</span>' +
+      '<span class="night-recap-strip-zero-chip">已结束</span>' +
     '</div>';
 
   // ── 信号灯：仅颜色展现，不展示分数 ──
@@ -2369,6 +2446,59 @@ function renderNightCoreMetric(scene) {
     '</div>' +
     topTextHtml +
     compassHtml;
+}
+
+// ══════════════════════════════════════════
+// RENDER: Today Tab 顶部恒定锚点胶囊（PRD §3.1a / §5.0）
+// 白天：今日高能时长 {值}h {delta}
+// 夜间：入睡准备度信号灯 {状态词} · 推荐入睡 {time}
+// 新用户/无数据：文字占位
+// ══════════════════════════════════════════
+function renderTodayCoreCapsule(scene) {
+  var el = $('today-core-capsule');
+  if (!el) return;
+
+  // 空态
+  if (scene.isNight && !scene.sleepReadiness) {
+    el.className = 'today-core-capsule empty';
+    el.innerHTML = '连接设备后可查看今日锚点';
+    return;
+  }
+  if (!scene.isNight && !scene.attribution) {
+    el.className = 'today-core-capsule empty';
+    el.innerHTML = '连接设备后可查看今日高能时长';
+    return;
+  }
+
+  el.className = 'today-core-capsule';
+
+  if (scene.isNight && scene.sleepReadiness) {
+    // 夜间：信号灯 + 状态词 + 推荐入睡
+    var r = scene.sleepReadiness;
+    var b = bandInfo(r.band);
+    var stateWord = r.band_status_word || b.label;
+    el.innerHTML =
+      '<span class="today-core-capsule-dot ' + b.cls + '"></span>' +
+      '<span class="today-core-capsule-label">入睡准备度</span>' +
+      '<span class="today-core-capsule-value" style="font-size:15px;font-weight:600;">' + stateWord + '</span>' +
+      '<span class="today-core-capsule-spacer"></span>' +
+      '<span class="today-core-capsule-bedtime">推荐入睡 <b>' + r.recommended_bedtime + '</b></span>';
+  } else {
+    // 白天：今日高能时长数值 + delta
+    var a = scene.attribution;
+    var val = a.high_energy_h;
+    var d = a.delta;
+    var cls = d > 0 ? 'positive' : d < 0 ? 'negative' : 'neutral';
+    var arrow = d > 0 ? '↑' : d < 0 ? '↓' : '';
+    var dSign = d > 0 ? '+' : '';
+    el.innerHTML =
+      '<span class="today-core-capsule-label">今日高能时长</span>' +
+      '<div class="today-core-capsule-main">' +
+        '<span class="today-core-capsule-value">' + val + '</span>' +
+        '<span class="today-core-capsule-unit">h</span>' +
+      '</div>' +
+      '<span class="today-core-capsule-delta ' + cls + '">' + arrow + ' ' + dSign + d + 'h</span>';
+  }
 }
 
 // ══════════════════════════════════════════
@@ -2436,7 +2566,7 @@ function renderAttribution(scene) {
       return;
     }
     section.style.display = 'block';
-    toggle.querySelector('.attr-toggle-label').textContent = '可能原因（最多 3 条）';
+    toggle.querySelector('.attr-toggle-label').textContent = '为什么是这样';
     var maxDed = Math.max.apply(null, attrs.map(function(a) { return a.deduction_points; }).concat([1]));
 
     list.innerHTML = attrs.map(function(a) {
@@ -2469,7 +2599,7 @@ function renderAttribution(scene) {
     return;
   }
   section.style.display = 'block';
-  toggle.querySelector('.attr-toggle-label').textContent = '归因分析';
+  toggle.querySelector('.attr-toggle-label').textContent = '为什么是这样';
   var factors = scene.attribution.factors;
   var maxC = Math.max.apply(null, factors.map(function(f) { return Math.abs(f.contribution_h); }).concat([0.1]));
 
@@ -2705,8 +2835,8 @@ function renderVerticalTimeline(scene) {
     return;
   }
 
-  // Badge
-  var stateMap = { predictive: '预测态', realtime: '实时态', review: '回顾态' };
+  // Badge —— v0.4 用户面标签（PRD §5.3）：今天计划 / 当前 / 今日回顾
+  var stateMap = { predictive: '今天计划', realtime: '当前', review: '今日回顾' };
   badge.textContent = stateMap[scene.timelineState] || '';
   badge.className = 'timeline-state-badge ' + scene.timelineState;
 
@@ -2906,20 +3036,32 @@ function mockGenerateSuggestions(text) {
 function renderDockChips() {
   var chips = $('today-dock-chips');
   if (!chips) return;
+  // dock chips 与半层 chips 互斥（PRD §7.6.3）：半层打开时 dock 收起
+  var sheetOpen = $('plan-sheet-mask') && $('plan-sheet-mask').classList.contains('open');
   // 无历史数据时 chips 不显示（PRD §7.6.2）
   var hasHistory = currentScene && currentScene.energyCurve && currentScene.energyCurve.length > 0;
-  if (!hasHistory) {
+  if (!hasHistory || sheetOpen) {
     chips.innerHTML = '';
   } else {
     var weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     var wd = weekdays[new Date().getDay()];
+    // dock chips 用 "+" 前缀表示"添加动作"（PRD §7.6.2.2）
     chips.innerHTML =
-      '<span class="today-dock-chip" onclick="useChip(\'yesterday\')">和昨天一样</span>' +
-      '<span class="today-dock-chip" onclick="useChip(\'lastweek\')">和上周' + wd + '一样</span>';
+      '<span class="today-dock-chip" onclick="useChip(\'yesterday\')"><span class="today-dock-chip-prefix">+</span>和昨天一样</span>' +
+      '<span class="today-dock-chip" onclick="useChip(\'lastweek\')"><span class="today-dock-chip-prefix">+</span>和上周' + wd + '一样</span>';
   }
-  // 同步到半层里的 chips
+  // 同步到半层里的 chips（半层内仍展示为可快速填充的备选，保持纯文字无前缀）
   var sheetChips = $('plan-input-chips');
-  if (sheetChips) sheetChips.innerHTML = chips.innerHTML;
+  if (sheetChips) {
+    if (!hasHistory) {
+      sheetChips.innerHTML = '';
+    } else {
+      var wd2 = ['日','一','二','三','四','五','六'][new Date().getDay()];
+      sheetChips.innerHTML =
+        '<span class="today-dock-chip" onclick="useChip(\'yesterday\')">和昨天一样</span>' +
+        '<span class="today-dock-chip" onclick="useChip(\'lastweek\')">和上周' + wd2 + '一样</span>';
+    }
+  }
 }
 
 function useChip(type) {
@@ -2935,6 +3077,8 @@ function openPlanSheet(mode, voiceHint) {
   var mask = $('plan-sheet-mask');
   var desiredMode = mode || 'input';
   mask.classList.add('open');
+  // 半层打开 → dock chips 收起（PRD §7.6.3 exclusivity）
+  renderDockChips();
 
   // 二次输入空白重开（PRD §7.6.6）：只有 idle → input 时才清
   if (desiredMode === 'input' && PLAN_STATE.mode !== 'generating' && PLAN_STATE.mode !== 'ready') {
@@ -2964,6 +3108,8 @@ function reopenPlanSheet() {
 function collapsePlanSheet() {
   $('plan-sheet-mask').classList.remove('open');
   updateDockState();
+  // 半层收起 → dock chips 恢复（PRD §7.6.3）
+  renderDockChips();
 }
 
 function setPlanSheetMode(mode) {
@@ -3234,6 +3380,7 @@ function applyScene(scene) {
   renderBodyData(scene);
 
   // ── Today Tab ──
+  renderTodayCoreCapsule(scene);
   renderVerticalTimeline(scene);
   // 重置安排输入状态（切 scene = 切"今天"，清空上一条输入与生成结果）
   PLAN_STATE.mode = 'idle';
