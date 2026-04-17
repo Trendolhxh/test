@@ -1202,65 +1202,302 @@
     color: var(--night-text-primary);
   }
 
-  /* ── Seed Event Entry (+ 按钮) ── */
-  .seed-entry {
-    display: flex; align-items: center; justify-content: space-between;
-    margin: 0 0 14px 0;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.03);
-    border: 1px dashed rgba(0,0,0,0.12);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .seed-entry:hover { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.2); }
-  .seed-entry-text { font-size: 13px; color: var(--text-secondary); }
-  .seed-entry-plus {
-    width: 22px; height: 22px; border-radius: 50%;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--brand-green); color: #fff;
-    font-size: 15px; font-weight: 600; line-height: 1;
-  }
-  .iphone-frame.night-mode .seed-entry {
-    background: rgba(255,255,255,0.05);
-    border-color: rgba(255,255,255,0.12);
-  }
-  .iphone-frame.night-mode .seed-entry-text { color: var(--night-text-secondary); }
+  /* ── Today Bottom Dock (吸底交互区，替代 Smart Digest 对话入口) ── */
+  /* 今日 Tab 激活时隐藏全局 bottom-bar，只显示结构化 dock */
+  .iphone-frame.on-today .bottom-bar { display: none; }
 
-  /* ── Seed Event Sheet (快捷录入浮层) ── */
-  .seed-sheet-mask {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,0.3);
-    display: none; align-items: flex-end; justify-content: center;
-    z-index: 30;
+  .today-dock {
+    display: none;
+    position: relative; z-index: 10;
+    background: var(--bottom-gradient);
+    padding: 10px 16px 28px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    transition: background 0.4s ease;
   }
-  .seed-sheet-mask.open { display: flex; }
-  .seed-sheet {
-    width: 100%;
-    background: #fff;
-    border-radius: 16px 16px 0 0;
-    padding: 16px 16px 28px;
-    box-shadow: 0 -6px 20px rgba(0,0,0,0.15);
+  .iphone-frame.on-today .today-dock { display: block; }
+  .iphone-frame.night-mode .today-dock {
+    background: linear-gradient(180deg, rgba(30,28,60,0.9) 0%, rgba(26,26,62,1) 100%);
+    border-top-color: rgba(255,255,255,0.08);
   }
-  .seed-sheet-title {
-    font-size: 15px; font-weight: 600; color: var(--text-primary);
-    margin-bottom: 4px;
+
+  /* Dock 默认态：两行 */
+  .today-dock-row-input {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 22px;
+    padding: 8px 14px;
   }
-  .seed-sheet-desc {
-    font-size: 12px; color: var(--text-secondary);
-    margin-bottom: 14px;
+  .iphone-frame.night-mode .today-dock-row-input { background: rgba(255,255,255,0.08); }
+  .today-dock-input-field {
+    flex: 1;
+    background: transparent; border: none; outline: none;
+    font-size: 13px; color: var(--text-primary);
+    font-family: inherit;
   }
-  .seed-sheet-option {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 10px;
-    border-radius: 10px;
+  .today-dock-input-field::placeholder { color: var(--text-secondary); }
+  .iphone-frame.night-mode .today-dock-input-field { color: var(--night-text-primary); }
+  .iphone-frame.night-mode .today-dock-input-field::placeholder { color: var(--night-text-secondary); }
+  .today-dock-mic {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.06);
     cursor: pointer;
-    transition: background 0.15s ease;
+    flex-shrink: 0;
   }
-  .seed-sheet-option:hover { background: rgba(0,0,0,0.04); }
-  .seed-sheet-option-icon { font-size: 20px; width: 32px; text-align: center; }
-  .seed-sheet-option-label { font-size: 14px; color: var(--text-primary); font-weight: 500; }
-  .seed-sheet-option-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .today-dock-mic svg { width: 14px; height: 14px; fill: var(--text-secondary); }
+  .iphone-frame.night-mode .today-dock-mic { background: rgba(255,255,255,0.1); }
+  .iphone-frame.night-mode .today-dock-mic svg { fill: var(--night-text-secondary); }
+
+  .today-dock-chips {
+    display: flex; gap: 8px; margin-top: 8px;
+  }
+  .today-dock-chip {
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: rgba(0,0,0,0.04);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .today-dock-chip:hover { background: rgba(0,0,0,0.08); color: var(--text-primary); }
+  .iphone-frame.night-mode .today-dock-chip {
+    background: rgba(255,255,255,0.08); color: var(--night-text-secondary);
+  }
+  .iphone-frame.night-mode .today-dock-chip:hover {
+    background: rgba(255,255,255,0.14); color: var(--night-text-primary);
+  }
+
+  /* Dock 收起态（生成中 / 生成完毕） */
+  .today-dock.state-generating .today-dock-default,
+  .today-dock.state-ready .today-dock-default { display: none; }
+  .today-dock-collapsed {
+    display: none;
+    align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 22px;
+    font-size: 13px;
+    background: rgba(0,0,0,0.04);
+    cursor: pointer;
+  }
+  .iphone-frame.night-mode .today-dock-collapsed { background: rgba(255,255,255,0.08); }
+  .today-dock.state-generating .today-dock-collapsed,
+  .today-dock.state-ready .today-dock-collapsed { display: flex; }
+  .today-dock.state-generating .today-dock-collapsed {
+    color: var(--text-secondary);
+  }
+  .today-dock.state-ready .today-dock-collapsed {
+    background: linear-gradient(90deg, rgba(52,199,89,0.15), rgba(52,199,89,0.05));
+    color: var(--brand-green); font-weight: 500;
+  }
+  .iphone-frame.night-mode .today-dock.state-ready .today-dock-collapsed {
+    background: linear-gradient(90deg, rgba(74,222,128,0.18), rgba(74,222,128,0.05));
+    color: #4ADE80;
+  }
+  .today-dock-collapsed-cta {
+    font-size: 12px; color: inherit; opacity: 0.85;
+  }
+  .dock-spin {
+    width: 12px; height: 12px; margin-right: 6px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-top-color: var(--text-secondary);
+    border-radius: 50%;
+    animation: dock-spin 0.9s linear infinite;
+    display: inline-block; vertical-align: middle;
+  }
+  @keyframes dock-spin { to { transform: rotate(360deg); } }
+
+  /* ── Plan Sheet (半层：描述今日安排 → 生成建议 → 确认) ── */
+  .plan-sheet-mask {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: none;
+    z-index: 40;
+    transition: opacity 0.25s ease;
+  }
+  .plan-sheet-mask.open { display: block; }
+  .plan-sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 62%;
+    background: #fff;
+    border-radius: 18px 18px 0 0;
+    padding: 10px 18px 22px;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.18);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .plan-sheet-mask.open .plan-sheet { transform: translateY(0); }
+  .iphone-frame.night-mode .plan-sheet {
+    background: #1e1e2b;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.5);
+  }
+  .plan-sheet-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: rgba(0,0,0,0.15);
+    margin: 4px auto 10px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .iphone-frame.night-mode .plan-sheet-handle { background: rgba(255,255,255,0.2); }
+  .plan-sheet-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+  }
+  .plan-sheet-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .iphone-frame.night-mode .plan-sheet-title { color: var(--night-text-primary); }
+  .plan-sheet-close {
+    font-size: 13px; color: var(--text-secondary);
+    cursor: pointer; padding: 4px 8px;
+  }
+  .iphone-frame.night-mode .plan-sheet-close { color: var(--night-text-secondary); }
+  .plan-sheet-body {
+    flex: 1; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .plan-sheet-footer {
+    flex-shrink: 0; padding-top: 10px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    display: flex; gap: 8px;
+  }
+  .iphone-frame.night-mode .plan-sheet-footer { border-top-color: rgba(255,255,255,0.1); }
+  .plan-sheet-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 14px; font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+  }
+  .plan-sheet-btn-primary {
+    background: var(--brand-green); color: #fff;
+  }
+  .plan-sheet-btn-primary:disabled {
+    background: rgba(0,0,0,0.1); color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+  .plan-sheet-btn-ghost {
+    background: transparent; color: var(--text-secondary);
+    flex: 0 0 auto; padding: 12px 14px;
+  }
+  .iphone-frame.night-mode .plan-sheet-btn-ghost { color: var(--night-text-secondary); }
+
+  /* 三态 */
+  .plan-sheet .state-input,
+  .plan-sheet .state-generating,
+  .plan-sheet .state-confirm { display: none; }
+  .plan-sheet.mode-input .state-input { display: block; }
+  .plan-sheet.mode-generating .state-generating { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 14px; }
+  .plan-sheet.mode-confirm .state-confirm { display: block; }
+
+  /* Input state */
+  .plan-input-textarea {
+    width: 100%;
+    min-height: 72px;
+    padding: 12px 14px;
+    font-size: 14px; line-height: 1.5;
+    color: var(--text-primary);
+    background: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  .plan-input-textarea::placeholder { color: var(--text-secondary); }
+  .iphone-frame.night-mode .plan-input-textarea {
+    background: rgba(255,255,255,0.05); color: var(--night-text-primary);
+    border-color: rgba(255,255,255,0.1);
+  }
+  .plan-input-hint {
+    font-size: 11px; color: var(--text-secondary);
+    margin-top: 6px; line-height: 1.5;
+  }
+  .plan-input-chips {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+  }
+
+  /* Generating state */
+  .plan-gen-spin {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(0,0,0,0.08);
+    border-top-color: var(--brand-green);
+    border-radius: 50%;
+    animation: dock-spin 0.9s linear infinite;
+  }
+  .plan-gen-text {
+    font-size: 13px; color: var(--text-secondary);
+    text-align: center; max-width: 220px; line-height: 1.6;
+  }
+  .plan-gen-hint {
+    font-size: 11px; color: var(--text-secondary); opacity: 0.7;
+    margin-top: 4px;
+  }
+
+  /* Confirm state */
+  .plan-confirm-echo {
+    font-size: 12px; color: var(--text-secondary);
+    padding: 8px 10px;
+    background: rgba(0,0,0,0.03);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .iphone-frame.night-mode .plan-confirm-echo {
+    background: rgba(255,255,255,0.05); color: var(--night-text-secondary);
+  }
+  .plan-confirm-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .plan-confirm-count { font-size: 12px; color: var(--text-secondary); }
+  .plan-confirm-toggle-all {
+    font-size: 12px; color: var(--brand-green);
+    cursor: pointer; padding: 2px 4px;
+  }
+  .plan-sugg-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 4px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+  }
+  .plan-sugg-row:first-of-type { border-top: 0; }
+  .iphone-frame.night-mode .plan-sugg-row { border-top-color: rgba(255,255,255,0.08); }
+  .plan-sugg-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.25);
+    flex-shrink: 0; margin-top: 2px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .plan-sugg-check.checked {
+    background: var(--brand-green); border-color: var(--brand-green);
+  }
+  .plan-sugg-check.checked::after {
+    content: ''; width: 5px; height: 9px;
+    border: solid #fff; border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+  .plan-sugg-content { flex: 1; min-width: 0; }
+  .plan-sugg-top { display: flex; align-items: center; gap: 6px; }
+  .plan-sugg-icon { font-size: 15px; }
+  .plan-sugg-time { font-size: 12px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .plan-sugg-label { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+  .iphone-frame.night-mode .plan-sugg-label { color: var(--night-text-primary); }
+  .plan-sugg-cause {
+    font-size: 12px; color: var(--text-secondary);
+    margin-top: 2px; line-height: 1.5;
+  }
+  .plan-sugg-impact {
+    font-size: 11px; color: var(--brand-green);
+    margin-top: 3px; font-variant-numeric: tabular-nums;
+  }
 
   /* ── Pin cause text (因果式文案，补在 label 后) ── */
   .v-pin-tag .pin-tag-cause {
@@ -1453,49 +1690,78 @@
       <span class="timeline-state-badge" id="timeline-badge">预测态</span>
       <!-- 今日特色总结（顶部一句 data-driven 判断，见 PRD §7.3） -->
       <div id="today-highlight-slot"></div>
-      <!-- 种子事件快捷录入入口（见 PRD §7.6） -->
-      <div class="seed-entry" id="seed-entry" onclick="openSeedSheet()">
-        <span class="seed-entry-text">今天有什么特别的事？</span>
-        <span class="seed-entry-plus">+</span>
-      </div>
       <!-- Vertical 24h Timeline (dynamically rendered) -->
       <div class="v-timeline" id="v-timeline"></div>
       <div style="height:20px;flex-shrink:0;"></div>
     </div>
+  </div>
 
-    <!-- 种子事件快捷录入浮层（4 类预设，见 PRD §7.6） -->
-    <div class="seed-sheet-mask" id="seed-sheet-mask" onclick="if(event.target===this)closeSeedSheet()">
-      <div class="seed-sheet">
-        <div class="seed-sheet-title">今天有什么特别的事？</div>
-        <div class="seed-sheet-desc">选择后系统会围绕它重新排布建议</div>
-        <div class="seed-sheet-option" onclick="selectSeed('task')">
-          <div class="seed-sheet-option-icon">📌</div>
-          <div>
-            <div class="seed-sheet-option-label">有个重要任务 / 会议</div>
-            <div class="seed-sheet-option-desc">系统围绕它生成前后咖啡 / 小睡建议</div>
-          </div>
+  <!-- 今日 Tab 吸底交互区（PRD §7.6；仅当今日 Tab 激活时显示，与 .bottom-bar 互斥） -->
+  <div class="today-dock" id="today-dock">
+    <!-- 默认态：输入框 + 麦克风 + chips -->
+    <div class="today-dock-default">
+      <div class="today-dock-row-input">
+        <input type="text" class="today-dock-input-field" id="today-dock-input"
+               placeholder="今天有什么特别安排？"
+               onfocus="openPlanSheet('input')" readonly>
+        <div class="today-dock-mic" onclick="openPlanSheet('input', true)" title="语音输入">
+          <svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
         </div>
-        <div class="seed-sheet-option" onclick="selectSeed('social')">
-          <div class="seed-sheet-option-icon">🍽️</div>
-          <div>
-            <div class="seed-sheet-option-label">今晚有饭局 / 应酬</div>
-            <div class="seed-sheet-option-desc">调整入睡窗口和明日预期</div>
-          </div>
+      </div>
+      <div class="today-dock-chips" id="today-dock-chips">
+        <!-- chips 动态渲染：和昨天一样 / 和上周 {weekday} 一样；无历史则不渲染 -->
+      </div>
+    </div>
+    <!-- 收起态：生成中 / 生成完毕（点击重新拉起半层） -->
+    <div class="today-dock-collapsed" id="today-dock-collapsed" onclick="reopenPlanSheet()">
+      <span id="today-dock-collapsed-text"><span class="dock-spin"></span>正在生成建议...</span>
+      <span class="today-dock-collapsed-cta" id="today-dock-collapsed-cta"></span>
+    </div>
+  </div>
+
+  <!-- 今日安排半层（三态：输入 / 生成中 / 确认） -->
+  <div class="plan-sheet-mask" id="plan-sheet-mask" onclick="if(event.target===this)collapsePlanSheet()">
+    <div class="plan-sheet" id="plan-sheet">
+      <div class="plan-sheet-handle" onclick="collapsePlanSheet()"></div>
+      <div class="plan-sheet-header">
+        <div class="plan-sheet-title" id="plan-sheet-title">今天有什么特别安排？</div>
+        <div class="plan-sheet-close" onclick="collapsePlanSheet()">取消</div>
+      </div>
+      <div class="plan-sheet-body">
+        <!-- 输入态 -->
+        <div class="state-input">
+          <textarea class="plan-input-textarea" id="plan-input-textarea"
+                    placeholder="下午 3 点有个重要会议&#10;晚上要加班到 9 点&#10;今天要去接孩子"></textarea>
+          <div class="plan-input-hint">提示：可同时描述多件事，系统会分别生成建议。支持语音输入。</div>
+          <div class="plan-input-chips" id="plan-input-chips"></div>
         </div>
-        <div class="seed-sheet-option" onclick="selectSeed('exercise')">
-          <div class="seed-sheet-option-icon">💪</div>
-          <div>
-            <div class="seed-sheet-option-label">想安排运动</div>
-            <div class="seed-sheet-option-desc">调整前后咖啡因 / 餐饮建议</div>
-          </div>
+        <!-- 生成中态 -->
+        <div class="state-generating">
+          <div class="plan-gen-spin"></div>
+          <div class="plan-gen-text" id="plan-gen-text">正在为你生成建议…</div>
+          <div class="plan-gen-hint">你可以下拉收起等待</div>
         </div>
-        <div class="seed-sheet-option" onclick="selectSeed('late_night')">
-          <div class="seed-sheet-option-icon">🌙</div>
-          <div>
-            <div class="seed-sheet-option-label">今晚需要晚睡</div>
-            <div class="seed-sheet-option-desc">跳转入睡窗口页，查看不同方案的代价</div>
+        <!-- 确认态 -->
+        <div class="state-confirm">
+          <div class="plan-confirm-echo" id="plan-confirm-echo">基于「下午 3 点有重要会议」生成</div>
+          <div class="plan-confirm-head">
+            <span class="plan-confirm-count" id="plan-confirm-count">3 条建议 · 默认全部勾选</span>
+            <span class="plan-confirm-toggle-all" id="plan-confirm-toggle" onclick="togglePlanAll()">全不选</span>
           </div>
+          <div id="plan-sugg-list"></div>
         </div>
+      </div>
+      <div class="plan-sheet-footer" id="plan-sheet-footer">
+        <!-- 输入态 footer -->
+        <button class="plan-sheet-btn plan-sheet-btn-primary" data-mode="input"
+                id="plan-btn-generate" onclick="triggerGenerate()">生成建议</button>
+        <!-- 确认态 footer -->
+        <button class="plan-sheet-btn plan-sheet-btn-ghost" data-mode="confirm"
+                onclick="redescribePlan()" style="display:none;">重新描述</button>
+        <button class="plan-sheet-btn plan-sheet-btn-ghost" data-mode="confirm"
+                onclick="dropAllSuggestions()" style="display:none;">都不要</button>
+        <button class="plan-sheet-btn plan-sheet-btn-primary" data-mode="confirm"
+                id="plan-btn-accept" onclick="acceptPlanSuggestions()" style="display:none;">接受勾选的 3 条</button>
       </div>
     </div>
   </div>
@@ -2426,12 +2692,6 @@ function renderVerticalTimeline(scene) {
   // 顶部「今日特色」总结（PRD §7.3）
   renderTodayHighlight(scene);
 
-  // 种子事件入口在无数据时隐藏（PRD §7.6）
-  var seedEntry = $('seed-entry');
-  if (seedEntry) {
-    seedEntry.style.display = (!scene.energyCurve || !scene.energyCurve.length) ? 'none' : 'flex';
-  }
-
   // Empty state
   if (!scene.energyCurve || !scene.energyCurve.length) {
     container.innerHTML =
@@ -2598,26 +2858,253 @@ function renderVerticalTimeline(scene) {
 var currentTab = 'status';
 
 // ══════════════════════════════════════════
-// 种子事件快捷录入（PRD §7.6）
+// 今日安排描述 → 生成建议 → 勾选接受（PRD §7.6）
 // ══════════════════════════════════════════
-function openSeedSheet() {
-  var mask = $('seed-sheet-mask');
-  if (mask) mask.classList.add('open');
+var PLAN_STATE = {
+  mode: 'idle',        // idle | input | generating | ready
+  lastInput: '',
+  suggestions: [],
+  generateTimer: null
+};
+
+// Demo 生成器：根据关键字返回一组假建议
+function mockGenerateSuggestions(text) {
+  if (/会议|开会|汇报|演讲/.test(text)) {
+    return [
+      { id: 'g1', icon: '☕', label: '喝咖啡', time: '13:30', cause: '保住会议前高能', impact_h: 0.3, checked: true },
+      { id: 'g2', icon: '😴', label: '小睡',   time: '12:40', cause: '填平会议前低谷', impact_h: 0.2, checked: true },
+      { id: 'g3', icon: '🧘', label: '冥想',   time: '14:50', cause: '会议前稳定情绪', impact_h: 0.1, checked: true }
+    ];
+  }
+  if (/加班|熬夜|晚上|夜/.test(text)) {
+    return [
+      { id: 'g1', icon: '☕', label: '喝咖啡',   time: '16:30', cause: '续力晚间加班',   impact_h: 0.4, checked: true },
+      { id: 'g2', icon: '🍚', label: '轻食晚餐', time: '18:30', cause: '避免餐后困倦',   impact_h: 0.2, checked: true },
+      { id: 'g3', icon: '🌙', label: '延后入睡', time: '00:30', cause: '匹配加班节奏',   impact_h: -0.3, checked: true }
+    ];
+  }
+  if (/运动|跑步|健身/.test(text)) {
+    return [
+      { id: 'g1', icon: '💧', label: '补水', time: '15:30', cause: '运动前准备', impact_h: 0.1, checked: true },
+      { id: 'g2', icon: '🍎', label: '轻食', time: '16:00', cause: '运动前补能', impact_h: 0.2, checked: true },
+      { id: 'g3', icon: '😴', label: '早睡', time: '22:30', cause: '运动后恢复', impact_h: 0.3, checked: true }
+    ];
+  }
+  if (/昨天|上周/.test(text)) {
+    return [
+      { id: 'g1', icon: '☕', label: '喝咖啡', time: '10:00', cause: '沿用昨日节奏',     impact_h: 0.3, checked: true },
+      { id: 'g2', icon: '🏃', label: '散步',   time: '17:30', cause: '沿用晚间活动节奏', impact_h: 0.3, checked: true }
+    ];
+  }
+  return [
+    { id: 'g1', icon: '☕', label: '喝咖啡', time: '10:30', cause: '保住上午高能', impact_h: 0.3, checked: true },
+    { id: 'g2', icon: '😴', label: '小睡',   time: '13:00', cause: '填平下午低谷', impact_h: 0.2, checked: true },
+    { id: 'g3', icon: '🏃', label: '散步',   time: '17:30', cause: '延长晚间高能', impact_h: 0.4, checked: true }
+  ];
 }
-function closeSeedSheet() {
-  var mask = $('seed-sheet-mask');
-  if (mask) mask.classList.remove('open');
+
+function renderDockChips() {
+  var chips = $('today-dock-chips');
+  if (!chips) return;
+  // 无历史数据时 chips 不显示（PRD §7.6.2）
+  var hasHistory = currentScene && currentScene.energyCurve && currentScene.energyCurve.length > 0;
+  if (!hasHistory) {
+    chips.innerHTML = '';
+  } else {
+    var weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+    var wd = weekdays[new Date().getDay()];
+    chips.innerHTML =
+      '<span class="today-dock-chip" onclick="useChip(\'yesterday\')">和昨天一样</span>' +
+      '<span class="today-dock-chip" onclick="useChip(\'lastweek\')">和上周' + wd + '一样</span>';
+  }
+  // 同步到半层里的 chips
+  var sheetChips = $('plan-input-chips');
+  if (sheetChips) sheetChips.innerHTML = chips.innerHTML;
 }
-function selectSeed(type) {
-  var msg = {
-    task:       '已录入主事件：时间轴会围绕它重新排布前后建议',
-    social:     '已录入晚间饭局：入睡窗口和明日预期会相应调整',
-    exercise:   '已安排运动：前后咖啡因 / 餐饮建议会调整',
-    late_night: '跳转到入睡窗口设置页（demo 占位）'
-  }[type];
-  closeSeedSheet();
-  // Demo：仅提示，不真的改时间轴
-  alert('✓ ' + msg);
+
+function useChip(type) {
+  var weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  var wd = weekdays[new Date().getDay()];
+  var text = type === 'yesterday' ? '和昨天一样' : '和上周' + wd + '一样';
+  openPlanSheet('input');
+  $('plan-input-textarea').value = text;
+  triggerGenerate();
+}
+
+function openPlanSheet(mode, voiceHint) {
+  var mask = $('plan-sheet-mask');
+  var desiredMode = mode || 'input';
+  mask.classList.add('open');
+
+  // 二次输入空白重开（PRD §7.6.6）：只有 idle → input 时才清
+  if (desiredMode === 'input' && PLAN_STATE.mode !== 'generating' && PLAN_STATE.mode !== 'ready') {
+    $('plan-input-textarea').value = '';
+    PLAN_STATE.lastInput = '';
+    PLAN_STATE.suggestions = [];
+    PLAN_STATE.mode = 'input';
+  }
+  setPlanSheetMode(desiredMode);
+  if (desiredMode === 'input') {
+    setTimeout(function(){ var ta = $('plan-input-textarea'); if (ta) ta.focus(); }, 260);
+  }
+  if (voiceHint) {
+    setTimeout(function(){
+      $('plan-input-textarea').value = '（demo 语音）下午 3 点有重要会议';
+    }, 300);
+  }
+}
+
+function reopenPlanSheet() {
+  var m = PLAN_STATE.mode;
+  if (m === 'generating') openPlanSheet('generating');
+  else if (m === 'ready') { openPlanSheet('confirm'); renderSuggestionList(); }
+  else openPlanSheet('input');
+}
+
+function collapsePlanSheet() {
+  $('plan-sheet-mask').classList.remove('open');
+  updateDockState();
+}
+
+function setPlanSheetMode(mode) {
+  var sheet = $('plan-sheet');
+  sheet.classList.remove('mode-input', 'mode-generating', 'mode-confirm');
+  document.querySelectorAll('#plan-sheet-footer > button').forEach(function(b){ b.style.display = 'none'; });
+  if (mode === 'input') {
+    sheet.classList.add('mode-input');
+    $('plan-sheet-title').textContent = '今天有什么特别安排？';
+    $('plan-btn-generate').style.display = 'block';
+    renderDockChips();
+  } else if (mode === 'generating') {
+    sheet.classList.add('mode-generating');
+    $('plan-sheet-title').textContent = '正在生成建议...';
+  } else if (mode === 'confirm') {
+    sheet.classList.add('mode-confirm');
+    $('plan-sheet-title').textContent = '这些建议可以吗？';
+    document.querySelectorAll('#plan-sheet-footer > button[data-mode="confirm"]').forEach(function(b){ b.style.display = 'block'; });
+  }
+}
+
+function triggerGenerate() {
+  var ta = $('plan-input-textarea');
+  var text = (ta.value || '').trim();
+  if (!text) { ta.focus(); return; }
+  PLAN_STATE.lastInput = text;
+  PLAN_STATE.mode = 'generating';
+  setPlanSheetMode('generating');
+  if (PLAN_STATE.generateTimer) clearTimeout(PLAN_STATE.generateTimer);
+  PLAN_STATE.generateTimer = setTimeout(function() {
+    PLAN_STATE.suggestions = mockGenerateSuggestions(text);
+    PLAN_STATE.mode = 'ready';
+    if ($('plan-sheet-mask').classList.contains('open')) {
+      setPlanSheetMode('confirm');
+      renderSuggestionList();
+    }
+    updateDockState();
+  }, 1800);
+}
+
+function renderSuggestionList() {
+  var list = $('plan-sugg-list');
+  var echo = $('plan-confirm-echo');
+  var count = $('plan-confirm-count');
+  var toggle = $('plan-confirm-toggle');
+  if (!list) return;
+  echo.innerHTML = '基于「<b>' + (PLAN_STATE.lastInput || '你的输入') + '</b>」生成';
+  var sugs = PLAN_STATE.suggestions;
+  count.textContent = sugs.length + ' 条建议 · 默认全部勾选';
+  var allChecked = sugs.length > 0 && sugs.every(function(s){ return s.checked; });
+  toggle.textContent = allChecked ? '全不选' : '全选';
+  list.innerHTML = sugs.map(function(s) {
+    var sign = (s.impact_h != null) ? (s.impact_h >= 0 ? '+' : '') : '';
+    var impact = (s.impact_h != null) ? ('能量 ' + sign + s.impact_h + 'h') : '';
+    return '<div class="plan-sugg-row" data-id="' + s.id + '">' +
+      '<div class="plan-sugg-check ' + (s.checked ? 'checked' : '') + '" onclick="toggleSuggestion(\'' + s.id + '\')"></div>' +
+      '<div class="plan-sugg-content">' +
+        '<div class="plan-sugg-top">' +
+          '<span class="plan-sugg-icon">' + s.icon + '</span>' +
+          '<span class="plan-sugg-time">' + s.time + '</span>' +
+          '<span class="plan-sugg-label">' + s.label + '</span>' +
+        '</div>' +
+        '<div class="plan-sugg-cause">' + (s.cause || '') + '</div>' +
+        (impact ? '<div class="plan-sugg-impact">' + impact + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+  updateAcceptBtnLabel();
+}
+
+function toggleSuggestion(id) {
+  PLAN_STATE.suggestions.forEach(function(s){ if (s.id === id) s.checked = !s.checked; });
+  renderSuggestionList();
+}
+
+function togglePlanAll() {
+  var allChecked = PLAN_STATE.suggestions.every(function(s){ return s.checked; });
+  PLAN_STATE.suggestions.forEach(function(s){ s.checked = !allChecked; });
+  renderSuggestionList();
+}
+
+function updateAcceptBtnLabel() {
+  var n = PLAN_STATE.suggestions.filter(function(s){ return s.checked; }).length;
+  var btn = $('plan-btn-accept');
+  btn.textContent = n > 0 ? '接受勾选的 ' + n + ' 条' : '请勾选至少一条';
+  btn.disabled = n === 0;
+}
+
+function redescribePlan() {
+  PLAN_STATE.suggestions = [];
+  PLAN_STATE.lastInput = '';
+  PLAN_STATE.mode = 'input';
+  var ta = $('plan-input-textarea');
+  if (ta) { ta.value = ''; setTimeout(function(){ ta.focus(); }, 200); }
+  setPlanSheetMode('input');
+  updateDockState();
+}
+
+function dropAllSuggestions() {
+  PLAN_STATE.suggestions = [];
+  PLAN_STATE.lastInput = '';
+  PLAN_STATE.mode = 'idle';
+  $('plan-sheet-mask').classList.remove('open');
+  updateDockState();
+}
+
+function acceptPlanSuggestions() {
+  var accepted = PLAN_STATE.suggestions.filter(function(s){ return s.checked; });
+  if (!accepted.length) return;
+  if (currentScene && currentScene.suggestions) {
+    accepted.forEach(function(s) {
+      currentScene.suggestions.push({
+        id: 'user_' + s.id + '_' + Date.now(),
+        icon: s.icon, label: s.label, time: s.time,
+        dosage: null, reason: s.cause, impact_h: s.impact_h, status: 'pending'
+      });
+    });
+    renderVerticalTimeline(currentScene);
+  }
+  PLAN_STATE.suggestions = [];
+  PLAN_STATE.lastInput = '';
+  PLAN_STATE.mode = 'idle';
+  $('plan-sheet-mask').classList.remove('open');
+  updateDockState();
+}
+
+function updateDockState() {
+  var dock = $('today-dock');
+  if (!dock) return;
+  dock.classList.remove('state-generating', 'state-ready');
+  var txt = $('today-dock-collapsed-text');
+  var cta = $('today-dock-collapsed-cta');
+  if (PLAN_STATE.mode === 'generating') {
+    dock.classList.add('state-generating');
+    txt.innerHTML = '<span class="dock-spin"></span>正在生成建议...';
+    cta.textContent = '';
+  } else if (PLAN_STATE.mode === 'ready') {
+    dock.classList.add('state-ready');
+    txt.innerHTML = '✨ 建议已生成 · ' + PLAN_STATE.suggestions.length + ' 条';
+    cta.textContent = '查看 →';
+  }
 }
 
 // ══════════════════════════════════════════
@@ -2699,6 +3186,17 @@ function switchTab(tabName) {
   $('tab-status').classList.toggle('active', tabName === 'status');
   $('tab-today').classList.toggle('active', tabName === 'today');
 
+  // 今日 Tab 专属：吸底 dock 显示 + chips 渲染；离开今日自动收起半层
+  var phone = $('phone');
+  if (phone) phone.classList.toggle('on-today', tabName === 'today');
+  if (tabName === 'today') {
+    renderDockChips();
+    updateDockState();
+  } else {
+    var mask = $('plan-sheet-mask');
+    if (mask) mask.classList.remove('open');
+  }
+
   // Update control panel toggle buttons
   document.querySelectorAll('.tab-toggle-btn').forEach(function(b) {
     b.classList.toggle('active', b.dataset.tab === tabName);
@@ -2737,6 +3235,13 @@ function applyScene(scene) {
 
   // ── Today Tab ──
   renderVerticalTimeline(scene);
+  // 重置安排输入状态（切 scene = 切"今天"，清空上一条输入与生成结果）
+  PLAN_STATE.mode = 'idle';
+  PLAN_STATE.lastInput = '';
+  PLAN_STATE.suggestions = [];
+  if (PLAN_STATE.generateTimer) { clearTimeout(PLAN_STATE.generateTimer); PLAN_STATE.generateTimer = null; }
+  renderDockChips();
+  updateDockState();
 
   // Default to status tab
   switchTab('status');
