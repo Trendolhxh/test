@@ -1182,6 +1182,123 @@
   .v-pin-tag.done .pin-tag-label { text-decoration: line-through; }
   .v-pin-tag.skipped { opacity: 0.4; }
   .v-pin-tag.skipped .pin-tag-label { text-decoration: line-through; }
+
+  /* ── Today Highlight Bar (顶部「今日特色」总结) ── */
+  .today-highlight {
+    display: flex; align-items: flex-start; gap: 8px;
+    margin: 0 0 12px 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, rgba(52,199,89,0.08), rgba(52,199,89,0.02));
+    border-left: 3px solid var(--brand-green);
+    font-size: 13px; line-height: 1.45;
+    color: var(--text-primary);
+    transition: all 0.5s ease;
+  }
+  .today-highlight-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .today-highlight-text b { color: var(--brand-green); font-weight: 600; }
+  .iphone-frame.night-mode .today-highlight {
+    background: linear-gradient(90deg, rgba(74,222,128,0.12), rgba(74,222,128,0.02));
+    color: var(--night-text-primary);
+  }
+
+  /* ── Seed Event Entry (+ 按钮) ── */
+  .seed-entry {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 0 0 14px 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.03);
+    border: 1px dashed rgba(0,0,0,0.12);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .seed-entry:hover { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.2); }
+  .seed-entry-text { font-size: 13px; color: var(--text-secondary); }
+  .seed-entry-plus {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--brand-green); color: #fff;
+    font-size: 15px; font-weight: 600; line-height: 1;
+  }
+  .iphone-frame.night-mode .seed-entry {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.12);
+  }
+  .iphone-frame.night-mode .seed-entry-text { color: var(--night-text-secondary); }
+
+  /* ── Seed Event Sheet (快捷录入浮层) ── */
+  .seed-sheet-mask {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.3);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 30;
+  }
+  .seed-sheet-mask.open { display: flex; }
+  .seed-sheet {
+    width: 100%;
+    background: #fff;
+    border-radius: 16px 16px 0 0;
+    padding: 16px 16px 28px;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.15);
+  }
+  .seed-sheet-title {
+    font-size: 15px; font-weight: 600; color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .seed-sheet-desc {
+    font-size: 12px; color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+  .seed-sheet-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .seed-sheet-option:hover { background: rgba(0,0,0,0.04); }
+  .seed-sheet-option-icon { font-size: 20px; width: 32px; text-align: center; }
+  .seed-sheet-option-label { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+  .seed-sheet-option-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* ── Pin cause text (因果式文案，补在 label 后) ── */
+  .v-pin-tag .pin-tag-cause {
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .iphone-frame.night-mode .v-pin-tag .pin-tag-cause { color: var(--night-text-secondary); }
+
+  /* ── Pin alternative popover (试试另一个) ── */
+  .pin-alt-popover {
+    position: absolute; right: 0;
+    max-width: 260px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    font-size: 12px; line-height: 1.5;
+    z-index: 20;
+    display: none;
+  }
+  .pin-alt-popover.open { display: block; }
+  .pin-alt-popover-title {
+    font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;
+  }
+  .pin-alt-row {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 4px 0;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    color: var(--text-primary);
+  }
+  .pin-alt-row:first-of-type { border-top: 0; }
+  .pin-alt-row .alt-delta { color: var(--text-secondary); flex-shrink: 0; }
+  .iphone-frame.night-mode .pin-alt-popover {
+    background: #1e1e2b; color: var(--night-text-primary);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+  }
+  .iphone-frame.night-mode .pin-alt-row { border-color: rgba(255,255,255,0.06); }
   .v-pin-tag.current { border-color: var(--brand-green); animation: pulse 2s ease-in-out infinite; }
 
   /* ── Current Time Marker ── */
@@ -1334,9 +1451,52 @@
     <!-- ══ Today Tab ══ -->
     <div class="tab-content" id="tab-today">
       <span class="timeline-state-badge" id="timeline-badge">预测态</span>
+      <!-- 今日特色总结（顶部一句 data-driven 判断，见 PRD §7.3） -->
+      <div id="today-highlight-slot"></div>
+      <!-- 种子事件快捷录入入口（见 PRD §7.6） -->
+      <div class="seed-entry" id="seed-entry" onclick="openSeedSheet()">
+        <span class="seed-entry-text">今天有什么特别的事？</span>
+        <span class="seed-entry-plus">+</span>
+      </div>
       <!-- Vertical 24h Timeline (dynamically rendered) -->
       <div class="v-timeline" id="v-timeline"></div>
       <div style="height:20px;flex-shrink:0;"></div>
+    </div>
+
+    <!-- 种子事件快捷录入浮层（4 类预设，见 PRD §7.6） -->
+    <div class="seed-sheet-mask" id="seed-sheet-mask" onclick="if(event.target===this)closeSeedSheet()">
+      <div class="seed-sheet">
+        <div class="seed-sheet-title">今天有什么特别的事？</div>
+        <div class="seed-sheet-desc">选择后系统会围绕它重新排布建议</div>
+        <div class="seed-sheet-option" onclick="selectSeed('task')">
+          <div class="seed-sheet-option-icon">📌</div>
+          <div>
+            <div class="seed-sheet-option-label">有个重要任务 / 会议</div>
+            <div class="seed-sheet-option-desc">系统围绕它生成前后咖啡 / 小睡建议</div>
+          </div>
+        </div>
+        <div class="seed-sheet-option" onclick="selectSeed('social')">
+          <div class="seed-sheet-option-icon">🍽️</div>
+          <div>
+            <div class="seed-sheet-option-label">今晚有饭局 / 应酬</div>
+            <div class="seed-sheet-option-desc">调整入睡窗口和明日预期</div>
+          </div>
+        </div>
+        <div class="seed-sheet-option" onclick="selectSeed('exercise')">
+          <div class="seed-sheet-option-icon">💪</div>
+          <div>
+            <div class="seed-sheet-option-label">想安排运动</div>
+            <div class="seed-sheet-option-desc">调整前后咖啡因 / 餐饮建议</div>
+          </div>
+        </div>
+        <div class="seed-sheet-option" onclick="selectSeed('late_night')">
+          <div class="seed-sheet-option-icon">🌙</div>
+          <div>
+            <div class="seed-sheet-option-label">今晚需要晚睡</div>
+            <div class="seed-sheet-option-desc">跳转入睡窗口页，查看不同方案的代价</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2218,9 +2378,59 @@ function catmullRomPath(points) {
   return d;
 }
 
+// ── 今日特色一句话（PRD §7.3） · 按场景 id 映射 ──
+var TODAY_HIGHLIGHT_MAP = {
+  morning_good:       { icon: '⚡', text: '今天高能总长 <b>7.5h</b>，比昨天多 0.3h——重点事放进 <b>09:30–11:45</b> 或 <b>18:45–21:10</b>' },
+  morning_bad:        { icon: '⚠️', text: '今天高能比昨天 <b>少 1.8h</b>，关键事 <b>11:00 前</b>做完' },
+  afternoon_high:     { icon: '✨', text: '还剩 <b>4 小时高能</b>，<b>14:00–16:00</b> 是今天的主场' },
+  afternoon_depleted: { icon: '🪫', text: '高能时段已基本走完，下午建议安排 <b>轻任务</b> 或 <b>小睡</b>' },
+  evening_low:        { icon: '🌙', text: '今天活动量偏低——<b>18 点后</b>精力会持续下滑，重要事别拖到晚间' }
+};
+
+// ── 根据建议 icon/label/time 推导因果短语（PRD §7.4） ──
+function deriveCause(sug) {
+  var labelMap = {
+    '喝咖啡':    '保住上午高能',
+    '运动':      '延长晚间高能',
+    '小睡':      '填平下午低谷',
+    '冥想':      '帮助晚间放松',
+    '准备入睡':  '保住明日高能'
+  };
+  // 咖啡根据时间可微调
+  if (sug.label === '喝咖啡') {
+    var startMin = timeToMinutes((sug.time || '10:00').split(' ')[0]);
+    if (startMin >= 12 * 60) return '续力下午';
+  }
+  return labelMap[sug.label] || '';
+}
+
+function renderTodayHighlight(scene) {
+  var slot = $('today-highlight-slot');
+  if (!slot) return;
+  var item = TODAY_HIGHLIGHT_MAP[scene.id];
+  if (!item || !scene.energyCurve || !scene.energyCurve.length) {
+    slot.innerHTML = '';
+    return;
+  }
+  slot.innerHTML =
+    '<div class="today-highlight">' +
+      '<span class="today-highlight-icon">' + item.icon + '</span>' +
+      '<span class="today-highlight-text">' + item.text + '</span>' +
+    '</div>';
+}
+
 function renderVerticalTimeline(scene) {
   var container = $('v-timeline');
   var badge = $('timeline-badge');
+
+  // 顶部「今日特色」总结（PRD §7.3）
+  renderTodayHighlight(scene);
+
+  // 种子事件入口在无数据时隐藏（PRD §7.6）
+  var seedEntry = $('seed-entry');
+  if (seedEntry) {
+    seedEntry.style.display = (!scene.energyCurve || !scene.energyCurve.length) ? 'none' : 'flex';
+  }
 
   // Empty state
   if (!scene.energyCurve || !scene.energyCurve.length) {
@@ -2348,13 +2558,17 @@ function renderVerticalTimeline(scene) {
       '⚡ 高能 ' + w.start + '-' + w.end + '</div>';
   });
 
-  // ── Floating pin tags (right side) ──
-  (scene.suggestions || []).forEach(function(p) {
+  // ── Floating pin tags (right side, PRD §6.2 + §7.4 因果式文案) ──
+  (scene.suggestions || []).forEach(function(p, idx) {
     var pMin = timeToMinutes(p.time.split(' ')[0]);
     var pinY = (pMin / 60) * HOUR_H;
-    html += '<div class="v-pin-tag ' + p.status + '" style="top:' + pinY + 'px">' +
+    var cause = deriveCause(p);
+    var causeHtml = cause ? '<span class="pin-tag-cause">· ' + cause + '</span>' : '';
+    html += '<div class="v-pin-tag ' + p.status + '" style="top:' + pinY + 'px" ' +
+              'onclick="togglePinAlt(this, \'' + (p.id || 's' + idx) + '\', \'' + p.label + '\')">' +
       '<span class="pin-tag-icon">' + p.icon + '</span>' +
-      '<span class="pin-tag-label">' + p.label + '</span></div>';
+      '<span class="pin-tag-label">' + p.label + '</span>' + causeHtml +
+      '</div>';
   });
 
   // ── Current time marker ──
@@ -2382,6 +2596,93 @@ function renderVerticalTimeline(scene) {
 // TAB SWITCHING
 // ══════════════════════════════════════════
 var currentTab = 'status';
+
+// ══════════════════════════════════════════
+// 种子事件快捷录入（PRD §7.6）
+// ══════════════════════════════════════════
+function openSeedSheet() {
+  var mask = $('seed-sheet-mask');
+  if (mask) mask.classList.add('open');
+}
+function closeSeedSheet() {
+  var mask = $('seed-sheet-mask');
+  if (mask) mask.classList.remove('open');
+}
+function selectSeed(type) {
+  var msg = {
+    task:       '已录入主事件：时间轴会围绕它重新排布前后建议',
+    social:     '已录入晚间饭局：入睡窗口和明日预期会相应调整',
+    exercise:   '已安排运动：前后咖啡因 / 餐饮建议会调整',
+    late_night: '跳转到入睡窗口设置页（demo 占位）'
+  }[type];
+  closeSeedSheet();
+  // Demo：仅提示，不真的改时间轴
+  alert('✓ ' + msg);
+}
+
+// ══════════════════════════════════════════
+// Pin 的"试试另一个"对比浮层（PRD §7.5）
+// ══════════════════════════════════════════
+var PIN_ALTERNATIVES = {
+  '喝咖啡': [
+    { label: '当前建议：这个时间 1 杯', delta: '上午 +0.3h' },
+    { label: '不喝',                    delta: '持平' },
+    { label: '改绿茶',                  delta: '上午 +0.1h' },
+    { label: '14:00 再喝',              delta: '入睡延迟 30min（不建议）' }
+  ],
+  '运动': [
+    { label: '当前建议：17:00 有氧 30min', delta: '晚间 +0.5h' },
+    { label: '不运动',                     delta: '晚间 持平' },
+    { label: '改 20:00 力量',              delta: '入睡延迟 40min' }
+  ],
+  '小睡': [
+    { label: '当前建议：20min',  delta: '下午 +0.2h' },
+    { label: '不小睡',            delta: '下午 持平' },
+    { label: '改 40min',          delta: '下午 +0.1h，入睡延迟 15min' }
+  ],
+  '冥想': [
+    { label: '当前建议：10min', delta: '入睡更快 8min' },
+    { label: '不冥想',           delta: '持平' }
+  ],
+  '准备入睡': [
+    { label: '当前建议：22:30',  delta: '明日高能 7.8h' },
+    { label: '延后 30min',        delta: '明日 7.5h（-0.3h）' },
+    { label: '延后 1h',           delta: '明日 7.1h（-0.7h）' }
+  ]
+};
+function togglePinAlt(el, pid, label) {
+  // 关闭其他已开的浮层
+  var existing = document.querySelector('.pin-alt-popover.open');
+  if (existing) existing.remove();
+  if (existing && existing.dataset.pid === pid) return;
+
+  var alts = PIN_ALTERNATIVES[label];
+  if (!alts) return;
+  var rowsHtml = alts.map(function(a) {
+    return '<div class="pin-alt-row"><span>' + a.label + '</span>' +
+      '<span class="alt-delta">' + a.delta + '</span></div>';
+  }).join('');
+  var pop = document.createElement('div');
+  pop.className = 'pin-alt-popover open';
+  pop.dataset.pid = pid;
+  pop.innerHTML =
+    '<div class="pin-alt-popover-title">试试另一个 · ' + label + '</div>' +
+    rowsHtml;
+  // 放在 pin 下方
+  var top = parseFloat(el.style.top) + 30;
+  pop.style.top = top + 'px';
+  el.parentNode.appendChild(pop);
+  // 点击空白关闭
+  setTimeout(function() {
+    var off = function(e) {
+      if (!pop.contains(e.target) && e.target !== el) {
+        pop.remove();
+        document.removeEventListener('click', off, true);
+      }
+    };
+    document.addEventListener('click', off, true);
+  }, 0);
+}
 
 function switchTab(tabName) {
   currentTab = tabName;
