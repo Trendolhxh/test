@@ -477,29 +477,168 @@
   }
   .energy-tier-icon { font-size: 14px; }
 
-  /* Night mode: Sleep Readiness */
-  .readiness-indicator {
-    display: flex; align-items: center; gap: 12px;
-    margin-bottom: 8px;
+  /* ──────────────────────────────────────────
+     Night mode: Body Readiness (信号灯 + 罗盘阵列)
+     调性红线：不用红色；暖橙 ≠ 红灯；隐藏分数模式可关闭数字
+     ────────────────────────────────────────── */
+  .body-readiness-main {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 6px;
   }
-  .readiness-dot {
-    width: 48px; height: 48px; border-radius: 50%;
+  .signal-light {
+    width: 60px; height: 60px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px;
+    flex-direction: column; flex-shrink: 0;
+    transition: background 0.5s ease, box-shadow 0.5s ease;
   }
-  .readiness-dot.ready { background: rgba(52, 199, 89, 0.15); }
-  .readiness-dot.almost { background: rgba(255, 204, 0, 0.15); }
-  .readiness-dot.not-ready { background: rgba(255, 59, 48, 0.15); }
+  .signal-light.cool-white {
+    background: rgba(160, 210, 255, 0.20);
+    box-shadow: 0 0 28px rgba(160, 210, 255, 0.28), inset 0 0 12px rgba(255,255,255,0.15);
+    color: #d2e8ff;
+  }
+  .signal-light.amber-yellow {
+    background: rgba(255, 213, 128, 0.20);
+    box-shadow: 0 0 28px rgba(255, 213, 128, 0.25), inset 0 0 12px rgba(255,255,255,0.12);
+    color: #ffe0a3;
+  }
+  .signal-light.amber-orange {
+    background: rgba(244, 162, 97, 0.22);
+    box-shadow: 0 0 28px rgba(244, 162, 97, 0.28), inset 0 0 12px rgba(255,255,255,0.10);
+    color: #f6b784;
+  }
+  .signal-score {
+    font-size: 22px; font-weight: 700; line-height: 1;
+  }
+  .signal-score-suffix {
+    font-size: 9px; opacity: 0.65; margin-top: 2px; letter-spacing: 0.5px;
+  }
+  .signal-light.hide-score .signal-score,
+  .signal-light.hide-score .signal-score-suffix { display: none; }
+  .signal-light.hide-score::after {
+    content: ''; width: 12px; height: 12px; border-radius: 50%;
+    background: currentColor; opacity: 0.7;
+  }
 
-  .readiness-text {
-    font-size: 22px; font-weight: 700; color: #fff;
+  .body-readiness-heading {
+    display: flex; flex-direction: column; gap: 3px; flex: 1;
   }
-  .readiness-sub {
-    font-size: 13px; color: var(--night-text-secondary); margin-top: 2px;
+  .body-readiness-band {
+    font-size: 20px; font-weight: 700; color: #fff; line-height: 1.2;
+  }
+  .body-readiness-sub-scores {
+    font-size: 10.5px; color: var(--night-text-secondary);
+    display: flex; gap: 10px;
+  }
+  .body-readiness-sub-scores span b {
+    color: rgba(255,255,255,0.85); font-weight: 600;
+  }
+
+  .body-readiness-top-text {
+    font-size: 12.5px; color: rgba(255,255,255,0.82);
+    padding: 8px 12px;
+    background: rgba(244, 162, 97, 0.10);
+    border-left: 3px solid rgba(244, 162, 97, 0.6);
+    border-radius: 6px;
+    margin: 6px 0 10px;
+    line-height: 1.45;
+  }
+
+  /* Compass array: 2x2 grid */
+  .compass-array {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  .compass-cell {
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .compass-name {
+    font-size: 10.5px; color: var(--night-text-secondary);
+    letter-spacing: 0.3px; margin-bottom: 8px;
+  }
+
+  /* Bidirectional / unidirectional track */
+  .compass-track {
+    position: relative;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    margin: 2px 0 10px;
+  }
+  .compass-track-ideal {
+    position: absolute; top: 0; bottom: 0;
+    background: rgba(160, 210, 255, 0.35);
+    border-radius: 2px;
+  }
+  .compass-pointer {
+    position: absolute; top: 50%;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.25), 0 0 6px rgba(255,255,255,0.3);
+    transform: translate(-50%, -50%);
+    transition: left 0.5s ease, background 0.4s ease;
+  }
+  .compass-pointer.dev-center { background: #d2e8ff; }
+  .compass-pointer.dev-low,
+  .compass-pointer.dev-high { background: #f6b784; }
+
+  .compass-value-row {
+    display: flex; align-items: baseline; gap: 6px;
+  }
+  .compass-value {
+    font-size: 15px; color: #fff; font-weight: 600; line-height: 1;
+  }
+  .compass-unit {
+    font-size: 10.5px; color: var(--night-text-secondary);
+  }
+  .compass-status {
+    font-size: 10.5px; color: var(--night-text-secondary);
+    margin-left: auto;
+  }
+
+  /* Trend arrow compass (皮温趋势) */
+  .compass-trend {
+    display: flex; align-items: center; gap: 10px; padding: 4px 0 2px;
+  }
+  .compass-trend-icon {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+    background: rgba(255,255,255,0.06);
+  }
+  .compass-trend.up .compass-trend-icon { color: #d2e8ff; background: rgba(160, 210, 255, 0.15); }
+  .compass-trend.flat .compass-trend-icon { color: rgba(255,255,255,0.55); }
+  .compass-trend.down .compass-trend-icon { color: #f6b784; background: rgba(244, 162, 97, 0.12); }
+  .compass-trend-text {
+    font-size: 13px; color: #fff; font-weight: 500;
+  }
+
+  /* Binary compass (睡前体动) */
+  .compass-binary {
+    display: flex; align-items: center; gap: 10px; padding: 4px 0 2px;
+  }
+  .compass-binary-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .compass-binary-dot.still {
+    background: #d2e8ff;
+    box-shadow: 0 0 8px rgba(160, 210, 255, 0.4);
+  }
+  .compass-binary-dot.active {
+    background: transparent;
+    border: 2px solid #f6b784;
+  }
+  .compass-binary-text {
+    font-size: 13px; color: #fff; font-weight: 500;
   }
 
   .readiness-details {
-    display: flex; gap: 16px; margin-top: 10px;
+    display: flex; gap: 10px; margin-top: 6px;
   }
   .readiness-detail-item {
     flex: 1;
@@ -513,6 +652,49 @@
   }
   .readiness-detail-value {
     font-size: 18px; font-weight: 600; color: #fff;
+  }
+
+  /* Night mode attribution: 可能原因 evidence layer */
+  .attr-evidence-row {
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    margin-bottom: 6px;
+  }
+  .attr-evidence-top {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  }
+  .attr-evidence-tag {
+    font-size: 10px; font-weight: 600;
+    padding: 2px 6px; border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.3px;
+  }
+  .attr-evidence-tag.f-s { background: rgba(180, 160, 255, 0.15); color: #c9b8ff; }
+  .attr-evidence-tag.f-c { background: rgba(120, 200, 220, 0.15); color: #aee1ec; }
+  .attr-evidence-tag.f-w { background: rgba(255, 180, 140, 0.15); color: #ffc8a8; }
+  .attr-evidence-actionable {
+    font-size: 10px; color: var(--night-text-secondary);
+    margin-left: auto;
+  }
+  .attr-evidence-actionable.no { opacity: 0.55; }
+  .attr-evidence-text {
+    font-size: 13px; color: #fff; line-height: 1.45; margin-bottom: 6px;
+  }
+  .attr-evidence-bar-wrap {
+    height: 3px; background: rgba(255,255,255,0.06);
+    border-radius: 2px; overflow: hidden;
+    position: relative;
+  }
+  .attr-evidence-bar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(244, 162, 97, 0.55);
+    border-radius: 2px;
+  }
+  .attr-evidence-bar-label {
+    font-size: 10px; color: var(--night-text-secondary);
+    margin-top: 4px;
   }
 
   /* ── Layer 2: Smart Digest ── */
@@ -1343,20 +1525,26 @@ var SCENES = [
     bodyData: { hr: 75, hrv: 40, steps: 3500, spo2: 98, sleepH: '7h', sleepEff: '88%', deep: 20, light: 46, rem: 24, awake: 10 },
   },
 
-  // ── Scene 6: Night - Ready 🟢 ──
+  // ── Scene 6: Night - Cool White 凉白 ──
   {
-    id: 'night_ready', name: '夜晚 - 已准备好 🟢',
-    desc: '夜间模式，入睡准备度：已准备好',
+    id: 'night_ready', name: '夜晚 - 凉白（身体准备度 82）',
+    desc: '身体准备度凉白区，不展示建议',
     time: '22:50', isNight: true, greeting: '夜深了',
-    sleepReadiness: {
-      level: 'ready', estimated_min: null, suggestion: null,
+    bodyReadiness: {
+      score: 82, band: 'cool_white', top_deviation_text: null, hide_score: false,
       predicted_tomorrow_h: 7.5, recommended_bedtime: '23:00',
-      factors: [
-        { label: '心率趋势', value: '持续下降中（58bpm）', direction: 'positive' },
-        { label: '距上次咖啡因', value: '12h', direction: 'positive' },
-        { label: '距上次运动', value: '5h', direction: 'positive' },
-        { label: '当日活动量', value: '步数 8234', direction: 'positive' },
-      ]
+      sub_scores: { f_S: 0.92, f_C: 0.94, f_W: 0.95 },
+      compasses: [
+        { name: 'HRV', form: 'bidirectional', value: 58, unit: 'ms',
+          track_min: 20, track_max: 100, ideal_min: 48, ideal_max: 75,
+          deviation_side: 'center', status_word: '放松' },
+        { name: 'HR', form: 'bidirectional', value: 58, unit: 'bpm',
+          track_min: 45, track_max: 85, ideal_min: 55, ideal_max: 65,
+          deviation_side: 'center', status_word: '平稳' },
+        { name: '远端皮温', form: 'trend_arrow', direction: 'up', status_word: '正在升温' },
+        { name: '睡前体动', form: 'binary', state: 'still', status_word: '静止' },
+      ],
+      attributions: []
     },
     digest: '静息心率已经降到 58 了，身体比你先准备好了',
     questions: ['低心率说明什么', '现在多快能睡着', '明天精力预估准吗'],
@@ -1380,19 +1568,32 @@ var SCENES = [
     bodyData: { hr: 58, hrv: 52, steps: 8234, spo2: 98, sleepH: '7h12m', sleepEff: '93%', deep: 24, light: 44, rem: 22, awake: 10 },
   },
 
-  // ── Scene 7: Night - Almost Ready 🟡 ──
+  // ── Scene 7: Night - Amber Yellow 暖黄 ──
   {
-    id: 'night_almost', name: '夜晚 - 接近准备好 🟡',
-    desc: '夜间模式，入睡准备度：接近准备好',
+    id: 'night_almost', name: '夜晚 - 暖黄（身体准备度 63）',
+    desc: '身体准备度暖黄区，用户下钻可看偏离因子',
     time: '22:30', isNight: true, greeting: '夜深了',
-    sleepReadiness: {
-      level: 'almost', estimated_min: 25, suggestion: null,
+    bodyReadiness: {
+      score: 63, band: 'amber_yellow', top_deviation_text: null, hide_score: false,
       predicted_tomorrow_h: 7.0, recommended_bedtime: '23:00',
-      factors: [
-        { label: '心率趋势', value: '缓慢下降中（65bpm）', direction: 'positive' },
-        { label: '距上次咖啡因', value: '8h', direction: 'positive' },
-        { label: '距上次运动', value: '2h', direction: 'negative' },
-        { label: '当日活动量', value: '步数 6500', direction: 'positive' },
+      sub_scores: { f_S: 0.82, f_C: 0.85, f_W: 0.91 },
+      compasses: [
+        { name: 'HRV', form: 'bidirectional', value: 42, unit: 'ms',
+          track_min: 20, track_max: 100, ideal_min: 48, ideal_max: 75,
+          deviation_side: 'low', status_word: '略低' },
+        { name: 'HR', form: 'bidirectional', value: 65, unit: 'bpm',
+          track_min: 45, track_max: 85, ideal_min: 55, ideal_max: 65,
+          deviation_side: 'center', status_word: '平稳' },
+        { name: '远端皮温', form: 'trend_arrow', direction: 'up', status_word: '缓慢上升' },
+        { name: '睡前体动', form: 'binary', state: 'still', status_word: '静止' },
+      ],
+      attributions: [
+        { sub_score: 'f_W', evidence_layer: 'T2_inferred',
+          text: '检测到 19:00–19:30 有中高强度运动，交感尚未完全回落',
+          deduction_points: 9, actionable_now: false },
+        { sub_score: 'f_W', evidence_layer: 'T1_physio',
+          text: 'HRV 42 ms，比过去 14 天基线略低',
+          deduction_points: 5, actionable_now: true },
       ]
     },
     digest: '心率还在慢慢降，距上次运动才 2 小时——再等 25 分钟会更容易入睡',
@@ -1417,20 +1618,37 @@ var SCENES = [
     bodyData: { hr: 65, hrv: 42, steps: 6500, spo2: 98, sleepH: '7h', sleepEff: '90%', deep: 22, light: 44, rem: 24, awake: 10 },
   },
 
-  // ── Scene 8: Night - Not Ready 🔴 ──
+  // ── Scene 8: Night - Amber Orange 暖橙（不用红色） ──
   {
-    id: 'night_not_ready', name: '夜晚 - 还需准备 🔴',
-    desc: '夜间模式，入睡准备度：还需准备',
+    id: 'night_not_ready', name: '夜晚 - 暖橙（身体准备度 41）',
+    desc: '身体准备度暖橙区，一行软化文案；具体建议需主动下钻',
     time: '23:15', isNight: true, greeting: '夜深了',
-    sleepReadiness: {
-      level: 'not_ready', estimated_min: null,
-      suggestion: '试试 5 分钟呼吸练习',
+    bodyReadiness: {
+      score: 41, band: 'amber_orange',
+      top_deviation_text: '身体还没进入休息模式，给它一点时间降温',
+      hide_score: false,
       predicted_tomorrow_h: 5.8, recommended_bedtime: '23:00',
-      factors: [
-        { label: '心率趋势', value: '偏高（78bpm）', direction: 'negative' },
-        { label: '距上次咖啡因', value: '4h', direction: 'negative' },
-        { label: '距上次运动', value: '无运动', direction: 'negative' },
-        { label: '当日活动量', value: '步数 2800', direction: 'negative' },
+      sub_scores: { f_S: 0.72, f_C: 0.78, f_W: 0.73 },
+      compasses: [
+        { name: 'HRV', form: 'bidirectional', value: 30, unit: 'ms',
+          track_min: 20, track_max: 100, ideal_min: 48, ideal_max: 75,
+          deviation_side: 'low', status_word: '偏低' },
+        { name: 'HR', form: 'bidirectional', value: 78, unit: 'bpm',
+          track_min: 45, track_max: 85, ideal_min: 55, ideal_max: 65,
+          deviation_side: 'high', status_word: '偏高' },
+        { name: '远端皮温', form: 'trend_arrow', direction: 'flat', status_word: '未启动' },
+        { name: '睡前体动', form: 'binary', state: 'still', status_word: '静止' },
+      ],
+      attributions: [
+        { sub_score: 'f_W', evidence_layer: 'T3_behavior',
+          text: '19:00 摄入约 200 mg 咖啡因，预计当前残留 110 mg',
+          deduction_points: 14, actionable_now: false },
+        { sub_score: 'f_W', evidence_layer: 'T1_physio',
+          text: '静息心率 78 bpm，比过去 14 天基线高 12 bpm',
+          deduction_points: 10, actionable_now: true },
+        { sub_score: 'f_C', evidence_layer: 'T1_physio',
+          text: '远端皮温未见上升趋势，DPG 尚未建立',
+          deduction_points: 7, actionable_now: true },
       ]
     },
     digest: '心率还在 78，咖啡因 4 小时前才喝——身体还没进入休息模式',
@@ -1557,32 +1775,94 @@ function renderDayCoreMetric(scene) {
     '<div class="core-metric-slots">' + slotsHtml + '</div>';
 }
 
-function renderNightCoreMetric(scene) {
-  const r = scene.sleepReadiness;
-  var dotEmoji, dotCls, statusText;
-  if (r.level === 'ready') {
-    dotEmoji = '🟢'; dotCls = 'ready'; statusText = '已准备好';
-  } else if (r.level === 'almost') {
-    dotEmoji = '🟡'; dotCls = 'almost'; statusText = '接近准备好';
-  } else {
-    dotEmoji = '🔴'; dotCls = 'not-ready'; statusText = '还需准备';
+// Band → CSS class + 中文标签
+function bandInfo(band) {
+  if (band === 'cool_white')   return { cls: 'cool-white',   label: '凉白' };
+  if (band === 'amber_yellow') return { cls: 'amber-yellow', label: '暖黄' };
+  return { cls: 'amber-orange', label: '暖橙' };
+}
+
+// 渲染单个罗盘
+function renderCompass(c) {
+  var html = '<div class="compass-cell"><div class="compass-name">' + c.name + '</div>';
+
+  if (c.form === 'bidirectional' || c.form === 'unidirectional') {
+    var range = c.track_max - c.track_min;
+    var idealL = ((c.ideal_min - c.track_min) / range) * 100;
+    var idealW = ((c.ideal_max - c.ideal_min) / range) * 100;
+    var pointerL = ((c.value - c.track_min) / range) * 100;
+    pointerL = Math.max(2, Math.min(98, pointerL));
+    var devCls = 'dev-' + (c.deviation_side || 'center');
+    html +=
+      '<div class="compass-track">' +
+        '<div class="compass-track-ideal" style="left:' + idealL + '%;width:' + idealW + '%"></div>' +
+        '<div class="compass-pointer ' + devCls + '" style="left:' + pointerL + '%"></div>' +
+      '</div>' +
+      '<div class="compass-value-row">' +
+        '<span class="compass-value">' + c.value + '</span>' +
+        '<span class="compass-unit">' + c.unit + '</span>' +
+        '<span class="compass-status">' + c.status_word + '</span>' +
+      '</div>';
+  } else if (c.form === 'trend_arrow') {
+    var arrow = c.direction === 'up' ? '↗' : c.direction === 'down' ? '↘' : '·';
+    html +=
+      '<div class="compass-trend ' + c.direction + '">' +
+        '<div class="compass-trend-icon">' + arrow + '</div>' +
+        '<div class="compass-trend-text">' + c.status_word + '</div>' +
+      '</div>';
+  } else if (c.form === 'binary') {
+    html +=
+      '<div class="compass-binary">' +
+        '<span class="compass-binary-dot ' + c.state + '"></span>' +
+        '<span class="compass-binary-text">' + c.status_word + '</span>' +
+      '</div>';
   }
 
-  var subText = '';
-  if (r.level === 'almost' && r.estimated_min) {
-    subText = '预计约 ' + r.estimated_min + ' 分钟后进入最佳状态';
-  } else if (r.level === 'not_ready' && r.suggestion) {
-    subText = r.suggestion;
+  html += '</div>';
+  return html;
+}
+
+function renderNightCoreMetric(scene) {
+  var r = scene.bodyReadiness;
+  var b = bandInfo(r.band);
+  var hideScore = !!r.hide_score;
+
+  var signalHtml =
+    '<div class="signal-light ' + b.cls + (hideScore ? ' hide-score' : '') + '">' +
+      '<div class="signal-score">' + r.score + '</div>' +
+      '<div class="signal-score-suffix">/ 100</div>' +
+    '</div>';
+
+  var subScoresHtml = '';
+  if (r.sub_scores) {
+    subScoresHtml =
+      '<div class="body-readiness-sub-scores">' +
+        '<span>f_S <b>' + r.sub_scores.f_S.toFixed(2) + '</b></span>' +
+        '<span>f_C <b>' + r.sub_scores.f_C.toFixed(2) + '</b></span>' +
+        '<span>f_W <b>' + r.sub_scores.f_W.toFixed(2) + '</b></span>' +
+      '</div>';
   }
+
+  var topTextHtml = '';
+  if (r.band === 'amber_orange' && r.top_deviation_text) {
+    topTextHtml = '<div class="body-readiness-top-text">' + r.top_deviation_text + '</div>';
+  }
+
+  var compassHtml = '<div class="compass-array">' +
+    r.compasses.map(renderCompass).join('') +
+    '</div>';
 
   $('core-metric').innerHTML =
-    '<div class="core-metric-label">入睡准备度</div>' +
-    '<div class="readiness-indicator">' +
-      '<div class="readiness-dot ' + dotCls + '">' + dotEmoji + '</div>' +
-      '<div><div class="readiness-text">' + statusText + '</div>' +
-        (subText ? '<div class="readiness-sub">' + subText + '</div>' : '') +
+    '<div class="core-metric-label">身体准备度</div>' +
+    '<div class="body-readiness-main">' +
+      signalHtml +
+      '<div class="body-readiness-heading">' +
+        '<div class="body-readiness-band">' + b.label + '</div>' +
+        subScoresHtml +
       '</div>' +
     '</div>' +
+    topTextHtml +
+    compassHtml +
     '<div class="readiness-details">' +
       '<div class="readiness-detail-item">' +
         '<div class="readiness-detail-label">明日高能预估</div>' +
@@ -1651,22 +1931,37 @@ function renderAttribution(scene) {
   var toggle = $('attr-toggle');
   var body = $('attr-body');
 
-  // Night mode: use sleepReadiness factors
-  if (scene.isNight && scene.sleepReadiness) {
+  // Night mode: 身体准备度 "可能原因" 证据层（最多 3 条，扣分贡献降序）
+  if (scene.isNight && scene.bodyReadiness) {
+    var attrs = (scene.bodyReadiness.attributions || []).slice(0, 3);
+    if (attrs.length === 0) {
+      // 凉白区无归因：本层自然收缩
+      section.style.display = 'none';
+      return;
+    }
     section.style.display = 'block';
-    toggle.querySelector('.attr-toggle-label').textContent = '入睡准备度归因';
-    var factors = scene.sleepReadiness.factors;
-    list.innerHTML = factors.map(function(f) {
-      var dirIcon = f.direction === 'positive' ? '✓' : '✗';
-      return '<div class="attr-row">' +
-        '<div class="attr-info">' +
-          '<div class="attr-label">' + f.label + '</div>' +
-          '<div class="attr-value">' + f.value + '</div>' +
+    toggle.querySelector('.attr-toggle-label').textContent = '可能原因（最多 3 条）';
+    var maxDed = Math.max.apply(null, attrs.map(function(a) { return a.deduction_points; }).concat([1]));
+
+    list.innerHTML = attrs.map(function(a) {
+      var tagCls = a.sub_score.replace('_', '-').toLowerCase(); // f_W → f-w
+      var tagLabel = a.sub_score.replace('_', ' ');              // f_W → f W
+      var barPct = Math.min(100, (a.deduction_points / maxDed) * 100);
+      var actionableCls = a.actionable_now ? 'yes' : 'no';
+      var actionableText = a.actionable_now ? '· 今晚可改善' : '· 本晚无法改变';
+      return '<div class="attr-evidence-row">' +
+        '<div class="attr-evidence-top">' +
+          '<span class="attr-evidence-tag ' + tagCls + '">' + tagLabel + '</span>' +
+          '<span class="attr-evidence-actionable ' + actionableCls + '">' + actionableText + '</span>' +
         '</div>' +
-        '<div class="attr-direction ' + f.direction + '">' + dirIcon + '</div>' +
+        '<div class="attr-evidence-text">' + a.text + '</div>' +
+        '<div class="attr-evidence-bar-wrap">' +
+          '<div class="attr-evidence-bar" style="width:' + barPct + '%"></div>' +
+        '</div>' +
+        '<div class="attr-evidence-bar-label">扣分贡献 −' + a.deduction_points + '</div>' +
       '</div>';
     }).join('');
-    // Reset collapsed state
+
     toggle.classList.remove('expanded');
     body.style.display = 'none';
     return;
@@ -2060,7 +2355,7 @@ function applyScene(scene) {
   }
 
   // ── Status Tab ──
-  if (scene.isNight && scene.sleepReadiness) {
+  if (scene.isNight && scene.bodyReadiness) {
     renderNightCoreMetric(scene);
   } else {
     renderDayCoreMetric(scene);
