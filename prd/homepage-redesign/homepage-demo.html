@@ -543,6 +543,79 @@
     line-height: 1.45;
   }
 
+  /* ── 夜间顶部「今日高能时长 · 已归零」过渡条：复用 energy-tank 布局，但去饱和 ── */
+  .night-recap-strip {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+  }
+  .night-recap-strip-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .night-recap-strip-label {
+    font-size: 11.5px; color: var(--night-text-secondary);
+    letter-spacing: 0.2px;
+  }
+  .night-recap-strip-value {
+    font-size: 13px; color: rgba(255,255,255,0.65);
+    font-weight: 500;
+  }
+  .night-recap-strip-value b {
+    color: rgba(255,255,255,0.88);
+    font-weight: 600; margin-right: 4px;
+  }
+  .night-recap-strip-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .night-recap-strip-bar-fill {
+    height: 100%;
+    background: rgba(160, 210, 255, 0.22);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+  .night-recap-strip-zero-chip {
+    display: inline-block;
+    padding: 1px 6px; margin-left: 4px;
+    font-size: 10px; color: rgba(210, 232, 255, 0.85);
+    background: rgba(160, 210, 255, 0.12);
+    border-radius: 4px; font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── 入睡准备度：状态词 + 推荐入睡时间（并排，无分值） ── */
+  .sleep-readiness-state-row {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap; margin-top: 2px;
+  }
+  .sleep-readiness-state-word {
+    font-size: 22px; font-weight: 700; color: #fff; line-height: 1.15;
+  }
+  .sleep-readiness-state-word.cool-white { color: #d2e8ff; }
+  .sleep-readiness-state-word.amber-yellow { color: #ffe0a3; }
+  .sleep-readiness-state-word.amber-orange { color: #f6b784; }
+  .sleep-readiness-bedtime-chip {
+    display: inline-flex; align-items: baseline; gap: 4px;
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 999px;
+  }
+  .sleep-readiness-bedtime-chip-label {
+    font-size: 10.5px; color: var(--night-text-secondary);
+    letter-spacing: 0.3px;
+  }
+  .sleep-readiness-bedtime-chip-value {
+    font-size: 13.5px; font-weight: 700; color: #fff;
+    letter-spacing: 0.3px;
+  }
+
   /* Compass array: 2x2 grid */
   .compass-array {
     display: grid;
@@ -614,26 +687,6 @@
   .compass-trend.flat .compass-trend-icon { color: rgba(255,255,255,0.55); }
   .compass-trend.down .compass-trend-icon { color: #f6b784; background: rgba(244, 162, 97, 0.12); }
   .compass-trend-text {
-    font-size: 13px; color: #fff; font-weight: 500;
-  }
-
-  /* Binary compass (睡前体动) */
-  .compass-binary {
-    display: flex; align-items: center; gap: 10px; padding: 4px 0 2px;
-  }
-  .compass-binary-dot {
-    width: 14px; height: 14px; border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .compass-binary-dot.still {
-    background: #d2e8ff;
-    box-shadow: 0 0 8px rgba(160, 210, 255, 0.4);
-  }
-  .compass-binary-dot.active {
-    background: transparent;
-    border: 2px solid #f6b784;
-  }
-  .compass-binary-text {
     font-size: 13px; color: #fff; font-weight: 500;
   }
 
@@ -1527,13 +1580,14 @@ var SCENES = [
 
   // ── Scene 6: Night - Cool White 凉白 ──
   {
-    id: 'night_ready', name: '夜晚 - 凉白（身体准备度 82）',
-    desc: '身体准备度凉白区，不展示建议',
+    id: 'night_ready', name: '夜晚 - 凉白（入睡准备度 · 放松就绪）',
+    desc: '入睡准备度凉白区，不展示建议；仅 3 状态展现',
     time: '22:50', isNight: true, greeting: '夜深了',
-    bodyReadiness: {
-      score: 82, band: 'cool_white', top_deviation_text: null, hide_score: false,
-      predicted_tomorrow_h: 7.5, recommended_bedtime: '23:00',
-      sub_scores: { f_S: 0.92, f_C: 0.94, f_W: 0.95 },
+    sleepReadiness: {
+      band: 'cool_white', band_status_word: '放松就绪',
+      top_deviation_text: null, hide_score: false,
+      recommended_bedtime: '23:00',
+      today_high_energy_h: 7.2,
       compasses: [
         { name: 'HRV', form: 'bidirectional', value: 58, unit: 'ms',
           track_min: 20, track_max: 100, ideal_min: 48, ideal_max: 75,
@@ -1542,7 +1596,10 @@ var SCENES = [
           track_min: 45, track_max: 85, ideal_min: 55, ideal_max: 65,
           deviation_side: 'center', status_word: '平稳' },
         { name: '远端皮温', form: 'trend_arrow', direction: 'up', status_word: '正在升温' },
-        { name: '睡前体动', form: 'binary', state: 'still', status_word: '静止' },
+        { name: '睡眠压力', form: 'unidirectional', direction: 'higher_better',
+          value: 16.5, unit: 'h', track_min: 6, track_max: 24,
+          ideal_min: 14, ideal_max: 20,
+          deviation_side: 'center', status_word: '充足' },
       ],
       attributions: []
     },
@@ -1570,13 +1627,14 @@ var SCENES = [
 
   // ── Scene 7: Night - Amber Yellow 暖黄 ──
   {
-    id: 'night_almost', name: '夜晚 - 暖黄（身体准备度 63）',
-    desc: '身体准备度暖黄区，用户下钻可看偏离因子',
+    id: 'night_almost', name: '夜晚 - 暖黄（入睡准备度 · 接近就绪）',
+    desc: '入睡准备度暖黄区，用户下钻可看偏离因子',
     time: '22:30', isNight: true, greeting: '夜深了',
-    bodyReadiness: {
-      score: 63, band: 'amber_yellow', top_deviation_text: null, hide_score: false,
-      predicted_tomorrow_h: 7.0, recommended_bedtime: '23:00',
-      sub_scores: { f_S: 0.82, f_C: 0.85, f_W: 0.91 },
+    sleepReadiness: {
+      band: 'amber_yellow', band_status_word: '接近就绪',
+      top_deviation_text: null, hide_score: false,
+      recommended_bedtime: '23:00',
+      today_high_energy_h: 6.8,
       compasses: [
         { name: 'HRV', form: 'bidirectional', value: 42, unit: 'ms',
           track_min: 20, track_max: 100, ideal_min: 48, ideal_max: 75,
@@ -1585,13 +1643,16 @@ var SCENES = [
           track_min: 45, track_max: 85, ideal_min: 55, ideal_max: 65,
           deviation_side: 'center', status_word: '平稳' },
         { name: '远端皮温', form: 'trend_arrow', direction: 'up', status_word: '缓慢上升' },
-        { name: '睡前体动', form: 'binary', state: 'still', status_word: '静止' },
+        { name: '睡眠压力', form: 'unidirectional', direction: 'higher_better',
+          value: 13.5, unit: 'h', track_min: 6, track_max: 24,
+          ideal_min: 14, ideal_max: 20,
+          deviation_side: 'low', status_word: '略浅' },
       ],
       attributions: [
-        { sub_score: 'f_W', evidence_layer: 'T2_inferred',
+        { sub_score: 'f_W', category_label: '近端唤起', evidence_layer: 'T2_inferred',
           text: '检测到 19:00–19:30 有中高强度运动，交感尚未完全回落',
           deduction_points: 9, actionable_now: false },
-        { sub_score: 'f_W', evidence_layer: 'T1_physio',
+        { sub_score: 'f_W', category_label: '近端唤起', evidence_layer: 'T1_physio',
           text: 'HRV 42 ms，比过去 14 天基线略低',
           deduction_points: 5, actionable_now: true },
       ]
@@ -1620,15 +1681,15 @@ var SCENES = [
 
   // ── Scene 8: Night - Amber Orange 暖橙（不用红色） ──
   {
-    id: 'night_not_ready', name: '夜晚 - 暖橙（身体准备度 41）',
-    desc: '身体准备度暖橙区，一行软化文案；具体建议需主动下钻',
+    id: 'night_not_ready', name: '夜晚 - 暖橙（入睡准备度 · 还在准备中）',
+    desc: '入睡准备度暖橙区，一行软化文案；具体建议需主动下钻',
     time: '23:15', isNight: true, greeting: '夜深了',
-    bodyReadiness: {
-      score: 41, band: 'amber_orange',
+    sleepReadiness: {
+      band: 'amber_orange', band_status_word: '还在准备中',
       top_deviation_text: '身体还没进入休息模式，给它一点时间降温',
       hide_score: false,
-      predicted_tomorrow_h: 5.8, recommended_bedtime: '23:00',
-      sub_scores: { f_S: 0.72, f_C: 0.78, f_W: 0.73 },
+      recommended_bedtime: '23:30',
+      today_high_energy_h: 5.4,
       compasses: [
         { name: 'HRV', form: 'bidirectional', value: 30, unit: 'ms',
           track_min: 20, track_max: 100, ideal_min: 48, ideal_max: 75,
@@ -1637,16 +1698,19 @@ var SCENES = [
           track_min: 45, track_max: 85, ideal_min: 55, ideal_max: 65,
           deviation_side: 'high', status_word: '偏高' },
         { name: '远端皮温', form: 'trend_arrow', direction: 'flat', status_word: '未启动' },
-        { name: '睡前体动', form: 'binary', state: 'still', status_word: '静止' },
+        { name: '睡眠压力', form: 'unidirectional', direction: 'higher_better',
+          value: 11, unit: 'h', track_min: 6, track_max: 24,
+          ideal_min: 14, ideal_max: 20,
+          deviation_side: 'low', status_word: '偏浅' },
       ],
       attributions: [
-        { sub_score: 'f_W', evidence_layer: 'T3_behavior',
+        { sub_score: 'f_W', category_label: '近端唤起', evidence_layer: 'T3_behavior',
           text: '19:00 摄入约 200 mg 咖啡因，预计当前残留 110 mg',
           deduction_points: 14, actionable_now: false },
-        { sub_score: 'f_W', evidence_layer: 'T1_physio',
+        { sub_score: 'f_W', category_label: '近端唤起', evidence_layer: 'T1_physio',
           text: '静息心率 78 bpm，比过去 14 天基线高 12 bpm',
           deduction_points: 10, actionable_now: true },
-        { sub_score: 'f_C', evidence_layer: 'T1_physio',
+        { sub_score: 'f_C', category_label: '昼夜节律', evidence_layer: 'T1_physio',
           text: '远端皮温未见上升趋势，DPG 尚未建立',
           deduction_points: 7, actionable_now: true },
       ]
@@ -1783,6 +1847,10 @@ function bandInfo(band) {
 }
 
 // 渲染单个罗盘
+// 支持三种形态：
+//   - bidirectional  双向偏差（HRV / HR）
+//   - unidirectional 单向偏差（睡眠压力；direction=higher_better 时理想区在轨道右端）
+//   - trend_arrow    趋势箭头（远端皮温）
 function renderCompass(c) {
   var html = '<div class="compass-cell"><div class="compass-name">' + c.name + '</div>';
 
@@ -1810,69 +1878,71 @@ function renderCompass(c) {
         '<div class="compass-trend-icon">' + arrow + '</div>' +
         '<div class="compass-trend-text">' + c.status_word + '</div>' +
       '</div>';
-  } else if (c.form === 'binary') {
-    html +=
-      '<div class="compass-binary">' +
-        '<span class="compass-binary-dot ' + c.state + '"></span>' +
-        '<span class="compass-binary-text">' + c.status_word + '</span>' +
-      '</div>';
   }
 
   html += '</div>';
   return html;
 }
 
+// v1.2：布局对齐白天高能时长 —— 顶部先显示"今日高能时长 · 已归零"过渡条，
+// 然后进入入睡准备度（3 状态信号灯 + 状态词 + 推荐入睡），不展示分值/子分/明日预估。
 function renderNightCoreMetric(scene) {
-  var r = scene.bodyReadiness;
+  var r = scene.sleepReadiness;
   var b = bandInfo(r.band);
-  var hideScore = !!r.hide_score;
 
-  var signalHtml =
-    '<div class="signal-light ' + b.cls + (hideScore ? ' hide-score' : '') + '">' +
-      '<div class="signal-score">' + r.score + '</div>' +
-      '<div class="signal-score-suffix">/ 100</div>' +
+  // ── 顶部：今日高能时长已归零过渡条（复用白天能量槽视觉语言，去饱和） ──
+  var todayH = (r.today_high_energy_h != null) ? r.today_high_energy_h : null;
+  var recapValueHtml = todayH != null
+    ? '<b>' + todayH + 'h</b><span class="night-recap-strip-zero-chip">已归零</span>'
+    : '<span class="night-recap-strip-zero-chip">已归零</span>';
+  var recapHtml =
+    '<div class="night-recap-strip">' +
+      '<div class="night-recap-strip-head">' +
+        '<span class="night-recap-strip-label">今日高能时长</span>' +
+        '<span class="night-recap-strip-value">' + recapValueHtml + '</span>' +
+      '</div>' +
+      '<div class="night-recap-strip-bar">' +
+        '<div class="night-recap-strip-bar-fill" style="width:0%"></div>' +
+      '</div>' +
     '</div>';
 
-  var subScoresHtml = '';
-  if (r.sub_scores) {
-    subScoresHtml =
-      '<div class="body-readiness-sub-scores">' +
-        '<span>f_S <b>' + r.sub_scores.f_S.toFixed(2) + '</b></span>' +
-        '<span>f_C <b>' + r.sub_scores.f_C.toFixed(2) + '</b></span>' +
-        '<span>f_W <b>' + r.sub_scores.f_W.toFixed(2) + '</b></span>' +
-      '</div>';
-  }
+  // ── 信号灯：仅颜色展现，不展示分数 ──
+  var signalHtml =
+    '<div class="signal-light ' + b.cls + ' hide-score"></div>';
 
+  // ── 核心状态：状态词 + 推荐入睡时间 ──
+  var stateWord = r.band_status_word || b.label;
+  var headingHtml =
+    '<div class="body-readiness-heading">' +
+      '<div class="sleep-readiness-state-row">' +
+        '<span class="sleep-readiness-state-word ' + b.cls + '">' + stateWord + '</span>' +
+        '<span class="sleep-readiness-bedtime-chip">' +
+          '<span class="sleep-readiness-bedtime-chip-label">推荐入睡</span>' +
+          '<span class="sleep-readiness-bedtime-chip-value">' + r.recommended_bedtime + '</span>' +
+        '</span>' +
+      '</div>' +
+    '</div>';
+
+  // ── 暖橙区软化文案 ──
   var topTextHtml = '';
   if (r.band === 'amber_orange' && r.top_deviation_text) {
     topTextHtml = '<div class="body-readiness-top-text">' + r.top_deviation_text + '</div>';
   }
 
+  // ── 罗盘阵列：HRV / HR / 皮温 / 睡眠压力 ──
   var compassHtml = '<div class="compass-array">' +
     r.compasses.map(renderCompass).join('') +
     '</div>';
 
   $('core-metric').innerHTML =
-    '<div class="core-metric-label">身体准备度</div>' +
+    recapHtml +
+    '<div class="core-metric-label">入睡准备度</div>' +
     '<div class="body-readiness-main">' +
       signalHtml +
-      '<div class="body-readiness-heading">' +
-        '<div class="body-readiness-band">' + b.label + '</div>' +
-        subScoresHtml +
-      '</div>' +
+      headingHtml +
     '</div>' +
     topTextHtml +
-    compassHtml +
-    '<div class="readiness-details">' +
-      '<div class="readiness-detail-item">' +
-        '<div class="readiness-detail-label">明日高能预估</div>' +
-        '<div class="readiness-detail-value">' + r.predicted_tomorrow_h + 'h</div>' +
-      '</div>' +
-      '<div class="readiness-detail-item">' +
-        '<div class="readiness-detail-label">推荐入睡</div>' +
-        '<div class="readiness-detail-value">' + r.recommended_bedtime + '</div>' +
-      '</div>' +
-    '</div>';
+    compassHtml;
 }
 
 // ══════════════════════════════════════════
@@ -1931,9 +2001,9 @@ function renderAttribution(scene) {
   var toggle = $('attr-toggle');
   var body = $('attr-body');
 
-  // Night mode: 身体准备度 "可能原因" 证据层（最多 3 条，扣分贡献降序）
-  if (scene.isNight && scene.bodyReadiness) {
-    var attrs = (scene.bodyReadiness.attributions || []).slice(0, 3);
+  // Night mode: 入睡准备度 "可能原因" 证据层（最多 3 条，扣分贡献降序）
+  if (scene.isNight && scene.sleepReadiness) {
+    var attrs = (scene.sleepReadiness.attributions || []).slice(0, 3);
     if (attrs.length === 0) {
       // 凉白区无归因：本层自然收缩
       section.style.display = 'none';
@@ -2355,7 +2425,7 @@ function applyScene(scene) {
   }
 
   // ── Status Tab ──
-  if (scene.isNight && scene.bodyReadiness) {
+  if (scene.isNight && scene.sleepReadiness) {
     renderNightCoreMetric(scene);
   } else {
     renderDayCoreMetric(scene);
