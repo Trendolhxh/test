@@ -811,6 +811,119 @@
     background: rgba(255,255,255,0.08); color: var(--night-text-secondary);
   }
 
+  /* ── v1.4：解读卡片三段式（结论短语 / 偏差罗盘 / 归因总结） ── */
+  .status-card-conclusion {
+    font-size: 16px; font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px; line-height: 1.3;
+  }
+  .iphone-frame.night-mode .status-card-conclusion { color: var(--night-text-primary); }
+
+  .status-card-compass-array {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin-bottom: 10px;
+  }
+  .dev-compass-cell {
+    padding: 8px 6px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.7);
+    border-radius: 10px;
+  }
+  .iphone-frame.night-mode .dev-compass-cell {
+    background: rgba(255,255,255,0.04);
+    border-color: var(--night-border);
+  }
+  .dev-compass-name {
+    font-size: 10.5px; color: var(--text-secondary);
+    margin-bottom: 6px; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .iphone-frame.night-mode .dev-compass-name { color: var(--night-text-secondary); }
+  .dev-compass-track {
+    position: relative; height: 4px; margin: 5px 0 6px;
+    background: rgba(0,0,0,0.06); border-radius: 2px;
+  }
+  .iphone-frame.night-mode .dev-compass-track { background: rgba(255,255,255,0.08); }
+  .dev-compass-ideal {
+    position: absolute; left: 42%; right: 42%; top: 0; bottom: 0;
+    background: rgba(52,199,89,0.22); border-radius: 2px;
+  }
+  .dev-compass-pointer {
+    position: absolute; top: -3px;
+    width: 10px; height: 10px; border-radius: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  }
+  .dev-compass-pointer.pos { background: var(--brand-green); }
+  .dev-compass-pointer.neg { background: var(--warning-orange); }
+  .dev-compass-pointer.neu { background: #8E8E93; }
+  .dev-compass-status {
+    font-size: 11px; font-weight: 500;
+    line-height: 1.2;
+  }
+  .dev-compass-status.pos { color: var(--brand-green); }
+  .dev-compass-status.neg { color: var(--warning-orange); }
+  .dev-compass-status.neu { color: #8E8E93; }
+
+  .status-card-summary {
+    display: flex; align-items: flex-start; gap: 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+  }
+  .iphone-frame.night-mode .status-card-summary {
+    border-top-color: rgba(255,255,255,0.08);
+  }
+  .status-card-summary-icon {
+    font-size: 12px; margin-top: 2px; flex-shrink: 0;
+  }
+  .status-card-summary-text {
+    font-size: 13px; line-height: 1.5;
+    color: var(--text-secondary);
+  }
+  .iphone-frame.night-mode .status-card-summary-text {
+    color: var(--night-text-secondary);
+  }
+
+  /* ── v1.4 / v0.5：快捷提问悬浮 chips（两 Tab 共用） ── */
+  .questions-dock {
+    padding: 6px 16px 0;
+    display: flex; gap: 6px;
+    overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    background: transparent;
+  }
+  .questions-dock::-webkit-scrollbar { display: none; }
+  .questions-dock:empty { display: none; }
+  .questions-dock .question-chip {
+    flex-shrink: 0;
+    padding: 5px 10px;
+    font-size: 11.5px; color: var(--text-secondary);
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .questions-dock .question-chip:hover {
+    background: rgba(255,255,255,0.8); color: var(--text-primary);
+  }
+  .questions-dock .question-chip-prefix {
+    display: inline-block; margin-right: 3px;
+    color: rgba(115,115,244,0.9); font-weight: 500;
+  }
+  .iphone-frame.night-mode .questions-dock .question-chip {
+    background: rgba(255,255,255,0.08);
+    color: var(--night-text-secondary);
+    border-color: rgba(255,255,255,0.06);
+  }
+  .iphone-frame.night-mode .questions-dock .question-chip:hover {
+    background: rgba(255,255,255,0.14);
+    color: var(--night-text-primary);
+  }
+  /* 半层打开时隐藏快捷提问 */
+  .iphone-frame.sheet-open .questions-dock { display: none; }
+
   /* ── Layer 3: Attribution (collapsible) ── */
   .attribution-section {
     margin-bottom: 12px;
@@ -1753,21 +1866,10 @@
       <!-- Layer 1: Core Metric -->
       <div class="core-metric" id="core-metric"></div>
 
-      <!-- Layer 2: Insight (digest + notable values merged) -->
+      <!-- Layer 2: 解读卡片（结论短语 + 数据归因罗盘 + 归因总结） · v1.4 -->
       <div class="insight-card" id="insight-card" style="display:none;"></div>
 
-      <!-- Layer 3: Attribution (collapsed by default) -->
-      <div class="attribution-section" id="attribution-section">
-        <div class="attr-toggle" id="attr-toggle">
-          <span class="attr-toggle-label">为什么是这样</span>
-          <span class="attr-toggle-arrow">›</span>
-        </div>
-        <div class="attr-body" id="attr-body" style="display:none;">
-          <div id="attribution-list"></div>
-        </div>
-      </div>
-
-      <!-- Layer 4: Body Data -->
+      <!-- Layer 3: Body Data -->
       <div class="body-data-section" id="body-data-section">
         <div class="section-title">身体数据</div>
         <div class="body-data-grid" id="body-data-grid"></div>
@@ -1788,6 +1890,9 @@
       <div style="height:20px;flex-shrink:0;"></div>
     </div>
   </div>
+
+  <!-- v1.4 / v0.5：快捷提问悬浮 chips（两 Tab 共用，位于吸底交互区之上） -->
+  <div class="questions-dock" id="questions-dock"></div>
 
   <!-- 今日 Tab 吸底交互区（PRD §7.6；仅当今日 Tab 激活时显示，与 .bottom-bar 互斥） -->
   <div class="today-dock" id="today-dock">
@@ -2277,6 +2382,8 @@ var SCENES = [
 // ══════════════════════════════════════════
 // RENDER: Core Metric (Layer 1)
 // ══════════════════════════════════════════
+// v1.4：主数字 = 今日剩余高能时长；delta = 相比上次数据更新的变化
+// 去除：进度条文字标签、"10h 目标"小竖线、高能时段 slots、tier 文字 CTA
 function renderDayCoreMetric(scene) {
   var a = scene.attribution;
   if (!a) {
@@ -2286,67 +2393,40 @@ function renderDayCoreMetric(scene) {
       '<div class="empty-state-desc">连接 Apple Watch 或 Health 数据<br>即可查看高能时长</div></div>';
     return;
   }
-  var val = a.high_energy_h;
-  var d = a.delta;
+  var total = a.high_energy_h;                                      // 今日全天预估总长（槽条宽度的分子）
+  var consumed = a.consumed_h || 0;                                 // 已消耗
+  var remaining = a.remaining_h != null ? a.remaining_h : total;    // 今日剩余 ← 主数字
+  var d = a.delta;                                                  // 本次更新相比上次的变化
   var cls = d > 0 ? 'positive' : d < 0 ? 'negative' : 'neutral';
   var arrow = d > 0 ? '↑' : d < 0 ? '↓' : '';
   var dSign = d > 0 ? '+' : '';
-  var valColor = val < 4 ? 'color:var(--warning-orange)' : val >= 10 ? 'color:var(--brand-green)' : '';
+  var valColor = remaining < 2 ? 'color:var(--warning-orange)' : remaining >= 8 ? 'color:var(--brand-green)' : '';
 
-  // Quality tier (仅用于槽内色阶；不再输出文字 CTA)
-  var tier;
-  if (val >= 10) {
-    tier = 'excellent';
-  } else if (val >= 4) {
-    tier = 'normal';
-  } else {
-    tier = 'poor';
-  }
+  // 槽内色阶：按全天总长（total）分档，保持 v1.3 视觉语言
+  var tier = total >= 10 ? 'excellent' : total >= 4 ? 'normal' : 'poor';
 
-  // Tank bar calculations
-  var consumed = a.consumed_h || 0;
-  var remaining = a.remaining_h != null ? a.remaining_h : val;
-  var maxRef = 12; // reference max for bar width
-  var totalPct = Math.min(val / maxRef * 100, 100);
-  var consumedPct = Math.min(consumed / maxRef * 100, 100);
-  var remainingPct = Math.min(remaining / maxRef * 100, 100);
-  var goalPct = (10 / maxRef * 100); // 10h goal marker position
-  var goalReached = val >= 10;
-  var remainColor = val < 4 ? 'orange' : 'green';
-
-  // Consumed / remaining label text —— 仅在已消耗时展示"已用/剩余"，避免与顶部主数字重复
-  var tankLabelsHtml = '';
-  if (consumed > 0) {
-    tankLabelsHtml =
-      '<span class="consumed">已用 ' + consumed + 'h</span>' +
-      '<span class="remaining ' + remainColor + '">剩余 ' + remaining + 'h</span>';
-  }
-
-  // High window slots
-  var slotsHtml = scene.highWindows.map(function(w) {
-    return '<span class="core-metric-slot">' + w.start + ' – ' + w.end + '</span>';
-  }).join('');
+  // Tank bar calculations —— 修复 v1.3 真机 bug：移除"10h 目标小竖线"
+  var maxRef = 12;
+  var totalPct = Math.min(total / maxRef * 100, 100);
+  var consumedInFillPct = total > 0 ? (consumed / total * 100) : 0;
+  var remainingInFillPct = total > 0 ? (remaining / total * 100) : 100;
 
   $('core-metric').innerHTML =
-    '<div class="core-metric-label">今日高能时长</div>' +
+    '<div class="core-metric-label">今日剩余高能时长</div>' +
     '<div class="core-metric-row">' +
-      '<span class="core-metric-value" style="' + valColor + ';animation:countPop 0.45s ease">' + val + '</span>' +
+      '<span class="core-metric-value" style="' + valColor + ';animation:countPop 0.45s ease">' + remaining + '</span>' +
       '<span class="core-metric-unit">小时</span>' +
-      '<span class="core-metric-delta ' + cls + '">' + arrow + ' ' + dSign + d + 'h</span>' +
+      '<span class="core-metric-delta ' + cls + '" title="相比上次数据更新">' + arrow + ' ' + dSign + d + 'h</span>' +
     '</div>' +
-    // Tank bar
+    // Tank bar（仅保留分段槽，移除底部文字标签与 10h 目标小竖线）
     '<div class="energy-tank">' +
       '<div class="energy-tank-bar">' +
         '<div class="energy-tank-fill tier-' + tier + '" style="width:' + totalPct + '%">' +
-          (consumed > 0 ? '<div class="energy-tank-consumed" style="width:' + (consumed / val * 100).toFixed(1) + '%"></div>' : '') +
-          '<div class="energy-tank-remaining" style="width:' + (remaining / val * 100).toFixed(1) + '%"></div>' +
+          (consumed > 0 ? '<div class="energy-tank-consumed" style="width:' + consumedInFillPct.toFixed(1) + '%"></div>' : '') +
+          '<div class="energy-tank-remaining" style="width:' + remainingInFillPct.toFixed(1) + '%"></div>' +
         '</div>' +
-        '<div class="energy-tank-goal' + (goalReached ? ' reached' : '') + '" style="left:' + goalPct + '%"></div>' +
       '</div>' +
-      (tankLabelsHtml ? '<div class="energy-tank-labels">' + tankLabelsHtml + '</div>' : '') +
-    '</div>' +
-    // High windows
-    '<div class="core-metric-slots">' + slotsHtml + '</div>';
+    '</div>';
 }
 
 // Band → CSS class + 中文标签
@@ -2484,153 +2564,147 @@ function renderTodayCoreCapsule(scene) {
       '<span class="today-core-capsule-spacer"></span>' +
       '<span class="today-core-capsule-bedtime">推荐入睡 <b>' + r.recommended_bedtime + '</b></span>';
   } else {
-    // 白天：今日高能时长数值 + delta
+    // 白天：今日剩余高能时长 + 本次更新变化（v1.4 / v0.5 语义对齐）
     var a = scene.attribution;
-    var val = a.high_energy_h;
+    var remaining = a.remaining_h != null ? a.remaining_h : a.high_energy_h;
     var d = a.delta;
     var cls = d > 0 ? 'positive' : d < 0 ? 'negative' : 'neutral';
     var arrow = d > 0 ? '↑' : d < 0 ? '↓' : '';
     var dSign = d > 0 ? '+' : '';
     el.innerHTML =
-      '<span class="today-core-capsule-label">今日高能时长</span>' +
+      '<span class="today-core-capsule-label">今日剩余高能时长</span>' +
       '<div class="today-core-capsule-main">' +
-        '<span class="today-core-capsule-value">' + val + '</span>' +
+        '<span class="today-core-capsule-value">' + remaining + '</span>' +
         '<span class="today-core-capsule-unit">h</span>' +
       '</div>' +
-      '<span class="today-core-capsule-delta ' + cls + '">' + arrow + ' ' + dSign + d + 'h</span>';
+      '<span class="today-core-capsule-delta ' + cls + '" title="相比上次数据更新">' + arrow + ' ' + dSign + d + 'h</span>';
   }
 }
 
 // ══════════════════════════════════════════
-// RENDER: Insight Card (digest + notables merged)
+// RENDER: 解读卡片（v1.4 · 结论短语 + 数据归因罗盘 + 归因总结）
 // ══════════════════════════════════════════
-function renderInsight(scene) {
+
+// 白天结论短语：rule-based 映射 remaining + delta
+function dayConclusionPhrase(remaining, delta) {
+  if (remaining < 1) return '快到今日收尾段';
+  if (remaining < 2) return '精力即将见底';
+  if (remaining >= 6 && delta >= 0.3) return '状态比预期更好';
+  if (remaining >= 6) return '你的精力很充沛';
+  if (remaining < 6 && delta <= -1) return '今日精力提前耗尽';
+  if (delta <= -0.5) return '剩余精力在加速消耗';
+  return '精力维持平稳';
+}
+
+// 夜间结论短语：band → 一句话
+function nightConclusionPhrase(band) {
+  if (band === 'cool_white')   return '身体已经准备好了';
+  if (band === 'amber_yellow') return '差不多可以了';
+  return '身体还在放松路上';
+}
+
+// 偏差罗盘（白天专用）：把 factor 转换成"因子名 + 偏差方向指针 + 状态词"的紧凑格
+function renderDeviationCompass(f) {
+  // 偏差方向：positive → 右偏；negative → 左偏；neutral → 居中
+  var leftPct, markCls, word;
+  if (f.direction === 'positive') {
+    leftPct = 70; markCls = 'pos'; word = '高于日常';
+  } else if (f.direction === 'negative') {
+    leftPct = 30; markCls = 'neg'; word = '低于日常';
+  } else {
+    leftPct = 50; markCls = 'neu'; word = '接近基线';
+  }
+  return '<div class="dev-compass-cell">' +
+    '<div class="dev-compass-name">' + f.label + '</div>' +
+    '<div class="dev-compass-track">' +
+      '<div class="dev-compass-ideal"></div>' +
+      '<div class="dev-compass-pointer ' + markCls + '" style="left:' + leftPct + '%"></div>' +
+    '</div>' +
+    '<div class="dev-compass-status ' + markCls + '">' + word + '</div>' +
+  '</div>';
+}
+
+function renderStatusCard(scene) {
   var el = $('insight-card');
   var digest = scene.digest || '';
-  var notables = (scene.attribution && scene.attribution.notable_values) || [];
-  var questions = scene.questions || [];
+  var html = '';
 
-  if (!digest && !notables.length) {
+  // ── ① 结论短语 ──
+  var conclusion = '';
+  if (scene.isNight && scene.sleepReadiness) {
+    conclusion = nightConclusionPhrase(scene.sleepReadiness.band);
+  } else if (scene.attribution) {
+    var rem = scene.attribution.remaining_h != null ? scene.attribution.remaining_h : scene.attribution.high_energy_h;
+    conclusion = dayConclusionPhrase(rem, scene.attribution.delta);
+  }
+
+  // 数据完全缺失时隐藏整张卡
+  if (!conclusion && !digest) {
     el.style.display = 'none';
     return;
   }
   el.style.display = 'block';
 
-  // Build a single insight line: digest text + inline notable highlights
-  var html = '<div class="insight-summary">';
-  html += '<span class="insight-icon">✨</span>';
-  html += '<div class="insight-text">';
+  if (conclusion) {
+    html += '<div class="status-card-conclusion">' + conclusion + '</div>';
+  }
 
+  // ── ② 数据归因罗盘 ──
+  // 白天：从 factors 里按 |contribution_h| 取 top-3
+  // 夜间：不重复渲染（核心指标胶囊里已有 4 枚罗盘）
+  if (!scene.isNight && scene.attribution && scene.attribution.factors) {
+    var sorted = scene.attribution.factors.slice().sort(function(a, b) {
+      return Math.abs(b.contribution_h) - Math.abs(a.contribution_h);
+    });
+    // 偏差阈值：|contribution_h| ≥ 0.1 才入罗盘
+    var significant = sorted.filter(function(f) { return Math.abs(f.contribution_h) >= 0.1; }).slice(0, 3);
+    if (significant.length > 0) {
+      html += '<div class="status-card-compass-array">';
+      significant.forEach(function(f) { html += renderDeviationCompass(f); });
+      html += '</div>';
+    }
+  }
+
+  // ── ③ 归因总结（复用 Smart Digest 文本） ──
   if (digest) {
-    html += digest;
-  }
-
-  // Append notable values as inline highlights
-  if (notables.length) {
-    notables.forEach(function(n) {
-      if (digest) html += ' · ';
-      html += '<span class="insight-notable ' + n.type + '">' + n.label + '</span>';
-      html += ' <span style="opacity:0.7">' + n.context + '</span>';
-    });
-  }
-
-  html += '</div></div>';
-
-  // Quick questions as small tags
-  if (questions.length) {
-    html += '<div class="insight-questions">';
-    questions.forEach(function(q) {
-      html += '<span class="insight-q">' + q + '</span>';
-    });
-    html += '</div>';
+    html += '<div class="status-card-summary">' +
+              '<span class="status-card-summary-icon">✨</span>' +
+              '<span class="status-card-summary-text">' + digest + '</span>' +
+            '</div>';
   }
 
   el.innerHTML = html;
 }
 
 // ══════════════════════════════════════════
-// RENDER: Attribution (collapsible)
+// RENDER: Questions Dock (v1.4 / v0.5，两 Tab 共用)
 // ══════════════════════════════════════════
-function renderAttribution(scene) {
-  var section = $('attribution-section');
-  var list = $('attribution-list');
-  var toggle = $('attr-toggle');
-  var body = $('attr-body');
+// 规则（详见 homepage-redesign-prd.md §3.5）：
+// - 悬浮于吸底对话栏之上，Tab 无关
+// - 每个 chip 带 "?" 前缀
+// - 夜间 orthosomnia 红线：临近就寝（isNight=true）时过滤会鼓励继续活动的问题
+// - 半层（安排卡）展开时整条 dock 由 CSS .sheet-open 自动隐藏
+function renderQuestionsDock(scene) {
+  var el = $('questions-dock');
+  if (!el) return;
+  var list = (scene && scene.questions) ? scene.questions.slice() : [];
 
-  // Night mode: 入睡准备度 "可能原因" 证据层（最多 3 条，扣分贡献降序）
-  if (scene.isNight && scene.sleepReadiness) {
-    var attrs = (scene.sleepReadiness.attributions || []).slice(0, 3);
-    if (attrs.length === 0) {
-      // 凉白区无归因：本层自然收缩
-      section.style.display = 'none';
-      return;
-    }
-    section.style.display = 'block';
-    toggle.querySelector('.attr-toggle-label').textContent = '为什么是这样';
-    var maxDed = Math.max.apply(null, attrs.map(function(a) { return a.deduction_points; }).concat([1]));
+  if (scene && scene.isNight) {
+    // 过滤会延后入睡 / 鼓励继续活动的快捷问法
+    var nightBlock = /恢复|续命|咖啡|做点什么|做什么/;
+    list = list.filter(function(q) { return !nightBlock.test(q); });
+  }
 
-    list.innerHTML = attrs.map(function(a) {
-      var tagCls = a.sub_score.replace('_', '-').toLowerCase(); // f_W → f-w
-      var tagLabel = a.sub_score.replace('_', ' ');              // f_W → f W
-      var barPct = Math.min(100, (a.deduction_points / maxDed) * 100);
-      var actionableCls = a.actionable_now ? 'yes' : 'no';
-      var actionableText = a.actionable_now ? '· 今晚可改善' : '· 本晚无法改变';
-      return '<div class="attr-evidence-row">' +
-        '<div class="attr-evidence-top">' +
-          '<span class="attr-evidence-tag ' + tagCls + '">' + tagLabel + '</span>' +
-          '<span class="attr-evidence-actionable ' + actionableCls + '">' + actionableText + '</span>' +
-        '</div>' +
-        '<div class="attr-evidence-text">' + a.text + '</div>' +
-        '<div class="attr-evidence-bar-wrap">' +
-          '<div class="attr-evidence-bar" style="width:' + barPct + '%"></div>' +
-        '</div>' +
-        '<div class="attr-evidence-bar-label">扣分贡献 −' + a.deduction_points + '</div>' +
-      '</div>';
-    }).join('');
-
-    toggle.classList.remove('expanded');
-    body.style.display = 'none';
+  if (list.length === 0) {
+    el.innerHTML = '';
     return;
   }
 
-  // Day mode
-  if (!scene.attribution) {
-    section.style.display = 'none';
-    return;
-  }
-  section.style.display = 'block';
-  toggle.querySelector('.attr-toggle-label').textContent = '为什么是这样';
-  var factors = scene.attribution.factors;
-  var maxC = Math.max.apply(null, factors.map(function(f) { return Math.abs(f.contribution_h); }).concat([0.1]));
-
-  list.innerHTML = factors.map(function(f) {
-    var pct = Math.abs(f.contribution_h) / maxC * 45;
-    var barStyle;
-    if (f.direction === 'positive') {
-      barStyle = 'left:50%;width:' + pct + '%;';
-    } else if (f.direction === 'negative') {
-      barStyle = 'right:50%;width:' + pct + '%;';
-    } else {
-      barStyle = 'left:48%;width:4%;';
-    }
-    var sign = f.contribution_h > 0 ? '+' : '';
-    var contribText = f.contribution_h === 0 ? '—' : sign + f.contribution_h + 'h';
-    return '<div class="attr-row">' +
-      '<div class="attr-info">' +
-        '<div class="attr-label">' + f.label + '</div>' +
-        '<div class="attr-value">' + f.value + '</div>' +
-      '</div>' +
-      '<div class="attr-bar-wrap">' +
-        '<div class="attr-bar-center"></div>' +
-        '<div class="attr-bar ' + f.direction + '" style="' + barStyle + '"></div>' +
-      '</div>' +
-      '<span class="attr-contrib ' + f.direction + '">' + contribText + '</span>' +
-    '</div>';
+  el.innerHTML = list.map(function(q) {
+    return '<div class="question-chip">' +
+             '<span class="question-chip-prefix">?</span>' + q +
+           '</div>';
   }).join('');
-
-  // Reset collapsed state on scene change
-  toggle.classList.remove('expanded');
-  body.style.display = 'none';
 }
 
 // ══════════════════════════════════════════
@@ -3375,9 +3449,9 @@ function applyScene(scene) {
   } else {
     renderDayCoreMetric(scene);
   }
-  renderInsight(scene);
-  renderAttribution(scene);
+  renderStatusCard(scene);
   renderBodyData(scene);
+  renderQuestionsDock(scene);
 
   // ── Today Tab ──
   renderTodayCoreCapsule(scene);
@@ -3409,20 +3483,6 @@ function applyScene(scene) {
       applyScene(scene);
     });
     btnGroup.appendChild(btn);
-  });
-
-  // Attribution collapse toggle
-  $('attr-toggle').addEventListener('click', function() {
-    var toggle = $('attr-toggle');
-    var body = $('attr-body');
-    var expanded = toggle.classList.contains('expanded');
-    if (expanded) {
-      toggle.classList.remove('expanded');
-      body.style.display = 'none';
-    } else {
-      toggle.classList.add('expanded');
-      body.style.display = 'block';
-    }
   });
 
   // Apply first scene
