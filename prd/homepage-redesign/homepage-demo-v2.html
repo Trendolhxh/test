@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isho · 首页 Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&family=Reddit+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  html, body {
+    margin: 0; padding: 0; background: #DCDCDC;
+    font-family: "Noto Sans SC", -apple-system, system-ui, sans-serif;
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  button { font-family: inherit; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  .stage {
+    min-height: 100vh; padding: 40px 24px 60px;
+    display: flex; flex-direction: column; align-items: center; gap: 28px;
+  }
+  .title {
+    font-family: "Instrument Serif", "Noto Serif SC", serif;
+    font-size: 28px; font-weight: 400; letter-spacing: 0.5px;
+    color: #222;
+  }
+  .subtitle {
+    font-size: 13px; color: rgba(0,0,0,0.55);
+    max-width: 600px; text-align: center; line-height: 1.6;
+  }
+  .devices { display: flex; gap: 36px; flex-wrap: wrap; justify-content: center; }
+  .tweak-panel {
+    position: fixed; bottom: 18px; right: 18px;
+    background: #fff; border-radius: 14px; padding: 14px 16px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
+    font-size: 13px; z-index: 1000; min-width: 240px;
+  }
+  .tweak-panel h4 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+  .tweak-row { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; gap: 8px; }
+  .tweak-row label { font-size: 12px; color: #555; }
+  .seg { display:inline-flex; background:#EEE; border-radius: 8px; padding: 2px; gap: 2px; }
+  .seg button { border: none; background: transparent; padding: 4px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; color: #555; }
+  .seg button.active { background: #fff; color: #000; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  @keyframes orb-spin { to { transform: rotate(360deg); } }
+  @keyframes orb-blink {
+    0%, 100% { opacity: 0.25; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<div class="tweak-panel">
+  <h4>Tweaks</h4>
+  <div class="tweak-row">
+    <label>能量状态</label>
+    <div class="seg" id="energyState">
+      <button data-v="morning">满格</button>
+      <button data-v="afternoon">消耗</button>
+      <button data-v="low">透支</button>
+      <button data-v="zero">归零</button>
+    </div>
+  </div>
+  <div class="tweak-row">
+    <label>重放动效</label>
+    <div class="seg"><button id="replayBtn" data-v="replay">重放</button></div>
+  </div>
+</div>
+
+<script>window.__TWEAKS = { energyState: "morning" };</script>
+
+<!-- React 18 + Babel standalone (prototype-grade, not production) -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ─── Design tokens ─────────────────────────────────────────
+const FF_SC     = '"Noto Sans SC", -apple-system, system-ui, sans-serif';
+const FF_SERIF  = '"Instrument Serif", "Noto Serif SC", serif';
+const GREEN     = '#B8F2C0';
+const AMBER     = '#FFB88A';
+const WARN      = '#FF7A5C';
+const ZERO_GREY = '#9CA3B8';
+const SLEEP     = '#7E9BFF';
+const DARK_BG   = '#0E0E0F';
+const LIGHT     = '#F5F5F2';
+
+// Energy-state color per key
+const ENERGY_COLOR = {
+  morning: GREEN, afternoon: AMBER, low: WARN, zero: ZERO_GREY
+};
+
+// ─── Data states ───────────────────────────────────────────
+const ENERGY_STATES = {
+  morning: {
+    h: '7', m: '29', unit: null, tone: 'neutral',
+    prev: { h: '5', m: '49', remainingPct: 72 },
+    tagline: '精力轻微下降', delta: '1.6h', remainingPct: 92,
+    analysis: '你的神经系统在昨夜获得了极其高质量的深度修复。优秀的深睡指标不仅清除了大脑疲劳，更将你今天的黄金创造期显著拉长。准备好迎接超长待机的一天吧。',
+    hashes: ['今天的高能峰值在几点', '昨夜我做对了什么', '今天我可以巅峰多久'],
+    label: '今日高能时长',
+    attribution: [
+      { name: 'HRV',    value: 92, normal: [30, 70] },
+      { name: '睡眠时长', value: 88, normal: [35, 70] },
+      { name: '静息心率', value: 15, normal: [35, 70] }
+    ]
+  },
+  afternoon: {
+    h: '5', m: '15', unit: null, tone: 'depleted',
+    prev: { h: '3', m: '36', remainingPct: 45 },
+    tagline: '神经状态虚浮需降速', delta: '1.6h', remainingPct: 64,
+    analysis: '你的神经系统已进入持续亢奋状态。午后的咖啡因摄入与持续的高压任务正在累积压力。建议现在安排 10 分钟低强度活动，让心率从 84bpm 缓慢沉降。',
+    hashes: ['为什么午后会虚浮', '现在最适合做什么', '今晚几点入睡最好'],
+    label: '今日高能时长',
+    attribution: [
+      { name: '心率',   value: 88, normal: [30, 65] },
+      { name: '压力',   value: 82, normal: [20, 55] },
+      { name: '咖啡因', value: 78, normal: [15, 50] }
+    ]
+  },
+  low: {
+    h: '15', m: '', unit: 'min', tone: 'depleted',
+    prev: { h: '48', m: '', unit: 'min', remainingPct: 24 },
+    tagline: '能量透支请求关机', delta: '1.6h', remainingPct: 8,
+    analysis: '你今天白天的实时压力值持续偏高，导致血氧降低，这极大地耗尽了最后一丝专注。请立刻放下工作进行 15 分钟的呼吸冥想，并调整今晚的就寝计划。',
+    hashes: ['怎么立刻利用好最后一点能量', '怎样快速降低压力', '最快的冷却姿势'],
+    label: '剩余高能时长',
+    attribution: [
+      { name: '血氧',   value: 8,  normal: [40, 75] },
+      { name: '压力',   value: 92, normal: [20, 55] },
+      { name: '专注度', value: 12, normal: [40, 75] }
+    ]
+  },
+  zero: {
+    h: '0', m: '', unit: 'min', tone: 'sleep',
+    prev: { h: '28', m: '', unit: 'min', remainingPct: 15 },
+    tagline: '是时候让神经软着陆了', delta: '1.6h', remainingPct: 0,
+    analysis: '你完美利用了今天所有的有效时间。然而，你全天的物理活动量远低于身体健康所需的水平。不利于今晚的顺利入睡。建议睡前请安排 15 分钟的冥想。',
+    hashes: ['高能状态怎么延续到明天', '昨夜深睡到底做对了什么'],
+    label: '剩余高能时长',
+    attribution: [
+      { name: '睡眠压力', value: 18, normal: [40, 80] },
+      { name: '咖啡因',   value: 12, normal: [40, 75] },
+      { name: '核心体温', value: 22, normal: [45, 80] }
+    ],
+    // Zero path morphs hero into sleep-readiness after number roll
+    sleep: {
+      pct: 45, label: '入睡准备度',
+      tagline: '神经张力尚未完全释放',
+      analysis: '较晚摄入的咖啡因仍在阻碍入睡信号，且较低的日间消耗导致身体缺乏真正的疲惫感。强行躺下易导致焦虑。建议开启专属呼吸节律训练，主动强制神经系统降速。',
+      hashes: ['呼吸练习怎么做', '推迟入睡明天会怎样', '睡前咖啡因的影响']
+    }
+  }
+};
+
+// ─── Phone wrapper (iPhone 16, 404×852 dark) ───────────────
+function Phone({ children, scrollKey }) {
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    if (scrollRef.current && scrollKey) {
+      const saved = sessionStorage.getItem('scroll-' + scrollKey);
+      if (saved) scrollRef.current.scrollTop = parseFloat(saved);
+    }
+  }, [scrollKey]);
+  const sb = LIGHT;
+  return (
+    <div style={{
+      width: 404, height: 852,
+      borderRadius: 54, padding: 6, background: '#0a0a0a',
+      boxShadow: '0 30px 60px rgba(0,0,0,0.22), 0 0 0 1.5px rgba(0,0,0,0.4)'
+    }}>
+      <div style={{
+        width: '100%', height: '100%', borderRadius: 48, overflow: 'hidden',
+        background: DARK_BG, position: 'relative'
+      }}>
+        {/* status bar */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: 54, zIndex: 80,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '18px 32px 0', pointerEvents: 'none', opacity: 0.9
+        }}>
+          <span style={{ fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 600, fontSize: 16, color: sb }}>9:41</span>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="0.5" fill={sb}/><rect x="4.5" y="5" width="3" height="6" rx="0.5" fill={sb}/><rect x="9" y="2.5" width="3" height="8.5" rx="0.5" fill={sb}/><rect x="13.5" y="0" width="3" height="11" rx="0.5" fill={sb}/></svg>
+            <svg width="16" height="11" viewBox="0 0 16 11"><path d="M8 3.2C9.6 3.2 11.1 3.8 12.2 4.8L13.5 3.5C12 2 10.1 1.1 8 1.1C5.9 1.1 4 2 2.5 3.5L3.8 4.8C4.9 3.8 6.4 3.2 8 3.2Z" fill={sb}/><circle cx="8" cy="9.5" r="1.5" fill={sb}/></svg>
+            <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0.5" y="0.5" width="21" height="11" rx="3" stroke={sb} fill="none" strokeOpacity="0.4"/><rect x="2" y="2" width="18" height="8" rx="2" fill={sb}/><path d="M23 4v4c0.6-0.3 1-1 1-2s-0.4-1.7-1-2z" fill={sb} fillOpacity="0.5"/></svg>
+          </div>
+        </div>
+        {/* dynamic island */}
+        <div style={{
+          position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+          width: 122, height: 34, borderRadius: 22, background: '#000', zIndex: 90
+        }} />
+
+        <div
+          ref={scrollRef}
+          onScroll={(e) => scrollKey && sessionStorage.setItem('scroll-' + scrollKey, e.target.scrollTop)}
+          style={{ position: 'absolute', inset: 0, overflowY: 'auto', paddingTop: 0, paddingBottom: 34 }}>
+          {children}
+        </div>
+
+        {/* home indicator */}
+        <div style={{
+          position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)',
+          width: 134, height: 5, borderRadius: 100, background: 'rgba(255,255,255,0.28)', zIndex: 95
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Rolling number (slot-machine interpolation) ───────────
+function RollingNumber({ value, duration = 800 }) {
+  const target = String(value ?? '');
+  const [, force] = useState(0);
+  const ref = useRef({ display: target, target, raf: null, startTs: 0, from: target });
+
+  if (ref.current.target !== target) {
+    const prevDisplay = ref.current.display;
+    const fromN = parseInt(prevDisplay, 10);
+    const toN = parseInt(target, 10);
+    if (Number.isFinite(fromN) && Number.isFinite(toN)) {
+      ref.current.target = target;
+      ref.current.from = prevDisplay;
+      ref.current.startTs = performance.now();
+      if (ref.current.raf) cancelAnimationFrame(ref.current.raf);
+      const pad = target.length;
+      const tick = () => {
+        const t = Math.min(1, (performance.now() - ref.current.startTs) / duration);
+        const e = 1 - Math.pow(1 - t, 3);
+        const fr = parseInt(ref.current.from, 10);
+        const to = parseInt(ref.current.target, 10);
+        const cur = Math.round(fr + (to - fr) * e);
+        ref.current.display = String(cur).padStart(pad, ' ').replace(/ /g, '\u00a0');
+        force(n => n + 1);
+        if (t < 1) {
+          ref.current.raf = requestAnimationFrame(tick);
+        } else {
+          ref.current.display = ref.current.target;
+          ref.current.raf = null;
+          force(n => n + 1);
+        }
+      };
+      ref.current.raf = requestAnimationFrame(tick);
+    } else {
+      ref.current.target = target;
+      ref.current.display = target;
+    }
+  }
+
+  useEffect(() => () => {
+    if (ref.current.raf) cancelAnimationFrame(ref.current.raf);
+  }, []);
+
+  return <span style={{ fontVariantNumeric: 'tabular-nums' }}>{ref.current.display}</span>;
+}
+
+// ─── Loading orb (spin → blink → fade) ─────────────────────
+function LoadingOrb({ phase }) {
+  const color = GREEN;
+  return (
+    <div style={{
+      width: 22, height: 22, position: 'relative',
+      opacity: phase === 'done' ? 0 : 1,
+      transition: 'opacity 400ms ease'
+    }}>
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: '50%',
+        border: '1px solid rgba(245,245,242,0.18)'
+      }} />
+      {phase === 'loading' && (
+        <div style={{ position: 'absolute', inset: 0, animation: 'orb-spin 1.2s linear infinite' }}>
+          <div style={{
+            position: 'absolute', top: -2, left: '50%', transform: 'translateX(-50%)',
+            width: 5, height: 5, borderRadius: '50%',
+            background: color, boxShadow: `0 0 8px ${color}`
+          }} />
+        </div>
+      )}
+      {phase === 'thinking' && (
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', gap: 2
+        }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{
+              width: 3, height: 3, borderRadius: '50%',
+              background: color, boxShadow: `0 0 4px ${color}`,
+              animation: `orb-blink 1.1s ease-in-out ${i * 0.18}s infinite`
+            }} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Hero (label + number + delta + progress + corner glow) ─
+function Hero({ energy, revealed, prev, sleepMode, sleep, topRight, onHeroClick, children }) {
+  const energyColor = ENERGY_COLOR[energy.key] || GREEN;
+  const color = sleepMode ? SLEEP : energyColor;
+  const ringSize = 820;
+
+  const displayH   = revealed ? energy.h : (prev ? prev.h : energy.h);
+  const displayM   = revealed ? energy.m : (prev ? prev.m : energy.m);
+  const displayPct = revealed ? energy.remainingPct : (prev ? prev.remainingPct : energy.remainingPct);
+  const displayUnit = revealed ? energy.unit : (prev && prev.unit !== undefined ? prev.unit : energy.unit);
+
+  const labelText = sleepMode && sleep ? sleep.label : energy.label;
+  const sleepPct  = sleep ? sleep.pct : 0;
+
+  return (
+    <div style={{
+      position: 'relative', width: '100%', minHeight: 480,
+      background: DARK_BG, color: LIGHT, overflow: 'hidden',
+      display: 'flex', flexDirection: 'column'
+    }}>
+      {/* Diffuse corner halo — energy + sleep layers crossfade */}
+      {[
+        { c: energyColor, op: sleepMode ? 0 : 1 },
+        { c: SLEEP,       op: sleepMode ? 1 : 0 },
+      ].map((layer, li) => (
+        <div key={li} style={{
+          position: 'absolute', top: -260, right: -260, width: ringSize, height: ringSize,
+          pointerEvents: 'none', opacity: layer.op,
+          transition: 'opacity 900ms cubic-bezier(.2,.7,.2,1)'
+        }}>
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: '50%',
+            background: `radial-gradient(circle at 50% 50%, ${layer.c} 0%, rgba(0,0,0,0) 62%)`,
+            opacity: 0.28, filter: 'blur(40px)',
+          }} />
+          <div style={{
+            position: 'absolute', inset: 120, borderRadius: '50%',
+            background: `radial-gradient(circle at 45% 45%, ${layer.c} 0%, rgba(0,0,0,0) 68%)`,
+            opacity: 0.42, filter: 'blur(26px)',
+          }} />
+          <div style={{
+            position: 'absolute', inset: 240, borderRadius: '50%',
+            background: `radial-gradient(circle at 50% 50%, ${layer.c} 0%, rgba(0,0,0,0) 72%)`,
+            opacity: 0.7, filter: 'blur(10px)',
+          }} />
+        </div>
+      ))}
+
+      {topRight && (
+        <div style={{ position: 'absolute', top: 74, right: 28, zIndex: 5 }}>{topRight}</div>
+      )}
+
+      {/* Top-left data block */}
+      <div onClick={onHeroClick} style={{
+        position: 'relative', padding: '80px 28px 0', cursor: 'pointer', zIndex: 2
+      }}>
+        {/* Label — crossfades energy label ↔ sleep label */}
+        <div style={{ position: 'relative', height: 14 }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            fontFamily: FF_SC, fontSize: 12, color: 'rgba(245,245,242,0.55)', letterSpacing: 2,
+            opacity: sleepMode ? 0 : 1,
+            transition: 'opacity 500ms cubic-bezier(.2,.7,.2,1)'
+          }}>{energy.label.toUpperCase()}</div>
+          <div style={{
+            position: 'absolute', inset: 0,
+            fontFamily: FF_SC, fontSize: 12, color: 'rgba(245,245,242,0.55)', letterSpacing: 2,
+            opacity: sleepMode ? 1 : 0,
+            transition: 'opacity 500ms cubic-bezier(.2,.7,.2,1)'
+          }}>{labelText.toUpperCase()}</div>
+        </div>
+
+        {/* Big number — energy-time vs sleep-pct crossfaded */}
+        <div style={{ position: 'relative', marginTop: 14, height: 96 }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            fontFamily: FF_SERIF, fontSize: 96, fontWeight: 400, lineHeight: 1,
+            letterSpacing: -2,
+            opacity: sleepMode ? 0 : 1,
+            transition: 'opacity 500ms cubic-bezier(.2,.7,.2,1)'
+          }}>
+            {displayUnit ? (
+              <>
+                <RollingNumber value={displayH} />
+                <span style={{ fontSize: 28, fontStyle: 'italic', marginLeft: 8 }}>{displayUnit}</span>
+              </>
+            ) : (
+              <>
+                <RollingNumber value={displayH} />
+                <span style={{ fontSize: 28, fontStyle: 'italic', marginLeft: 4, marginRight: 8 }}>hr</span>
+                <RollingNumber value={displayM} />
+                <span style={{ fontSize: 28, fontStyle: 'italic', marginLeft: 4 }}>m</span>
+              </>
+            )}
+          </div>
+          {sleep && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              fontFamily: FF_SERIF, fontSize: 96, fontWeight: 400, lineHeight: 1,
+              letterSpacing: -2,
+              opacity: sleepMode ? 1 : 0,
+              transition: 'opacity 500ms cubic-bezier(.2,.7,.2,1)'
+            }}>
+              <RollingNumber value={String(sleepPct)} />
+              <span style={{ fontSize: 28, fontStyle: 'italic', marginLeft: 8 }}>%</span>
+            </div>
+          )}
+        </div>
+
+        {/* Thin progress bar */}
+        <div style={{
+          marginTop: 20, height: 2,
+          background: 'rgba(245,245,242,0.12)', borderRadius: 2,
+          position: 'relative', overflow: 'visible'
+        }}>
+          <div style={{
+            position: 'absolute', left: 0, top: 0, height: '100%',
+            width: sleepMode ? `${sleepPct}%` : `${displayPct}%`,
+            background: color,
+            boxShadow: `0 0 8px ${color}`, borderRadius: 2,
+            transition: 'width 800ms cubic-bezier(.2,.7,.2,1), background 900ms, box-shadow 900ms'
+          }} />
+        </div>
+
+        {/* Delta text */}
+        <div style={{ position: 'relative', marginTop: 14, height: 18 }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            fontFamily: FF_SC, fontSize: 12, color: 'rgba(245,245,242,0.55)',
+            letterSpacing: 0.3,
+            opacity: sleepMode ? 0 : 1,
+            transition: 'opacity 500ms cubic-bezier(.2,.7,.2,1)'
+          }}>
+            较 2 小时前 <span style={{ color: 'rgba(245,245,242,0.85)' }}>↑ {energy.delta}</span>
+          </div>
+          <div style={{
+            position: 'absolute', inset: 0,
+            fontFamily: FF_SC, fontSize: 12, color: 'rgba(231,235,255,0.6)',
+            letterSpacing: 0.3,
+            opacity: sleepMode ? 1 : 0,
+            transition: 'opacity 500ms cubic-bezier(.2,.7,.2,1)'
+          }}>
+            较昨日 <span style={{ color: '#E7EBFF' }}>↓ 准备就寝</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Spacer pushes children to bottom */}
+      <div style={{ flex: '1 1 auto', minHeight: 0 }} />
+
+      {/* Narrative cluster rendered by parent */}
+      <div style={{ position: 'relative', zIndex: 2 }}>{children}</div>
+    </div>
+  );
+}
+
+// ─── StreamText: char-by-char blur→focus ───────────────────
+function StreamText({ text, start = 0, duration = 900, style, active }) {
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const startTs = performance.now();
+    let raf;
+    const tick = () => {
+      setElapsed(performance.now() - startTs);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active]);
+  const localT = Math.max(0, elapsed - start);
+  const chars = Array.from(text || '');
+  const perChar = duration / Math.max(1, chars.length);
+  return (
+    <div style={style}>
+      {chars.map((c, i) => {
+        const cs = i * perChar;
+        const p = Math.max(0, Math.min(1, (localT - cs) / (perChar * 3.5)));
+        return (
+          <span key={i} style={{
+            opacity: p, filter: `blur(${(1 - p) * 3}px)`,
+            whiteSpace: 'pre'
+          }}>{c}</span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Reveal: fade + slide-up on delay ──────────────────────
+function Reveal({ delay, active, children, y = 12, duration = 520 }) {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (!active) { setShown(false); return; }
+    const t = setTimeout(() => setShown(true), delay);
+    return () => clearTimeout(t);
+  }, [active, delay]);
+  return (
+    <div style={{
+      opacity: shown ? 1 : 0,
+      transform: shown ? 'translateY(0)' : `translateY(${y}px)`,
+      transition: `opacity ${duration}ms ease, transform ${duration}ms cubic-bezier(.2,.7,.2,1)`
+    }}>{children}</div>
+  );
+}
+
+// ─── Attribution card: 3-zone deviation gauge ──────────────
+function AttributionCard({ metric: a }) {
+  const [lo, hi] = a.normal;
+  const v = a.value;
+  const above = v > hi;
+  const below = v < lo;
+  const abnormal = above || below;
+
+  const chartH = 40, chartW = 100;
+  const zoneH = chartH / 3;
+  const highTop = 0,          highBot = zoneH;
+  const normTop = zoneH,      normBot = 2 * zoneH;
+  const lowTop  = 2 * zoneH,  lowBot  = chartH;
+  const edgePad = 3;
+  const devAbove = above ? Math.min(1, (v - hi) / Math.max(1, 100 - hi)) : 0;
+  const devBelow = below ? Math.min(1, (lo - v) / Math.max(1, lo)) : 0;
+
+  let dotY;
+  if (above) dotY = highBot - devAbove * (highBot - (highTop + edgePad));
+  else if (below) dotY = lowTop + devBelow * ((lowBot - edgePad) - lowTop);
+  else dotY = (normTop + normBot) / 2;
+
+  const dotColor = abnormal ? WARN : LIGHT;
+  const dotCx = chartW / 2;
+  const normalFill   = 'rgba(245,245,242,0.14)';
+  const normalBorder = 'rgba(245,245,242,0.55)';
+  const zoneFill     = 'rgba(245,245,242,0.02)';
+  const uid = React.useId();
+
+  return (
+    <div style={{
+      background: 'rgba(245,245,242,0.04)',
+      border: '1px solid rgba(245,245,242,0.08)',
+      borderRadius: 12, padding: '10px 12px',
+      display: 'flex', flexDirection: 'column', gap: 6,
+    }}>
+      <div style={{
+        fontFamily: FF_SC, fontSize: 12, color: LIGHT,
+        lineHeight: 1.2, letterSpacing: 0.5,
+      }}>{a.name}</div>
+      <div style={{ position: 'relative', height: chartH }}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${chartW} ${chartH}`}
+          preserveAspectRatio="none"
+          style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
+          <defs>
+            <radialGradient id={`glow-${uid}`} cx="50%" cy="50%" r="50%">
+              <stop offset="0%"   stopColor={dotColor} stopOpacity="0.5" />
+              <stop offset="60%"  stopColor={dotColor} stopOpacity="0.12" />
+              <stop offset="100%" stopColor={dotColor} stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect x="0" y={highTop} width={chartW} height={highBot - highTop} fill={zoneFill} />
+          <rect x="0" y={normTop} width={chartW} height={normBot - normTop} fill={normalFill} />
+          <rect x="0" y={lowTop}  width={chartW} height={lowBot  - lowTop}  fill={zoneFill} />
+          <line x1="0" y1={normTop} x2={chartW} y2={normTop}
+            stroke={normalBorder} strokeWidth="0.8" vectorEffect="non-scaling-stroke" />
+          <line x1="0" y1={normBot} x2={chartW} y2={normBot}
+            stroke={normalBorder} strokeWidth="0.8" vectorEffect="non-scaling-stroke" />
+          <circle cx={dotCx} cy={dotY} r="10" fill={`url(#glow-${uid})`} />
+          <circle cx={dotCx} cy={dotY} r="2.4" fill={dotColor}
+            style={{ filter: `drop-shadow(0 0 4px ${dotColor})` }} />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─── Intro timeline: loading → roll → stage1 → thinking → stage2 → done
+const ANIM = {
+  numberRollStart: 2200,
+  sleepModeStart: 3200,
+  stage1Start: 3800,
+  thinking: 4800,
+  analysisStart: 5400,
+  done: 8400
+};
+
+function useIntroTimeline(replayKey) {
+  const [phase, setPhase] = useState('loading');
+  const [dataRevealed, setDataRevealed] = useState(false);
+  const [sleepMode, setSleepMode] = useState(false);
+  const [showStage1, setShowStage1] = useState(false);
+  const [showStage2, setShowStage2] = useState(false);
+
+  useEffect(() => {
+    setPhase('loading');
+    setDataRevealed(false);
+    setSleepMode(false);
+    setShowStage1(false);
+    setShowStage2(false);
+    const timers = [];
+    timers.push(setTimeout(() => setDataRevealed(true),  ANIM.numberRollStart));
+    timers.push(setTimeout(() => setSleepMode(true),     ANIM.sleepModeStart));
+    timers.push(setTimeout(() => setShowStage1(true),    ANIM.stage1Start));
+    timers.push(setTimeout(() => setPhase('thinking'),   ANIM.thinking));
+    timers.push(setTimeout(() => setShowStage2(true),    ANIM.analysisStart));
+    timers.push(setTimeout(() => setPhase('done'),       ANIM.done));
+    return () => timers.forEach(clearTimeout);
+  }, [replayKey]);
+
+  return { phase, dataRevealed, sleepMode, showStage1, showStage2 };
+}
+
+// ─── Home narrative cluster (tagline + attribution + analysis + hashes)
+function HomeCluster({ energy, timeline, sleep, onHash }) {
+  const { showStage1, showStage2 } = timeline;
+  const source = sleep ? {
+    key: `${energy.key}-sleep`,
+    tagline: sleep.tagline,
+    attribution: energy.attribution || [],
+    analysis: sleep.analysis,
+    hashes: sleep.hashes,
+  } : {
+    key: energy.key,
+    tagline: energy.tagline,
+    attribution: energy.attribution,
+    analysis: energy.analysis,
+    hashes: energy.hashes,
+  };
+
+  const taglineStyle = {
+    fontFamily: FF_SERIF, fontSize: 24, fontStyle: 'italic',
+    color: LIGHT, padding: '0 24px 14px', letterSpacing: 0.2,
+    minHeight: 32
+  };
+  const analysisStyle = {
+    fontFamily: '"Noto Serif SC", serif', fontSize: 13, lineHeight: '24px',
+    color: 'rgba(245,245,242,0.82)', letterSpacing: 0.3, minHeight: 48
+  };
+
+  return (
+    <>
+      {showStage1 && (
+        <StreamText
+          key={`tag-${source.key}`}
+          text={source.tagline}
+          duration={900}
+          style={taglineStyle}
+          active={showStage1}
+        />
+      )}
+
+      {showStage1 && (
+        <div style={{ padding: '0 20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {source.attribution.map((m, i) => (
+              <Reveal
+                key={`attr-${source.key}-${i}`}
+                active={showStage1}
+                delay={200 + i * 160}
+                y={14}
+              >
+                <AttributionCard metric={m} />
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showStage2 && (
+        <div style={{ color: '#E5E5E0', padding: '16px 24px 28px' }}>
+          <StreamText
+            key={`ana-${source.key}`}
+            text={source.analysis}
+            duration={1800}
+            style={analysisStyle}
+            active={showStage2}
+          />
+          <div style={{ marginTop: 14, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {source.hashes.map((h, i) => (
+              <Reveal
+                key={`hash-${source.key}-${i}`}
+                active={showStage2}
+                delay={1400 + i * 140}
+                y={10}
+              >
+                <button onClick={() => onHash && onHash(h)} style={{
+                  background: 'transparent', border: '1px solid rgba(245,245,242,0.22)',
+                  color: '#E5E5E0', borderRadius: 100, padding: '5px 11px',
+                  fontFamily: FF_SC, fontSize: 11, cursor: 'pointer'
+                }}>→ {h}</button>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── Heart-rate entry (bottom of Hero — body-data drill-down) ──
+function HeartRateEntry({ sleepMode }) {
+  const color = sleepMode ? SLEEP : LIGHT;
+  const bpm = sleepMode ? 52 : 72;
+  const w = 260, h = 44;
+  const pts = [
+    [0,22],[20,22],[26,22],[34,14],[40,32],[46,6],[52,34],[58,22],
+    [90,22],[110,22],[118,18],[124,26],[130,22],
+    [160,22],[180,22],[188,22],[196,14],[202,32],[208,6],[214,34],[220,22],
+    [w,22]
+  ];
+  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]} ${p[1]}`).join(' ');
+  return (
+    <div style={{
+      margin: '0 20px 22px', padding: '12px 16px',
+      background: 'rgba(245,245,242,0.05)',
+      border: '1px solid rgba(245,245,242,0.08)',
+      borderRadius: 14, display: 'flex', alignItems: 'center', gap: 12,
+      cursor: 'pointer'
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 56 }}>
+        <div style={{ fontFamily: FF_SC, fontSize: 10, color: 'rgba(245,245,242,0.55)', letterSpacing: 1.5 }}>心率</div>
+        <div style={{ fontFamily: FF_SERIF, fontSize: 22, color: LIGHT, lineHeight: 1 }}>
+          {bpm}<span style={{ fontSize: 11, fontStyle: 'italic', marginLeft: 4, color: 'rgba(245,245,242,0.6)' }}>bpm</span>
+        </div>
+      </div>
+      <div style={{ flex: 1 }}>
+        <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+          <path d={d} fill="none" stroke={color} strokeWidth="1.2"
+            vectorEffect="non-scaling-stroke" opacity="0.88"
+            style={{ filter: `drop-shadow(0 0 3px ${color})` }} />
+        </svg>
+      </div>
+      <div style={{
+        fontFamily: FF_SC, fontSize: 18, color: 'rgba(245,245,242,0.55)', lineHeight: 1
+      }}>›</div>
+    </div>
+  );
+}
+
+// ─── Minimal timeline page (点击主指标展开) ──────────────────
+function TimelinePage({ energy, onBack }) {
+  const color = ENERGY_COLOR[energy.key] || GREEN;
+  const hours = [];
+  for (let h = 6; h <= 24; h += 2) hours.push(h);
+  const W = 380, H = 720;
+  const leftPad = 54, rightPad = 28, topPad = 120, botPad = 60;
+  const plotW = W - leftPad - rightPad;
+  const plotH = H - topPad - botPad;
+
+  const seed = [0.12, 0.28, 0.58, 0.82, 0.78, 0.92, 0.74, 0.62, 0.48, 0.36];
+  const pts = seed.map((v, i) => {
+    const y = topPad + (i / (seed.length - 1)) * plotH;
+    const x = leftPad + v * plotW;
+    return [x, y];
+  });
+
+  let d = '';
+  pts.forEach((p, i) => {
+    if (i === 0) { d += `M ${p[0]} ${p[1]}`; return; }
+    const prev = pts[i - 1];
+    const cy1 = prev[1] + (p[1] - prev[1]) * 0.5;
+    const cy2 = cy1;
+    d += ` C ${prev[0]} ${cy1}, ${p[0]} ${cy2}, ${p[0]} ${p[1]}`;
+  });
+
+  const nowY = topPad + plotH * 0.55;
+  const nowX = leftPad + plotW * 0.82;
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, background: DARK_BG, color: LIGHT, zIndex: 100,
+      display: 'flex', flexDirection: 'column'
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '62px 22px 6px'
+      }}>
+        <button onClick={onBack} style={{
+          background: 'transparent', border: 'none', color: LIGHT,
+          fontSize: 20, cursor: 'pointer', padding: 4, lineHeight: 1
+        }}>‹</button>
+        <div style={{ fontFamily: FF_SC, fontSize: 12, color: 'rgba(245,245,242,0.55)', letterSpacing: 2 }}>今日时间轴</div>
+        <div style={{ flex: 1 }} />
+        <div style={{ fontFamily: FF_SC, fontSize: 11, color: 'rgba(245,245,242,0.55)' }}>
+          高能 <span style={{ color: LIGHT }}>{energy.h}{energy.unit ? energy.unit : 'h ' + energy.m + 'm'}</span>
+        </div>
+      </div>
+      <div style={{ flex: 1, position: 'relative' }}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
+          {hours.map(h => {
+            const y = topPad + ((h - 6) / 18) * plotH;
+            return (
+              <g key={h}>
+                <text x={leftPad - 10} y={y + 4}
+                  textAnchor="end"
+                  fontFamily={FF_SC} fontSize="10"
+                  fill="rgba(245,245,242,0.4)">{h}:00</text>
+                <line x1={leftPad} y1={y} x2={W - rightPad} y2={y}
+                  stroke="rgba(245,245,242,0.06)" strokeWidth="0.6" />
+              </g>
+            );
+          })}
+          <path d={d} fill="none" stroke={color} strokeWidth="1.6"
+            vectorEffect="non-scaling-stroke" opacity="0.92"
+            style={{ filter: `drop-shadow(0 0 6px ${color})` }} />
+          <line x1={leftPad} y1={nowY} x2={W - rightPad} y2={nowY}
+            stroke={LIGHT} strokeWidth="0.5" strokeDasharray="3 3" opacity="0.5" />
+          <circle cx={nowX} cy={nowY} r="4" fill={LIGHT}
+            style={{ filter: `drop-shadow(0 0 4px ${color})` }} />
+          <text x={W - rightPad} y={nowY - 8}
+            textAnchor="end"
+            fontFamily={FF_SC} fontSize="10" fill="rgba(245,245,242,0.75)">now</text>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─── App ───────────────────────────────────────────────────
+function App() {
+  const [energyKey, setEnergyKey] = useState(window.__TWEAKS?.energyState || 'morning');
+  const [replay, setReplay] = useState(0);
+  const [timelineOpen, setTimelineOpen] = useState(false);
+
+  const energyData = ENERGY_STATES[energyKey] || ENERGY_STATES.morning;
+  const energy = { ...energyData, key: energyKey };
+
+  const timeline = useIntroTimeline(`${energyKey}-${replay}`);
+  const sleep = energyKey === 'zero' ? energyData.sleep : null;
+  const sleepMode = !!(sleep && timeline.sleepMode);
+
+  useEffect(() => {
+    const panel = document.getElementById('energyState');
+    if (!panel) return;
+    const update = () => {
+      panel.querySelectorAll('button').forEach(b => {
+        b.classList.toggle('active', b.dataset.v === energyKey);
+      });
+    };
+    update();
+    const onClick = (e) => {
+      const btn = e.target.closest('button[data-v]');
+      if (!btn) return;
+      setEnergyKey(btn.dataset.v);
+      setReplay(n => n + 1);
+      setTimelineOpen(false);
+    };
+    panel.addEventListener('click', onClick);
+    return () => panel.removeEventListener('click', onClick);
+  }, [energyKey]);
+
+  useEffect(() => {
+    const btn = document.getElementById('replayBtn');
+    if (!btn) return;
+    const onClick = () => setReplay(n => n + 1);
+    btn.addEventListener('click', onClick);
+    return () => btn.removeEventListener('click', onClick);
+  }, []);
+
+  const handleHeroClick = () => {
+    if (timeline.phase === 'done') setTimelineOpen(true);
+  };
+
+  return (
+    <div className="stage">
+      <div className="title">Isho · 首页 Demo v2</div>
+      <div className="subtitle">
+        状态页 + 今日时间轴 · 绿 / 橙 / 透支 / 归零（归零后 3.2s 切入紫色入睡准备度）· 右下角可切换状态与重放动效
+      </div>
+      <div className="devices">
+        <Phone scrollKey="home">
+          <Hero
+            energy={energy}
+            revealed={timeline.dataRevealed}
+            prev={energyData.prev}
+            sleepMode={sleepMode}
+            sleep={sleep}
+            topRight={<LoadingOrb phase={timeline.phase} />}
+            onHeroClick={handleHeroClick}
+          >
+            <HomeCluster
+              energy={energy}
+              timeline={timeline}
+              sleep={sleepMode ? sleep : null}
+            />
+          </Hero>
+          <div style={{ background: DARK_BG }}>
+            <HeartRateEntry sleepMode={sleepMode} />
+          </div>
+          {timelineOpen && (
+            <TimelinePage energy={energy} onBack={() => setTimelineOpen(false)} />
+          )}
+        </Phone>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
