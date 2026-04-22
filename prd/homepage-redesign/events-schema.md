@@ -1,0 +1,251 @@
+# iSho 首页事件表 · 统一字段与示例
+
+**版本** v1.2 · 2026-04-22
+**范围** 仅 Apple Watch 可自动识别（HealthKit 自动写入）的事件。
+**不收** 需要用户在 iSho 内手动录入的事件（咖啡 / 餐食 / 酒精 / 深度工作 / 任务等）——后续若接入手动录入能力再扩充。
+**不收** 正念类（呼吸练习 / 冥想）—— v1.1 临时移出，避免与运动类在 impact 语义上重叠。
+**不收** 数据波动事件（HRV 骤降 / 心率异常）—— 按 Master PRD 共识，这类是归因素材，不是事件流入口。
+
+---
+
+## 1 · 事件分类（过滤后）
+
+| 大类 | 子类 | Apple Watch 采集方式 |
+|---|---|---|
+| **睡眠** | `night_sleep` · 夜间睡眠 | Sleep 应用自动记录（戴表入睡即写入 HealthKit） |
+| **睡眠** | `nap` · 午睡 | watchOS 9+ 日间睡眠自动检测 |
+| **运动** | `walking` · 步行 | Workout 自动开始 / Activity 累计 |
+| **运动** | `moderate` · 中低强度 | Workout 自动开始（心率稳定在 Z2，如慢跑 / 骑行 / 泳池） |
+| **运动** | `vigorous` · 高强度 | Workout 自动开始（心率峰值进入 Z4–Z5，如冲刺 / HIIT / 力量） |
+
+**共 2 大类 · 5 子类**。
+
+**子类收敛原则**：
+- 不按器械 / 动作细分（不把跑步 / 骑行 / 游泳 / HIIT / 瑜伽列为独立子类），而是按**心率强度区间**归并 —— 因为 Hero 层关心的只是"对今日高能的影响"，这由强度而非器械决定。
+- 睡眠保留 2 子类（夜间 / 午睡），因为两者的 impact 语义完全不同（夜间睡眠 = 定义 Hero 基线；午睡 = delta）。夜间睡眠的好/坏通过示例数据表达，不再分子类。
+
+---
+
+## 2 · 统一字段（所有事件共用）
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `id` | string | ✅ | 事件唯一标识（系统生成） |
+| `category` | enum | ✅ | `sleep` / `exercise` / `mindfulness` |
+| `subtype` | string | ✅ | 子类键（如 `night_sleep` / `outdoor_run` / `breathing`） |
+| `title` | string | ✅ | 事件标题（展示用，如 `昨夜睡眠` / `户外跑步`） |
+| `state` | enum | ✅ | `in_progress`（正在进行） / `just_completed`（刚刚完成，30 min 内） |
+| `start_at` | datetime | ✅ | 事件开始时间 |
+| `end_at` | datetime | state=just_completed 必填 | 事件结束时间 |
+| `duration` | string | ✅ | 人类可读时长（如 `7h 12min` / `32 min`） |
+| `source` | enum | ✅ | 数据来源（`healthkit.sleep` / `healthkit.workout`） |
+| `impact` | string[] | ✅ | 对两个指标的影响，每条形如 `{指标} {值}`，至多 2 条。详见下方格式说明。 |
+| `headline` | string | ✅ | L4 结论一句话（事件本身怎么样） |
+| `narrative` | string | ✅ | 1–2 句归因叙述（为什么是这个结论） |
+| `prompts` | string[] | ✅ | 1–2 条推荐提问（点击进 Agent 对话） |
+
+**所有字段共用一张表，不再按类别分化**。
+
+### `impact` 字段格式
+
+页面上的影响表达**只有两种指标** + **值变化**，别的一律不写：
+
+| 指标 | 单位 | 变化形式 |
+|---|---|---|
+| `高能时长` | 小时/分钟 | 绝对值（`7h 29min`）或 delta（`+20min` / `-15min`） |
+| `入睡准备度` | 百分比 | 绝对值（`82%`）或 delta（`+6%` / `-8%`） |
+
+**取值规则**：
+
+- **source 事件**（夜间睡眠）：用绝对值，表示该事件**定义**了今日指标（如 `高能时长 7h 29min`）
+- **非 source 事件**：用 delta，显式带正负号（如 `入睡准备度 -6%`）
+- **多条并列**：一个事件最多写 2 条，一条指标一行
+- **低于阈值**：不写指标，用占位文案 `影响轻微`（单条）
+- 不写任何辅助文字（不写"预计"/"约"/"延长"/"压低"等动词修饰）—— 这些语义通过 `narrative` 解释
+
+---
+
+## 3 · 示例事件（5 子类 · 9 条示例）
+
+**归因文案（`narrative`）写作标准**：
+
+- ✅ 只陈述**客观可测事实**：时长 / 时段 / 心率 / HRV / 深睡-浅睡-REM 占比 / 觉醒次数 / EPOC
+- ✅ 预测量必须显式标注："预计" / "约"
+- ✅ 与个人基线比较时给出具体差值（如 `低于 14 日基线 9 ms`）
+- ❌ 禁止代言感受："迟钝感" / "清醒窗口" / "甜蜜区" / "更精神"
+- ❌ 禁止预算/电量语言："预算" / "消耗" / "结清" / "余量" / "透支"
+- ❌ 禁止单方面因果断言："因为 X 所以 Y"（因果归入 Agent 对话）
+
+---
+
+### 3.1 夜间睡眠 · 充分恢复
+
+```
+id:              evt_20260422_night_sleep_01
+category:        sleep
+subtype:         night_sleep
+title:           昨夜睡眠
+state:           just_completed
+start_at:        2026-04-21 23:40
+end_at:          2026-04-22 06:52
+duration:        7h 12min
+source:          healthkit.sleep
+impact:          ["高能时长 7h 29min"]
+headline:        连续性良好 · 深睡占比 22%
+narrative:       入睡潜伏期 14 分钟，深睡集中在 00:30–02:40。
+                 全夜 HRV 均值 58 ms，高于 14 日基线 9 ms；无单次超过 20 秒的觉醒。
+prompts:         ["昨夜睡眠为什么这么稳定？", "今天能维持多久巅峰？"]
+```
+
+### 3.2 夜间睡眠 · 一般
+
+```
+id:              evt_20260422_night_sleep_02
+category:        sleep
+subtype:         night_sleep
+title:           昨夜睡眠
+state:           just_completed
+start_at:        2026-04-21 00:10
+end_at:          2026-04-22 06:40
+duration:        6h 30min
+source:          healthkit.sleep
+impact:          ["高能时长 6h 40min"]
+headline:        时长达标 · 深睡偏少
+narrative:       入睡潜伏期 22 分钟，深睡仅占 14%（基线 18%），REM 集中在下半夜。
+                 HRV 均值 48 ms，处于 14 日基线区间下沿。
+prompts:         ["深睡为什么少？", "下周怎么把深睡拉回来？"]
+```
+
+### 3.3 夜间睡眠 · 偏短 / 片段化
+
+```
+id:              evt_20260422_night_sleep_03
+category:        sleep
+subtype:         night_sleep
+title:           昨夜睡眠
+state:           just_completed
+start_at:        2026-04-22 00:48
+end_at:          2026-04-22 06:30
+duration:        5h 42min
+source:          healthkit.sleep
+impact:          ["高能时长 5h 50min"]
+headline:        时长不足 · 3 次觉醒
+narrative:       总睡眠 5h 42min，期间 3 次觉醒（01:10 / 03:25 / 05:40），单次最长 8 分钟。
+                 HRV 均值 39 ms，低于 14 日基线 12 ms。
+prompts:         ["为什么醒这么多次？", "今天该怎么安排才不过度？"]
+```
+
+### 3.4 夜间睡眠 · 熬夜
+
+```
+id:              evt_20260422_night_sleep_04
+category:        sleep
+subtype:         night_sleep
+title:           昨夜睡眠
+state:           just_completed
+start_at:        2026-04-22 02:35
+end_at:          2026-04-22 06:55
+duration:        4h 20min
+source:          healthkit.sleep
+impact:          ["高能时长 4h 30min"]
+headline:        入睡偏晚 · 实际睡眠 4h 20min
+narrative:       入睡时间 02:35，比个人工作日均值晚 2h 50min。
+                 深睡仅出现一段（03:10–03:50 · 40 min），HRV 均值 35 ms，低于基线 16 ms。
+prompts:         ["这一次熬夜要几天补回来？", "今天午睡该睡多久？"]
+```
+
+### 3.5 午睡 · 有效
+
+```
+id:              evt_20260422_nap_01
+category:        sleep
+subtype:         nap
+title:           午睡
+state:           just_completed
+start_at:        2026-04-22 13:20
+end_at:          2026-04-22 13:50
+duration:        30 min
+source:          healthkit.sleep
+impact:          ["高能时长 +20min"]
+headline:        浅睡 30 min · 未进入深睡
+narrative:       睡眠阶段全程停留在 N1–N2，心率从 72 降至 58。
+                 醒后 10 分钟 HRV 回到午前水平。
+prompts:         ["我是怎么没进入深睡的？", "下午还能维持多久？"]
+```
+
+### 3.6 午睡 · 过深
+
+```
+id:              evt_20260422_nap_02
+category:        sleep
+subtype:         nap
+title:           午睡
+state:           just_completed
+start_at:        2026-04-22 13:05
+end_at:          2026-04-22 14:10
+duration:        65 min
+source:          healthkit.sleep
+impact:          ["高能时长 -15min"]
+headline:        进入深睡 · 时长 65 min
+narrative:       第 22 分钟起进入 N3 深睡，持续至第 58 分钟。
+                 醒时心率 52，核心体温较午前低 0.3 °C。
+prompts:         ["多睡久会更累？", "下次午睡设多久闹钟？"]
+```
+
+### 3.7 运动 · 步行
+
+```
+id:              evt_20260422_walking
+category:        exercise
+subtype:         walking
+title:           步行
+state:           just_completed
+start_at:        2026-04-22 12:45
+end_at:          2026-04-22 13:10
+duration:        25 min
+source:          healthkit.workout
+impact:          ["影响轻微"]
+headline:        低强度 · 平均心率 94
+narrative:       步频约 108 步/分，心率全程位于 Z1（<110 bpm）。
+                 血氧与呼吸率无显著变化。
+prompts:         ["这种强度算运动吗？"]
+```
+
+### 3.8 运动 · 中低强度
+
+```
+id:              evt_20260422_moderate
+category:        exercise
+subtype:         moderate
+title:           中低强度运动
+state:           just_completed
+start_at:        2026-04-22 07:15
+end_at:          2026-04-22 07:48
+duration:        33 min
+source:          healthkit.workout
+impact:          ["高能时长 +15min"]
+headline:        有氧稳定 · 平均心率 138
+narrative:       心率全程位于 Z2（130–148 bpm），EPOC 约 35 min。
+                 运动后 30 分钟内核心体温回到静息水平。
+prompts:         ["这个强度对我合适吗？", "今天还适合再做一次吗？"]
+```
+
+### 3.9 运动 · 高强度
+
+```
+id:              evt_20260422_vigorous
+category:        exercise
+subtype:         vigorous
+title:           高强度运动
+state:           just_completed
+start_at:        2026-04-22 17:30
+end_at:          2026-04-22 17:52
+duration:        22 min
+source:          healthkit.workout
+impact:          ["高能时长 -5min", "入睡准备度 -6%"]
+headline:        峰值心率 172 · EPOC 约 90 min
+narrative:       4 段冲刺间歇，峰值心率进入 Z5（>170 bpm），间歇期心率回落至 130。
+                 EPOC 预计持续约 90 分钟，核心体温较静息高 0.8 °C。
+prompts:         ["这个时间点合适吗？", "今晚能更快入睡吗？"]
+```
+
