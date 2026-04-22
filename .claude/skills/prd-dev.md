@@ -188,4 +188,6 @@ Payload: { id, timestamp }
 - [ ] 无视觉美学 / 品牌叙事内容
 - [ ] 所有 ID、字段、状态、事件名用英文
 
-满足后交还给 prd-workflow，提醒用户可以调用 `prd-review`。
+满足后交还给 prd-workflow：
+- 提醒用户可以调用 `prd-review`
+- **agent 更新 `prd/<feature>/进度.md`**：该模块"开发文档"格子 ⏸→🟡；review 通过后 → ✅ + 追加变更日志一行

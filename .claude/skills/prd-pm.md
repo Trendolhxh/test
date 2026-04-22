@@ -119,4 +119,6 @@ description: 为某个模块撰写 PM 自留的 notes 文件。PM 用它调试�
 - [ ] §3 §4 可以为空但要显式标 "暂无"
 - [ ] 没有任何内容会被工程或设计当成施工图
 
-完成后交还给 prd-workflow，可以走 prd-review（pm-notes 的审查主要是"和 master 冲突"和"和 ui/dev 有无逻辑矛盾"）。
+完成后交还给 prd-workflow：
+- 可以走 prd-review（pm-notes 的审查主要是"和 master 冲突"和"和 ui/dev 有无逻辑矛盾"）
+- **agent 更新 `prd/<feature>/进度.md`**：该模块"产品笔记"格子 ⏸→🟡；review 通过后 → ✅ + 追加变更日志一行

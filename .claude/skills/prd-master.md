@@ -196,4 +196,7 @@ description: 起草一份新需求的 master PRD。用 apple-design-reviewer 的
 - [ ] 正文（不含附录）≤ 300 行
 - [ ] 用户明确说"可以进入 prd-decompose 了"
 
-满足后，把状态改成 `Status: Review`，交还给 prd-workflow agent。
+满足后：
+- 把 主文档.md 头部 `Status` 改成 `Review`
+- 交还给 prd-workflow agent
+- **agent 收尾动作**：创建 `prd/<feature>/进度.md`（用 prd-workflow 附录「进度.md 模板」），初始化四阶段 checkbox / 模块矩阵占位 / 变更日志首行

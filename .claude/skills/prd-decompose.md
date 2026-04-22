@@ -126,4 +126,7 @@ mkdir -p prd/<feature>/shared/
 - [ ] 主文档.md 追加了"模块清单"表
 - [ ] 用户明确说"可以开始写某模块了"
 
-满足后交还给 prd-workflow agent，等用户指定下一步写哪个模块。
+满足后交还给 prd-workflow agent：
+- agent 在 主文档.md 末尾追加"模块清单"表
+- **agent 更新 `prd/<feature>/进度.md` 模块矩阵**（每模块一行、每列初始 ⏸）+ 共享契约清单 + 变更日志
+- 等用户指定下一步写哪个模块

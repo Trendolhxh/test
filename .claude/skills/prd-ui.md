@@ -153,3 +153,4 @@ description: 为某个模块撰写面向 UI / 设计师的 PRD。读 master PRD 
 1. 把文件头的 TODO 注释删除
 2. 提醒用户可以调用 `prd-review` skill 审查
 3. 交还给 prd-workflow agent
+4. **agent 更新 `prd/<feature>/进度.md`**：该模块"界面设计"格子 ⏸→🟡；review 通过后 → ✅ + 追加变更日志一行
