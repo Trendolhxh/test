@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iSho · 高能时长展开 · energy-detail 原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Reddit+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0E0F;
+    --panel-bg: #DCDCDC;
+    --ink: #FFFFFF;
+    --ink-90: rgba(255,255,255,0.9);
+    --ink-60: rgba(255,255,255,0.6);
+    --ink-35: rgba(255,255,255,0.35);
+    --ink-20: rgba(255,255,255,0.2);
+    --ink-10: rgba(255,255,255,0.1);
+    --green: #AAFFC1;
+    --green-strong: #90E89F;
+    --green-soft: #9CFFB6;
+    --error: #FFB4B4;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--panel-bg);
+    font-family: "Noto Sans SC", -apple-system, system-ui, sans-serif;
+    color: #111;
+    -webkit-font-smoothing: antialiased;
+  }
+  * { box-sizing: border-box; }
+  button { font-family: inherit; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+
+  .stage {
+    min-height: 100vh; padding: 40px 24px 120px;
+    display: flex; flex-direction: column; align-items: center; gap: 28px;
+  }
+  .title {
+    font-family: "Instrument Serif", "Noto Serif SC", serif;
+    font-size: 28px; font-weight: 400; letter-spacing: 0.5px;
+    color: #222;
+  }
+  .subtitle {
+    font-family: "Noto Sans SC"; font-size: 13px; color: rgba(0,0,0,0.55);
+    max-width: 640px; text-align: center; line-height: 1.6;
+  }
+  .flow-label {
+    font-family: "Reddit Sans", sans-serif; font-size: 11px;
+    letter-spacing: 1.8px; text-transform: uppercase;
+    color: rgba(0,0,0,0.4); margin-top: 4px;
+  }
+
+  /* Device board — 7 screens grid */
+  .board {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 32px 28px; justify-items: center; max-width: 1760px; width: 100%;
+  }
+  @media (max-width: 1600px) { .board { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 1220px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 820px)  { .board { grid-template-columns: 1fr; } }
+
+  .screen-caption {
+    margin-top: 12px; text-align: center; max-width: 340px;
+  }
+  .screen-caption .st-title {
+    font-family: "Noto Sans SC", sans-serif; font-size: 14px; font-weight: 600; color: #222;
+  }
+  .screen-caption .st-desc {
+    font-family: "Noto Sans SC"; font-size: 12px; color: rgba(0,0,0,0.55);
+    margin-top: 4px; line-height: 1.55;
+  }
+  .screen-caption .st-trigger {
+    font-family: "Reddit Sans", sans-serif; font-size: 10px;
+    letter-spacing: 0.8px; color: rgba(0,0,0,0.42); margin-top: 6px;
+  }
+
+  /* iPhone frame */
+  .phone {
+    width: 360px; height: 780px; border-radius: 44px; position: relative; overflow: hidden;
+    background: var(--bg);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12);
+  }
+  .phone .island {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 116px; height: 34px; border-radius: 22px; background: #000; z-index: 50;
+  }
+  .phone .home-indicator {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 128px; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.7); z-index: 60;
+  }
+  .status-bar {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 19px 30px 14px 30px; color: var(--ink-90);
+    font-family: -apple-system, "SF Pro", system-ui;
+    font-size: 15px; font-weight: 590; line-height: 20px;
+  }
+  .status-bar .icons { display: flex; align-items: center; gap: 6px; opacity: 0.9; }
+
+  /* Screen body */
+  .screen-body {
+    position: absolute; inset: 0; padding-top: 54px;
+    display: flex; flex-direction: column; color: var(--ink);
+  }
+
+  /* Top anchor bar — 两行结构：nav row (返回 + 日期切换) / title row (label + 数字) */
+  .top-anchor { padding: 10px 20px 10px; }
+  .nav-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .nav-row .date-group {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .title-row {
+    display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  }
+  .title-row .sub-label {
+    font-family: "Noto Sans SC"; font-size: 10px; font-weight: 400;
+    color: var(--ink-35); letter-spacing: 2px;
+  }
+  .title-row .total {
+    font-family: "Reddit Sans", sans-serif;
+    display: flex; align-items: baseline; gap: 2px;
+    color: var(--ink); font-weight: 500; min-height: 32px;
+  }
+  .title-row .total .num {
+    font-size: 28px; font-weight: 500; line-height: 32px; letter-spacing: -0.6px;
+  }
+  .title-row .total .unit {
+    font-family: "Reddit Sans", sans-serif;
+    font-size: 13px; color: var(--ink-60); margin-left: 1px; margin-right: 6px;
+    font-weight: 400;
+  }
+  .title-row .total .dim {
+    color: var(--ink-35); font-size: 24px; letter-spacing: -0.4px;
+  }
+
+  /* Date picker button */
+  .date-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 28px; min-width: 28px; padding: 0 10px;
+    border-radius: 999px; border: 1px solid var(--ink-10);
+    background: rgba(255,255,255,0.04);
+    color: var(--ink-90); font-family: "Reddit Sans"; font-size: 12px;
+    cursor: pointer;
+  }
+  .date-btn svg { display: block; }
+  .date-btn.icon-only { padding: 0; width: 28px; }
+  .date-btn:disabled, .date-btn.disabled {
+    color: var(--ink-20); border-color: rgba(255,255,255,0.05);
+    background: transparent; cursor: not-allowed;
+  }
+  .date-display {
+    font-family: "Reddit Sans"; font-size: 13px; color: var(--ink-90);
+    padding: 0 8px; letter-spacing: 0.2px; min-width: 64px; text-align: center;
+  }
+
+  /* Divider below header */
+  .header-div {
+    height: 0.5px; background: linear-gradient(90deg,
+      rgba(170,255,193,0) 0%, rgba(170,255,193,0.25) 20%,
+      rgba(170,255,193,0.25) 80%, rgba(170,255,193,0) 100%);
+    margin: 4px 20px 2px;
+  }
+
+  /* Scrollable timeline area */
+  .timeline-wrap {
+    flex: 1; overflow: hidden; position: relative; contain: strict;
+  }
+  .timeline-scroller {
+    height: 100%; overflow-y: auto; overflow-x: hidden; position: relative;
+    scroll-behavior: smooth;
+  }
+  .timeline-grid {
+    position: relative; width: 100%;
+    /* 24h × 56px/hour = 1344px；上下 24px 留白用 margin 而不是 padding，确保子层坐标系统一 */
+    height: 1344px;
+    margin: 20px 0 60px;
+  }
+
+  /* Axis (left) */
+  .axis {
+    position: absolute; top: 0; left: 16px; height: 100%; width: 34px;
+    pointer-events: none;
+  }
+  .axis .tick {
+    position: absolute; left: 0; width: 100%;
+    font-family: "Reddit Sans"; font-size: 10px; color: var(--ink-35);
+    line-height: 12px;
+    letter-spacing: 0.2px;
+  }
+
+  /* SVG Curve layer — 占左半屏；峰值不越中线，右半留给事件 */
+  .curve-layer {
+    position: absolute; left: 50px; width: 140px; top: 0; height: 100%;
+  }
+  .curve-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+  /* Events layer — 占右半屏；google calendar 风格方块 */
+  .events-layer {
+    position: absolute; left: 200px; right: 12px; top: 0; height: 100%;
+    pointer-events: none;
+  }
+  .events-layer .lane-canvas {
+    position: absolute; inset: 0;
+  }
+  .event-block {
+    position: absolute; pointer-events: auto; cursor: pointer;
+    border-radius: 6px; padding: 6px 8px;
+    background: linear-gradient(180deg, rgba(170,255,193,0.16), rgba(170,255,193,0.08));
+    border: 0.5px solid rgba(170,255,193,0.30);
+    color: var(--ink);
+    overflow: hidden;
+    display: flex; flex-direction: column; gap: 3px;
+    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  }
+  .event-block:hover {
+    background: linear-gradient(180deg, rgba(170,255,193,0.26), rgba(170,255,193,0.14));
+    border-color: rgba(170,255,193,0.50);
+  }
+  .event-block.planned {
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border: 0.5px dashed rgba(255,255,255,0.22);
+  }
+  .event-block.planned:hover {
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+    border-color: rgba(255,255,255,0.35);
+  }
+  .event-block .eb-row {
+    display: flex; align-items: center; gap: 5px;
+    font-family: "Noto Sans SC"; font-size: 10px; font-weight: 500;
+    color: var(--ink-90); letter-spacing: 0.2px;
+    line-height: 12px;
+  }
+  .event-block.planned .eb-row { color: var(--ink-60); }
+  .event-block .eb-icon {
+    width: 14px; height: 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--green); flex-shrink: 0;
+  }
+  .event-block.planned .eb-icon { color: var(--ink-60); }
+  .event-block .eb-name {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .event-block .eb-time {
+    font-family: "Reddit Sans"; font-size: 9px;
+    color: var(--ink-60); letter-spacing: 0.2px;
+    line-height: 11px;
+  }
+  .event-block.planned .eb-time { color: var(--ink-35); }
+  .event-block.compact {
+    padding: 4px 6px; gap: 0;
+  }
+  .event-block.compact .eb-time { display: none; }
+
+  /* Event modal (detail card) */
+  .modal-backdrop {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 100; display: flex; align-items: flex-end; justify-content: center;
+    animation: modal-in 180ms ease-out;
+  }
+  @keyframes modal-in {
+    from { background: rgba(0,0,0,0); }
+    to   { background: rgba(0,0,0,0.55); }
+  }
+  .modal-card {
+    width: 100%; max-height: 82%; overflow: auto;
+    background: #17171A; border-radius: 22px 22px 0 0;
+    border-top: 0.5px solid rgba(255,255,255,0.08);
+    box-shadow: 0 -8px 28px rgba(0,0,0,0.4);
+    padding: 16px 18px 22px; color: var(--ink);
+    animation: card-up 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes card-up {
+    from { transform: translateY(40px); opacity: 0.4; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .modal-card .grip {
+    width: 36px; height: 4px; border-radius: 999px;
+    background: rgba(255,255,255,0.18);
+    margin: 0 auto 12px;
+  }
+  .modal-card .head {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.08);
+  }
+  .modal-card .head .chip {
+    width: 36px; height: 36px; border-radius: 999px;
+    background: rgba(170,255,193,0.14); color: var(--green);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .modal-card.planned .head .chip {
+    background: rgba(255,255,255,0.06); color: var(--ink-60);
+  }
+  .modal-card .head .title-wrap {
+    flex: 1; min-width: 0;
+  }
+  .modal-card .head .title-wrap .eyebrow {
+    font-family: "Noto Sans SC"; font-size: 10px;
+    letter-spacing: 1.8px; color: var(--ink-35); text-transform: uppercase;
+  }
+  .modal-card.planned .head .title-wrap .eyebrow { color: var(--ink-35); }
+  .modal-card .head .title-wrap .title {
+    font-family: "Noto Sans SC"; font-size: 17px; font-weight: 600;
+    margin-top: 2px; letter-spacing: 0.2px;
+  }
+  .modal-card .head .title-wrap .meta-line {
+    font-family: "Reddit Sans"; font-size: 11px; color: var(--ink-60);
+    margin-top: 4px; letter-spacing: 0.2px;
+  }
+  .modal-card .section {
+    padding: 14px 0 4px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
+  }
+  .modal-card .section:last-child { border-bottom: none; }
+  .modal-card .section .label {
+    font-family: "Noto Sans SC"; font-size: 10px; letter-spacing: 1.6px;
+    color: var(--ink-35); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .modal-card .impact-row {
+    display: flex; align-items: center; gap: 8px;
+    font-family: "Noto Sans SC"; font-size: 13px; color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .modal-card .impact-row .value {
+    font-family: "Reddit Sans"; font-weight: 500;
+  }
+  .modal-card .impact-row.pos .value { color: var(--green); }
+  .modal-card .impact-row.neg .value { color: var(--error); }
+  .modal-card .headline {
+    font-family: "Noto Sans SC"; font-size: 14px; font-weight: 500;
+    color: var(--ink); margin-bottom: 6px;
+  }
+  .modal-card .narrative {
+    font-family: "Noto Sans SC"; font-size: 12px;
+    color: var(--ink-60); line-height: 1.65; white-space: pre-wrap;
+  }
+  .modal-card .prompts {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .modal-card .prompt-chip {
+    font-family: "Noto Sans SC"; font-size: 12px; color: var(--ink-90);
+    padding: 10px 12px; border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+  }
+  .modal-card .prompt-chip .arrow { color: var(--ink-35); }
+  .modal-card .close-hint {
+    margin-top: 14px; text-align: center;
+    font-family: "Noto Sans SC"; font-size: 10px; color: var(--ink-35);
+    letter-spacing: 0.8px;
+  }
+
+  /* Now indicator — 渐变实线，从两端淡出 */
+  .now-line {
+    position: absolute; left: 50px; right: 12px; height: 1px;
+    background: linear-gradient(90deg,
+      rgba(170,255,193,0) 0%, rgba(170,255,193,0.8) 22%,
+      rgba(170,255,193,0.8) 78%, rgba(170,255,193,0) 100%);
+    pointer-events: none;
+    z-index: 6;
+  }
+  .now-line::before {
+    content: ""; position: absolute; left: -4px; top: -4px;
+    width: 9px; height: 9px; border-radius: 999px;
+    background: var(--green);
+    box-shadow: 0 0 10px 2px rgba(170,255,193,0.6),
+                inset 0 0 2px rgba(255,255,255,0.25);
+  }
+  .now-line .now-label {
+    position: absolute; right: 0; top: -9px;
+    font-family: "Reddit Sans"; font-size: 10px; color: var(--green);
+    background: var(--bg); padding: 1px 4px; letter-spacing: 0.3px;
+  }
+
+  /* States: loading */
+  .skeleton-block {
+    position: absolute; background: linear-gradient(90deg,
+      rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
+    background-size: 400% 100%;
+    animation: skeleton-shimmer 1.8s linear infinite;
+    border-radius: 8px;
+  }
+  @keyframes skeleton-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+  }
+
+  /* Empty / error states */
+  .inline-error {
+    position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%);
+    font-family: "Noto Sans SC"; font-size: 11px; color: var(--ink-35);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .inline-error .retry {
+    color: var(--green); cursor: pointer; text-decoration: none;
+  }
+  .page-error {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; padding: 24px;
+    color: var(--ink-60);
+  }
+  .page-error .icon { font-size: 22px; opacity: 0.5; }
+  .page-error .msg {
+    font-family: "Noto Sans SC"; font-size: 13px; letter-spacing: 0.4px;
+  }
+  .page-error .retry-btn {
+    margin-top: 4px; padding: 8px 18px; border-radius: 999px;
+    border: 1px solid rgba(170,255,193,0.35); background: transparent;
+    color: var(--green); font-family: "Noto Sans SC"; font-size: 12px;
+    cursor: pointer;
+  }
+  .empty-hint {
+    position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%);
+    text-align: center; color: var(--ink-35); font-size: 12px;
+    font-family: "Noto Sans SC"; letter-spacing: 0.6px;
+    pointer-events: none;
+  }
+
+  /* Control panel (selector) */
+  .panel {
+    position: fixed; bottom: 18px; right: 18px;
+    background: #fff; border-radius: 14px; padding: 14px 16px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.04);
+    font-size: 13px; z-index: 1000; min-width: 220px;
+  }
+  .panel h4 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+  .panel .row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 8px; }
+  .panel label { font-size: 12px; color: #555; }
+  .panel .hint { font-size: 11px; color: #888; margin-top: 8px; line-height: 1.5; }
+  .panel .seg {
+    display: inline-flex; background: #EEE; border-radius: 8px; padding: 2px; gap: 2px;
+  }
+  .panel .seg button {
+    border: none; background: transparent; padding: 4px 8px; border-radius: 6px;
+    font-size: 12px; cursor: pointer; color: #555;
+  }
+  .panel .seg button.active {
+    background: #fff; color: #000; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+
+  /* Solo mode (focus one screen) */
+  .solo-view .board { grid-template-columns: 1fr; }
+  .solo-view .phone { width: 402px; height: 874px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<div class="panel" id="panel">
+  <h4>状态切换</h4>
+  <div class="row">
+    <label>视图</label>
+    <div class="seg" id="viewSeg">
+      <button data-v="grid" class="active">全景</button>
+      <button data-v="solo">聚焦</button>
+    </div>
+  </div>
+  <div class="row">
+    <label>聚焦单屏</label>
+    <select id="soloSelect" style="flex: 1; max-width: 150px; padding: 4px 6px; border-radius: 6px; border: 1px solid #DDD; font-size: 12px; background: #fff;">
+      <option value="today-live">今日·有数据</option>
+      <option value="history">历史日·有数据</option>
+      <option value="today-empty">今日·空数据</option>
+      <option value="history-none">历史日·无记录</option>
+      <option value="loading">加载中</option>
+      <option value="curve-error">曲线失败</option>
+      <option value="events-error">仅事件失败</option>
+    </select>
+  </div>
+  <div class="hint">
+    原型覆盖 UI PRD §5 全部 7 种状态。<br/>
+    "全景"一次并排查看；"聚焦"单屏放大。
+  </div>
+</div>
+
+<!-- React -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.25.7/babel.min.js" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+// Split batches: data + icons first
+const { useState, useEffect, useMemo, useRef } = React;
+
+// ──────────────────────────────────────────────────────────
+// Event icons (5 tokens from shared/事件数据.md §2.1)
+// ──────────────────────────────────────────────────────────
+const Icon = {
+  sleep: (
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+      <path d="M11.5 8.2A5 5 0 016.2 2.5 5 5 0 108.8 12a4.98 4.98 0 002.7-3.8z"
+            fill="currentColor"/>
+    </svg>
+  ),
+  nap: (
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+      <path d="M12 7.5A4.5 4.5 0 017.5 3a4.5 4.5 0 102.3 8.5A4.5 4.5 0 0012 7.5z"
+            fill="currentColor" opacity="0.55"/>
+      <path d="M12 7.5A4.5 4.5 0 017.5 3a4.5 4.5 0 102.3 8.5A4.5 4.5 0 0012 7.5z"
+            stroke="currentColor" strokeWidth="1" fill="none"/>
+    </svg>
+  ),
+  exercise: (
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+      <path d="M2 7l2.5 2.5M11.5 7L9 4.5M4 5l5 5M5 4l5 5M9.5 2.5L11 4M3 10l1.5 1.5"
+            stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
+  ),
+  walking: (
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+      <circle cx="8" cy="2.5" r="1.3" fill="currentColor"/>
+      <path d="M8 4l-2 3 1.5 1.2L6 12M8 4l2 2.5 1.5 0.5M6 8l-1 1"
+            stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    </svg>
+  ),
+  common: (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <circle cx="5" cy="5" r="3.5" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+      <circle cx="5" cy="5" r="1.1" fill="currentColor"/>
+    </svg>
+  ),
+};
+
+// ──────────────────────────────────────────────────────────
+// Curve sampling — continuous predicted values (0..1)
+// x-axis = energy; y-axis = time (0..24h). Higher value = more right.
+// Shape mimics typical circadian pattern, with small noise.
+// ──────────────────────────────────────────────────────────
+function genCurvePoints(samplesPerHour = 6) {
+  // Peaks around 10:30 and 16:30; trough ~14:30 and ~23:00
+  const pts = [];
+  for (let i = 0; i <= 24 * samplesPerHour; i++) {
+    const t = i / samplesPerHour; // hour
+    const morning = Math.exp(-Math.pow((t - 10.5) / 2.0, 2)) * 0.95;
+    const afternoon = Math.exp(-Math.pow((t - 16.5) / 2.2, 2)) * 0.82;
+    const dip = Math.exp(-Math.pow((t - 14.3) / 0.9, 2)) * -0.22;
+    const night = Math.exp(-Math.pow((t - 3.0) / 2.4, 2)) * -0.28;
+    const pre = Math.exp(-Math.pow((t - 7.5) / 1.6, 2)) * 0.35;
+    const evening = Math.exp(-Math.pow((t - 20.5) / 1.6, 2)) * 0.25;
+    const base = 0.18;
+    let v = base + morning + afternoon + pre + evening + dip + night;
+    // tiny noise to feel organic
+    v += Math.sin(t * 1.7 + 0.6) * 0.015;
+    v = Math.max(0.05, Math.min(1, v));
+    pts.push({ t, v });
+  }
+  return pts;
+}
+
+// ──────────────────────────────────────────────────────────
+// Events (2026-04-22, from shared/事件数据.md examples + v2 planned variant)
+// state: "completed" (past) / "planned" (future; v2 preview)
+// ──────────────────────────────────────────────────────────
+const NOW_HOUR = 10 + 32 / 60;  // 10:32
+
+const EVENTS_TODAY = [
+  {
+    id: "evt_night_sleep", icon: "sleep", name: "昨夜睡眠",
+    start: -0.333, end: 6.867, state: "completed",
+    detail: {
+      title: "昨夜睡眠", duration: "7h 12min",
+      impact: [{ metric: "高能时长", value: "7h 29min", tone: "neutral" }],
+      headline: "连续性良好 · 深睡占比 22%",
+      narrative: "入睡潜伏期 14 分钟，深睡集中在 00:30–02:40。\n全夜 HRV 均值 58 ms，高于 14 日基线 9 ms；无单次超过 20 秒的觉醒。",
+      prompts: ["昨夜睡眠为什么这么稳定？", "今天能维持多久巅峰？"],
+    },
+  },
+  {
+    id: "evt_moderate", icon: "exercise", name: "中低强度运动",
+    start: 7.25, end: 7.8, state: "completed",
+    detail: {
+      title: "中低强度运动", duration: "33 min",
+      impact: [{ metric: "高能时长", value: "+15min", tone: "pos" }],
+      headline: "有氧稳定 · 平均心率 138",
+      narrative: "心率全程位于 Z2（130–148 bpm），EPOC 约 35 min。\n运动后 30 分钟内核心体温回到静息水平。",
+      prompts: ["这个强度对我合适吗？", "今天还适合再做一次吗？"],
+    },
+  },
+  {
+    id: "evt_walking", icon: "walking", name: "步行",
+    start: 12.75, end: 13.167, state: "planned",
+    detail: {
+      title: "步行", duration: "计划约 25 min",
+      impact: [{ metric: "影响轻微", value: "—", tone: "neutral" }],
+      headline: "预计低强度 · 心率 Z1",
+      narrative: "按最近 7 天同时段步行记录预测：步频约 108 步/分，心率全程位于 Z1（<110 bpm）。\n此次会伴随午餐后移动，属常规日间活动。",
+      prompts: ["此时走路会影响午睡吗？", "有必要计入训练量吗？"],
+    },
+  },
+  {
+    id: "evt_nap", icon: "nap", name: "午睡",
+    start: 13.333, end: 13.833, state: "planned",
+    detail: {
+      title: "午睡", duration: "计划 30 min",
+      impact: [{ metric: "高能时长", value: "+20min (预计)", tone: "pos" }],
+      headline: "预计浅睡 30 min · 不进入深睡",
+      narrative: "按惯常午睡模式预测：停留在 N1–N2 阶段，心率由 72 降至约 58。\n若超过 40 分钟易进入深睡，建议 30 min 闹钟提醒。",
+      prompts: ["睡多久最合适？", "需要闹钟吗？"],
+    },
+  },
+  {
+    id: "evt_walk_pm", icon: "walking", name: "步行",
+    start: 17.25, end: 17.75, state: "planned",
+    detail: {
+      title: "步行", duration: "计划 30 min",
+      impact: [{ metric: "影响轻微", value: "—", tone: "neutral" }],
+      headline: "预计低强度 · 与高强度训练部分重叠",
+      narrative: "计划中的下班步行与 17:30 的高强度运动部分重叠（17:30–17:45）。\n若作为热身完成，不增加 EPOC 预算。",
+      prompts: ["和高强度运动怎么搭？", "是不是应该挪到训练后？"],
+    },
+  },
+  {
+    id: "evt_vigorous", icon: "exercise", name: "高强度运动",
+    start: 17.5, end: 17.867, state: "planned",
+    detail: {
+      title: "高强度运动", duration: "计划 22 min",
+      impact: [
+        { metric: "高能时长", value: "-5min (预计)", tone: "neg" },
+        { metric: "入睡准备度", value: "-6% (预计)", tone: "neg" },
+      ],
+      headline: "预计 Z5 间歇 · EPOC 约 90 min",
+      narrative: "基于过往训练预测：4 段冲刺间歇，峰值心率可能进入 Z5（>170 bpm）。\nEPOC 预计持续约 90 分钟，距推荐入睡时间仅 4.5h，可能压低今晚入睡准备度。",
+      prompts: ["这个时间点合适吗？", "要不要挪到更早？"],
+    },
+  },
+];
+
+const EVENTS_HISTORY = [
+  {
+    id: "h_sleep", icon: "sleep", name: "昨夜睡眠",
+    start: 0.0, end: 6.5, state: "completed",
+    detail: {
+      title: "昨夜睡眠", duration: "6h 30min",
+      impact: [{ metric: "高能时长", value: "6h 40min", tone: "neutral" }],
+      headline: "时长达标 · 深睡偏少",
+      narrative: "入睡潜伏期 22 分钟，深睡仅占 14%（基线 18%），REM 集中在下半夜。\nHRV 均值 48 ms，处于 14 日基线区间下沿。",
+      prompts: ["深睡为什么少？", "下周怎么把深睡拉回来？"],
+    },
+  },
+  {
+    id: "h_nap", icon: "nap", name: "午睡",
+    start: 13.08, end: 14.167, state: "completed",
+    detail: {
+      title: "午睡", duration: "65 min",
+      impact: [{ metric: "高能时长", value: "-15min", tone: "neg" }],
+      headline: "进入深睡 · 时长 65 min",
+      narrative: "第 22 分钟起进入 N3 深睡，持续至第 58 分钟。\n醒时心率 52，核心体温较午前低 0.3 °C。",
+      prompts: ["多睡久会更累？", "下次午睡设多久闹钟？"],
+    },
+  },
+  {
+    id: "h_walking", icon: "walking", name: "步行",
+    start: 18.5, end: 19.0, state: "completed",
+    detail: {
+      title: "步行", duration: "30 min",
+      impact: [{ metric: "影响轻微", value: "—", tone: "neutral" }],
+      headline: "低强度 · 平均心率 91",
+      narrative: "步频约 106 步/分，心率全程位于 Z1（<110 bpm）。\n血氧与呼吸率无显著变化。",
+      prompts: ["这种强度算运动吗？"],
+    },
+  },
+];
+
+// ──────────────────────────────────────────────────────────
+// iPhone shell
+// ──────────────────────────────────────────────────────────
+function StatusBar({ time = "9:41" }) {
+  return (
+    <div className="status-bar">
+      <span>{time}</span>
+      <div className="icons">
+        <svg width="17" height="11" viewBox="0 0 19 12"><rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill="currentColor" opacity="0.9"/><rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill="currentColor" opacity="0.9"/><rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill="currentColor" opacity="0.9"/><rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill="currentColor" opacity="0.9"/></svg>
+        <svg width="15" height="11" viewBox="0 0 17 12"><path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill="currentColor" opacity="0.9"/><path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill="currentColor" opacity="0.9"/><circle cx="8.5" cy="10.5" r="1.4" fill="currentColor" opacity="0.9"/></svg>
+        <svg width="23" height="11" viewBox="0 0 27 13"><rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="currentColor" strokeOpacity="0.45" fill="none"/><rect x="2" y="2" width="17" height="9" rx="1.6" fill="currentColor" opacity="0.9"/><path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill="currentColor" opacity="0.5"/></svg>
+      </div>
+    </div>
+  );
+}
+
+function Phone({ children }) {
+  return (
+    <div className="phone">
+      <div className="island"/>
+      <StatusBar/>
+      <div className="screen-body">{children}</div>
+      <div className="home-indicator"/>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
+// Top anchor (header)
+// ──────────────────────────────────────────────────────────
+function BackGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M9.5 2L4 7l5.5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+function PrevGlyph() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <path d="M6.5 1.5L3 5l3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+function NextGlyph() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+      <path d="M3.5 1.5L7 5l-3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+// Anchor: variants per state
+function TopAnchor({ state }) {
+  // state: today-live | history | today-empty | history-none | loading | curve-error | events-error
+  const anchor = {
+    "today-live":   { label: "今日高能时长", num: "7", min: "29", date: "今日", canPrev: true, canNext: false, showTotal: true },
+    "history":      { label: "4月21日高能时长", num: "6", min: "42", date: "4月21日", canPrev: true, canNext: true, showTotal: true },
+    "today-empty":  { label: "今日高能时长", num: "—", min: "", date: "今日", canPrev: true, canNext: false, showTotal: false },
+    "history-none": { label: "3月15日无记录", num: "", min: "", date: "3月15日", canPrev: true, canNext: true, showTotal: false },
+    "loading":      { label: "今日高能时长", num: "…", min: "", date: "今日", canPrev: false, canNext: false, showTotal: false, loading: true },
+    "curve-error":  { label: "今日高能时长", num: "—", min: "", date: "今日", canPrev: true, canNext: false, showTotal: false },
+    "events-error": { label: "今日高能时长", num: "7", min: "29", date: "今日", canPrev: true, canNext: false, showTotal: true },
+  }[state];
+
+  return (
+    <>
+      <div className="top-anchor">
+        <div className="nav-row">
+          <button className="date-btn icon-only" aria-label="返回首页">
+            <BackGlyph/>
+          </button>
+          <div className="date-group">
+            <button className={"date-btn icon-only" + (anchor.canPrev ? "" : " disabled")} disabled={!anchor.canPrev} aria-label="前一日">
+              <PrevGlyph/>
+            </button>
+            <div className="date-display">{anchor.date}</div>
+            <button className={"date-btn icon-only" + (anchor.canNext ? "" : " disabled")} disabled={!anchor.canNext} aria-label="后一日">
+              <NextGlyph/>
+            </button>
+          </div>
+        </div>
+        <div className="title-row">
+          <div className="sub-label">{anchor.label}</div>
+          {anchor.showTotal && (
+            <div className="total">
+              <span className="num">{anchor.num}</span>
+              <span className="unit">h</span>
+              <span className="num">{anchor.min}</span>
+              <span className="unit">min</span>
+            </div>
+          )}
+          {!anchor.showTotal && !anchor.loading && (
+            <div className="total"><span className="num dim">{anchor.num || "—"}</span></div>
+          )}
+          {anchor.loading && (
+            <div className="total"><span className="num dim">…</span></div>
+          )}
+        </div>
+      </div>
+      <div className="header-div"/>
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
+// Curve — vertical 24h (y = time, x = energy level)
+// 峰值不过屏幕中线：curve-layer 宽 140px 占屏幕左 50..190；中线在 180
+// ──────────────────────────────────────────────────────────
+const CURVE_WIDTH = 140;   // viewbox width (matches .curve-layer px)
+const CURVE_HEIGHT = 1344; // 24h × 56px
+const CURVE_BASELINE_X = 6;
+const CURVE_MAX_X = 128;
+
+function pathFromPoints(points, now) {
+  // Split into live (past) and dim (future) segments if now is set
+  const toX = (v) => CURVE_BASELINE_X + (CURVE_MAX_X - CURVE_BASELINE_X) * v;
+  const toY = (t) => (t / 24) * CURVE_HEIGHT;
+
+  // Build a single smooth path (we'll color via clip)
+  let d = "";
+  points.forEach((p, i) => {
+    const x = toX(p.v);
+    const y = toY(p.t);
+    if (i === 0) d += `M ${x.toFixed(2)} ${y.toFixed(2)}`;
+    else {
+      const prev = points[i-1];
+      const px = toX(prev.v);
+      const py = toY(prev.t);
+      const cy = (py + y) / 2;
+      d += ` C ${px.toFixed(2)} ${cy.toFixed(2)}, ${x.toFixed(2)} ${cy.toFixed(2)}, ${x.toFixed(2)} ${y.toFixed(2)}`;
+    }
+  });
+  return d;
+}
+
+function fillPathFromPoints(points) {
+  const toX = (v) => CURVE_BASELINE_X + (CURVE_MAX_X - CURVE_BASELINE_X) * v;
+  const toY = (t) => (t / 24) * CURVE_HEIGHT;
+  let d = `M ${CURVE_BASELINE_X} 0`;
+  points.forEach((p, i) => {
+    const x = toX(p.v);
+    const y = toY(p.t);
+    if (i === 0) d += ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
+    else {
+      const prev = points[i-1];
+      const px = toX(prev.v);
+      const py = toY(prev.t);
+      const cy = (py + y) / 2;
+      d += ` C ${px.toFixed(2)} ${cy.toFixed(2)}, ${x.toFixed(2)} ${cy.toFixed(2)}, ${x.toFixed(2)} ${y.toFixed(2)}`;
+    }
+  });
+  d += ` L ${CURVE_BASELINE_X} ${CURVE_HEIGHT} Z`;
+  return d;
+}
+
+function Curve({ variant, points, nowHour }) {
+  // variant: "live" (today) | "history" | "empty" | "loading"
+  const pathD = useMemo(() => points ? pathFromPoints(points) : "", [points]);
+  const fillD = useMemo(() => points ? fillPathFromPoints(points) : "", [points]);
+  const nowY = nowHour != null ? (nowHour / 24) * CURVE_HEIGHT : null;
+
+  if (variant === "empty") {
+    // greyed placeholder curve, flat near baseline
+    const placeholderPts = Array.from({ length: 25 }, (_, i) => ({
+      t: i, v: 0.12 + Math.sin(i * 0.8) * 0.03,
+    }));
+    const phFill = fillPathFromPoints(placeholderPts);
+    const phLine = pathFromPoints(placeholderPts);
+    return (
+      <svg className="curve-svg" viewBox={`0 0 ${CURVE_WIDTH} ${CURVE_HEIGHT}`} preserveAspectRatio="none">
+        <path d={phFill} fill="rgba(255,255,255,0.04)"/>
+        <path d={phLine} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+
+  if (variant === "loading") {
+    // shimmering placeholder band
+    return (
+      <svg className="curve-svg" viewBox={`0 0 ${CURVE_WIDTH} ${CURVE_HEIGHT}`} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="shimmer" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.03)"/>
+            <stop offset="50%" stopColor="rgba(255,255,255,0.09)"/>
+            <stop offset="100%" stopColor="rgba(255,255,255,0.03)"/>
+            <animate attributeName="x1" values="-1;1" dur="1.8s" repeatCount="indefinite"/>
+            <animate attributeName="x2" values="0;2" dur="1.8s" repeatCount="indefinite"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width={CURVE_WIDTH * 0.6} height={CURVE_HEIGHT} fill="url(#shimmer)"/>
+      </svg>
+    );
+  }
+
+  // live / history
+  const uid = variant + "-curve";
+  return (
+    <svg className="curve-svg" viewBox={`0 0 ${CURVE_WIDTH} ${CURVE_HEIGHT}`} preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={`fill-${uid}`} x1="1" y1="0" x2="0" y2="0">
+          <stop offset="0%" stopColor="rgba(172,255,194,0.55)"/>
+          <stop offset="40%" stopColor="rgba(172,255,194,0.30)"/>
+          <stop offset="100%" stopColor="rgba(172,255,194,0.02)"/>
+        </linearGradient>
+        {/* past vs future mask for today */}
+        {nowY != null && (
+          <>
+            <clipPath id={`past-${uid}`}><rect x="0" y="0" width={CURVE_WIDTH} height={nowY}/></clipPath>
+            <clipPath id={`future-${uid}`}><rect x="0" y={nowY} width={CURVE_WIDTH} height={CURVE_HEIGHT - nowY}/></clipPath>
+          </>
+        )}
+      </defs>
+
+      {/* Fill layer */}
+      {nowY != null ? (
+        <>
+          <path d={fillD} fill={`url(#fill-${uid})`} clipPath={`url(#past-${uid})`}/>
+          <path d={fillD} fill={`url(#fill-${uid})`} clipPath={`url(#future-${uid})`} opacity="0.32"/>
+        </>
+      ) : (
+        <path d={fillD} fill={`url(#fill-${uid})`} opacity="0.85"/>
+      )}
+
+      {/* Stroke layer */}
+      {nowY != null ? (
+        <>
+          <path d={pathD} fill="none" stroke="var(--green)" strokeWidth="1.8"
+                strokeLinecap="round" strokeLinejoin="round"
+                clipPath={`url(#past-${uid})`}/>
+          <path d={pathD} fill="none" stroke="var(--green)" strokeWidth="1.4"
+                strokeLinecap="round" strokeLinejoin="round"
+                strokeDasharray="2 2" opacity="0.45"
+                clipPath={`url(#future-${uid})`}/>
+        </>
+      ) : (
+        <path d={pathD} fill="none" stroke="var(--green)" strokeWidth="1.6"
+              strokeLinecap="round" strokeLinejoin="round" opacity="0.9"/>
+      )}
+    </svg>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
+// Axis — vertical time ticks at every 3h (cleaner than every hour)
+// ──────────────────────────────────────────────────────────
+function Axis({ heightPx = CURVE_HEIGHT }) {
+  const ticks = [0, 3, 6, 9, 12, 15, 18, 21, 24];
+  return (
+    <div className="axis" style={{ height: heightPx }}>
+      {ticks.map(h => {
+        const y = (h / 24) * heightPx - 6;
+        const label = h === 24 ? "24:00" : (h < 10 ? `0${h}:00` : `${h}:00`);
+        return (
+          <div key={h} className="tick" style={{ top: y }}>
+            {label}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
+// Events layer — google calendar-style blocks + overlap column分配
+// ──────────────────────────────────────────────────────────
+function fmtHHMM(t) {
+  const tt = t < 0 ? t + 24 : t;
+  const h = Math.floor(tt) % 24;
+  const m = Math.round((tt - Math.floor(tt)) * 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function assignColumns(events) {
+  // returns: map(eventId -> { col, lanes })
+  const sorted = [...events].sort((a, b) => a.start - b.start);
+  const overlap = (a, b) => a.start < b.end && b.start < a.end;
+  const place = {};
+  sorted.forEach(ev => {
+    const usedCols = sorted
+      .filter(e => e.id !== ev.id && place[e.id] != null && overlap(e, ev))
+      .map(e => place[e.id].col);
+    let col = 0;
+    while (usedCols.includes(col)) col++;
+    place[ev.id] = { col, lanes: 1 };
+  });
+  // compute lanes per event = max over overlapping set of (col+1)
+  sorted.forEach(ev => {
+    const overlapping = sorted.filter(e => overlap(e, ev));
+    const maxCol = Math.max(...overlapping.map(e => place[e.id].col));
+    place[ev.id].lanes = maxCol + 1;
+  });
+  return place;
+}
+
+function EventsLayer({ events, heightPx = CURVE_HEIGHT, onSelect }) {
+  const layout = useMemo(() => assignColumns(events), [events]);
+  return (
+    <div className="events-layer">
+      <div className="lane-canvas">
+        {events.map(ev => {
+          const startT = Math.max(0, ev.start);
+          const endT = Math.min(24, ev.end);
+          const topPx = (startT / 24) * heightPx;
+          const boxH = Math.max(20, ((endT - startT) / 24) * heightPx);
+          const { col, lanes } = layout[ev.id];
+          const widthPct = 100 / lanes;
+          const leftPct = col * widthPct;
+          const planned = ev.state === "planned";
+          const compact = boxH < 30;
+          return (
+            <div
+              key={ev.id}
+              className={`event-block${planned ? " planned" : ""}${compact ? " compact" : ""}`}
+              style={{
+                top: topPx,
+                height: boxH - 2,
+                left: `calc(${leftPct}% + ${col === 0 ? 0 : 2}px)`,
+                width: `calc(${widthPct}% - ${lanes > 1 ? 3 : 0}px)`,
+              }}
+              onClick={() => onSelect && onSelect(ev)}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="eb-row">
+                <div className="eb-icon">{Icon[ev.icon] || Icon.common}</div>
+                <div className="eb-name">{ev.name}</div>
+              </div>
+              {!compact && (
+                <div className="eb-time">{fmtHHMM(ev.start)} – {fmtHHMM(ev.end)}</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
+// Event detail card (bottom sheet modal)
+// ──────────────────────────────────────────────────────────
+function EventCard({ event, onClose }) {
+  if (!event) return null;
+  const planned = event.state === "planned";
+  const d = event.detail || {};
+  const eyebrow = planned ? "即将进行 · 预测" : "已完成";
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className={"modal-card" + (planned ? " planned" : "")}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="grip"/>
+        <div className="head">
+          <div className="chip">{Icon[event.icon] || Icon.common}</div>
+          <div className="title-wrap">
+            <div className="eyebrow">{eyebrow}</div>
+            <div className="title">{d.title || event.name}</div>
+            <div className="meta-line">
+              {fmtHHMM(event.start)} – {fmtHHMM(event.end)} · {d.duration || "—"}
+            </div>
+          </div>
+        </div>
+
+        {d.impact && d.impact.length > 0 && (
+          <div className="section">
+            <div className="label">{planned ? "预计影响" : "影响"}</div>
+            {d.impact.map((it, i) => (
+              <div key={i} className={"impact-row " + (it.tone || "neutral")}>
+                <span>{it.metric}</span>
+                <span className="value">{it.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {d.headline && (
+          <div className="section">
+            <div className="label">{planned ? "预测结论" : "结论"}</div>
+            <div className="headline">{d.headline}</div>
+            {d.narrative && <div className="narrative">{d.narrative}</div>}
+          </div>
+        )}
+
+        {d.prompts && d.prompts.length > 0 && (
+          <div className="section">
+            <div className="label">追问 Agent</div>
+            <div className="prompts">
+              {d.prompts.map((p, i) => (
+                <div key={i} className="prompt-chip">
+                  <span>{p}</span>
+                  <span className="arrow">›</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="close-hint">点击上方空白区域关闭</div>
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
+// Now indicator
+// ──────────────────────────────────────────────────────────
+function NowLine({ hour, minute }) {
+  const topPx = ((hour + minute / 60) / 24) * CURVE_HEIGHT;
+  const hh = String(hour).padStart(2, "0");
+  const mm = String(minute).padStart(2, "0");
+  return (
+    <div className="now-line" style={{ top: topPx }}>
+      <span className="now-label">{hh}:{mm}</span>
+    </div>
+  );
+}
+
+// Screen states
+const SCREEN_STATES = [
+  {
+    id: "today-live",
+    title: "今日 · 有数据",
+    desc: "常规主态。曲线 24h 连续值，此刻前实 / 此刻后淡。",
+    trigger: "默认态 · 从 hero 主数字点击进入",
+  },
+  {
+    id: "history",
+    title: "历史日 · 有数据",
+    desc: "曲线全段实；无此刻线；默认锚定首事件居中。",
+    trigger: "点「前一日」切到 4月21日",
+  },
+  {
+    id: "today-empty",
+    title: "今日 · 空数据",
+    desc: "授权未开 / 未累积足够数据；曲线位灰色占位。",
+    trigger: "首次启用 · HealthKit 未授权",
+  },
+  {
+    id: "history-none",
+    title: "历史日 · 无记录",
+    desc: "所选日期早于本机数据起点。",
+    trigger: "切到 3月15日（超出本机记录范围）",
+  },
+  {
+    id: "loading",
+    title: "加载中",
+    desc: "首次打开 / 主动刷新 / 切日期。曲线 + 顶部锚均 skeleton。",
+    trigger: "进入页面瞬间 · 或下拉刷新",
+  },
+  {
+    id: "curve-error",
+    title: "曲线失败",
+    desc: "曲线请求失败；全页错误态；顶部数字灰占位。",
+    trigger: "网络异常 · 或服务端错误",
+  },
+  {
+    id: "events-error",
+    title: "仅事件失败",
+    desc: "曲线就绪但事件流失败；不升级为全页错误，曲线下方一行灰字。",
+    trigger: "曲线接口 200，事件接口 5xx",
+  },
+];
+
+// ──────────────────────────────────────────────────────────
+// Screen body compositions per state
+// ──────────────────────────────────────────────────────────
+function TimelineBody({ state }) {
+  const points = useMemo(() => genCurvePoints(6), []);
+  const scrollerRef = useRef(null);
+  const [selected, setSelected] = useState(null);
+
+  // Auto-scroll: today-live anchors to now (10:32); history anchors to first event
+  useEffect(() => {
+    if (!scrollerRef.current) return;
+    const el = scrollerRef.current;
+    const viewH = el.clientHeight;
+    let targetY = 0;
+    if (state === "today-live" || state === "events-error") {
+      targetY = ((10 + 32/60) / 24) * CURVE_HEIGHT - viewH / 2 + 16;
+    } else if (state === "history") {
+      // first event = 00:00 sleep, anchor around 03:00
+      targetY = (3 / 24) * CURVE_HEIGHT - viewH / 2 + 16;
+    } else {
+      targetY = (8 / 24) * CURVE_HEIGHT - viewH / 2 + 16;
+    }
+    el.scrollTop = Math.max(0, targetY);
+  }, [state]);
+
+  if (state === "curve-error") {
+    return (
+      <div className="timeline-wrap">
+        <div className="page-error">
+          <div className="icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 7v5m0 3v.01" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.4" fill="none" opacity="0.5"/></svg>
+          </div>
+          <div className="msg">数据加载失败</div>
+          <button className="retry-btn">点击重试</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (state === "history-none") {
+    return (
+      <div className="timeline-wrap">
+        <div className="timeline-scroller" ref={scrollerRef}>
+          <div className="timeline-grid">
+            <Axis/>
+            <div className="curve-layer"><Curve variant="empty"/></div>
+          </div>
+        </div>
+        <div className="empty-hint">该日期无记录</div>
+      </div>
+    );
+  }
+
+  if (state === "today-empty") {
+    return (
+      <div className="timeline-wrap">
+        <div className="timeline-scroller" ref={scrollerRef}>
+          <div className="timeline-grid">
+            <Axis/>
+            <div className="curve-layer"><Curve variant="empty"/></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (state === "loading") {
+    return (
+      <div className="timeline-wrap">
+        <div className="timeline-scroller" ref={scrollerRef}>
+          <div className="timeline-grid">
+            <Axis/>
+            <div className="curve-layer"><Curve variant="loading"/></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // today-live | history | events-error
+  const events = state === "history" ? EVENTS_HISTORY : EVENTS_TODAY;
+  const showEvents = state !== "events-error";
+  const showNow = state === "today-live" || state === "events-error";
+  const curveVariant = state === "history" ? "history" : "live";
+  const nowHour = showNow ? (10 + 32/60) : null;
+
+  return (
+    <div className="timeline-wrap">
+      <div className="timeline-scroller" ref={scrollerRef}>
+        <div className="timeline-grid">
+          <Axis/>
+          <div className="curve-layer">
+            <Curve variant={curveVariant} points={points} nowHour={nowHour}/>
+          </div>
+          {showEvents && <EventsLayer events={events} onSelect={setSelected}/>}
+          {showNow && <NowLine hour={10} minute={32}/>}
+        </div>
+      </div>
+      {state === "events-error" && (
+        <div className="inline-error">
+          <span>事件加载失败</span>
+          <span className="retry">· 点击重试</span>
+        </div>
+      )}
+      {selected && <EventCard event={selected} onClose={() => setSelected(null)}/>}
+    </div>
+  );
+}
+
+function Screen({ state }) {
+  return (
+    <Phone>
+      <TopAnchor state={state}/>
+      <TimelineBody state={state}/>
+    </Phone>
+  );
+}
+
+// ──────────────────────────────────────────────────────────
+// App — grid (全景) + solo 模式
+// ──────────────────────────────────────────────────────────
+function App() {
+  const [view, setView] = useState("grid");
+  const [solo, setSolo] = useState("today-live");
+
+  useEffect(() => {
+    const seg = document.getElementById("viewSeg");
+    seg.querySelectorAll("button").forEach(b => {
+      b.onclick = () => {
+        seg.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        setView(b.dataset.v);
+      };
+    });
+    document.getElementById("soloSelect").onchange = (e) => setSolo(e.target.value);
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle("solo-view", view === "solo");
+  }, [view]);
+
+  if (view === "solo") {
+    const st = SCREEN_STATES.find(s => s.id === solo) || SCREEN_STATES[0];
+    return (
+      <div className="stage">
+        <div className="title">iSho · 高能时长展开 · energy-detail</div>
+        <div className="subtitle">
+          二级页 · 竖向 24h 曲线 × 事件铺底 × 此刻线。基于 <code>modules/energy-detail/界面设计.md</code> v2.2 + Figma 视觉基调（深黑底 + 绿色主调）。
+        </div>
+        <div className="flow-label">STATE · {st.title}</div>
+        <div className="board" style={{ gridTemplateColumns: "1fr" }}>
+          <div>
+            <Screen state={solo}/>
+            <div className="screen-caption">
+              <div className="st-title">{st.title}</div>
+              <div className="st-desc">{st.desc}</div>
+              <div className="st-trigger">TRIGGER · {st.trigger}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="stage">
+      <div className="title">iSho · 高能时长展开 · energy-detail</div>
+      <div className="subtitle">
+        二级页 · 竖向 24h 曲线 × 事件铺底 × 此刻线。基于 <code>modules/energy-detail/界面设计.md</code> v2.2 + Figma 视觉基调（深黑底 + 绿色主调）。
+      </div>
+      <div className="flow-label">STATES · §5 全 7 种</div>
+      <div className="board">
+        {SCREEN_STATES.map(st => (
+          <div key={st.id}>
+            <Screen state={st.id}/>
+            <div className="screen-caption">
+              <div className="st-title">{st.title}</div>
+              <div className="st-desc">{st.desc}</div>
+              <div className="st-trigger">TRIGGER · {st.trigger}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
