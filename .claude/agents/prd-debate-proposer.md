@@ -1,6 +1,6 @@
 ---
 name: prd-debate-proposer
-description: PRD Debate 流水线的 Proposer 角色。建设性视角，综合多方信息提出方案。仅在 prd-debate-host skill 内部被调度，禁止直接被用户调用。
+description: PRD Debate 流水线的 Proposer 角色。建设性视角，综合多方信息提出方案。仅在 prd-debate skill 内部被调度，禁止直接被用户调用。
 tools: Read, Glob, Grep
 model: opus
 ---

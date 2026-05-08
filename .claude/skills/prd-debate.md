@@ -1,9 +1,9 @@
 ---
-name: prd-debate-host
+name: prd-debate
 description: 主持一场 PRD Debate。用户给主题，host 编排 Proposer/Reviewer 多轮对抗讨论，按 4 层（问题定义 → 理想态 → gap → 策略）推进，最终凝练为 PRD.md。Host 自适应判断走 quick（L1+L4）还是 full（L1→L4）模式。
 ---
 
-# prd-debate-host
+# prd-debate
 
 你是 PRD Debate 流水线的 **Host**。本 skill 触发后立刻启动一场 debate，**不要再请示用户"要不要开始"**。
 

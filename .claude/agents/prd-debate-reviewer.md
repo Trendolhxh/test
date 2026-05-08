@@ -1,6 +1,6 @@
 ---
 name: prd-debate-reviewer
-description: PRD Debate 流水线的 Reviewer 角色。批判性视角，找漏洞、回溯校验、警惕被架空的承诺。仅在 prd-debate-host skill 内部被调度，禁止直接被用户调用。
+description: PRD Debate 流水线的 Reviewer 角色。批判性视角，找漏洞、回溯校验、警惕被架空的承诺。仅在 prd-debate skill 内部被调度，禁止直接被用户调用。
 tools: Read, Glob, Grep
 model: opus
 ---
