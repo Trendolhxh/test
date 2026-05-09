@@ -17,14 +17,34 @@ description: 根据 PRD 生成 app 产品原型 HTML。基于根目录 prototype
 
 ## 模板基线
 
-**所有原型必须基于** `prototype-template.html`（根目录）。这套模板提供四件能力，禁止重写：
+**所有原型必须基于** `prototype-template.html`（根目录）。这套模板提供四件原子能力，**任何原型都不能改动它们**：
 
-1. **直接编辑**：所有 `__edit` class 的元素都可点击编辑文本与字号
-2. **覆盖保存**：File System Access API（Chrome 首次选文件授权 → 后续 Cmd/Ctrl+S 直接覆盖原文件）
-3. **Tweaks 控件**：右下浮动面板，自动收集 `[data-screen]` 屏列表，含模式切换 / 重放动效 / 标注显隐
-4. **标注**：标注模式下点击组件创建 SVG 连线 + 文本框；一键显隐
+1. **直接编辑**（`__edit` class + 浮动字号 toolbar + contenteditable 全选）
+2. **覆盖保存**（File System Access API + Cmd/Ctrl+S 快捷键 + 下载兜底）
+3. **Tweaks 控件**（右下浮动面板：模式切换 / 屏导航 / 重放动效 / 标注显隐 / 保存）
+4. **标注**（点组件创建 SVG 连线 + 文本框 + 4px 阈值拖动 + 双击编辑 + 一键显隐）
 
-不要替换或精简模板的脚本/CSS。只动 `<header>` 标题与 `.board` 内的 `.screen-wrap`。
+### 禁改区（绝对不动）
+
+- 模板的整段 `<style>`：所有 CSS variables、`.tweaks*`、`.annot*`、`.edit-toolbar`、`html.mode-*`、`.__edit`、`.scr-*` 基础组件类
+- 模板的整段 `<script>`：编辑模式 / 标注模式 / 拖动 / Tweaks 面板 / FSA 保存 / Toast 等所有 JS
+- 顶部字体 `<link>` 与 `<head>` 元数据
+- `<aside class="tweaks">` 整块 + `<div class="edit-toolbar">` + `<svg class="annot-svg">` + `<div class="annot-layer">` + `<div class="toast">`
+
+如果觉得需要改这些（"想加个组件"、"动效不够"、"想换控件"），**优先在模板里增量加，而不是在派生原型里改**——派生原型里的改动会让其它原型不一致。需要改模板时跟用户先对齐。
+
+### 允许改动区
+
+- `<header class="page-header">` 内的标题、副标题、meta（都已挂 `__edit`）
+- `<main class="stage">` > `<div class="board">` 内的 `.screen-wrap` 节点（增 / 删 / 改）
+- 在 `<style>` **末尾**（不要插在中间）追加新组件 CSS——只在模板已有的 `.scr-card / .scr-tabs / .scr-bars` 等都不够用时才加
+
+### 屏内改动的硬约束
+
+- 每个 `.screen-wrap` 必须挂 `data-screen="<屏 ID>"` `data-screen-title="<标题>"`（tweaks 自动收集）
+- 屏内**所有可见文案**必须挂 `__edit`（包括状态栏 9:41、icons、屏序号、卡片箭头这些容易漏的）——参考模板里已经标好的位置
+- 不要给屏内元素加 `contenteditable` 属性（保存时会被剥离，多此一举）
+- 不要给屏内元素绑 onclick / 自定义 JS（原型是静态画面，跳转用 tweaks 切屏）
 
 ## 视觉基线
 
@@ -86,6 +106,17 @@ cp /Users/trendol/Documents/iSho/test/prototype-template.html <PRD-dir>/原型.h
 **写完 1 屏停下来：**「屏 01 完成（路径 X）。要继续屏 02，还是先调整这屏？」
 
 用户说继续 → 写下一屏；说改 → 改完再问；说重来 → 退步骤 1。
+
+### 步骤 3.5 · 每屏收尾自检
+
+每屏写完、报给用户之前，**逐项扫一遍**——任何一条不过就修了再报：
+
+- [ ] `<style>` 段没有被改动（除了在末尾追加新组件 CSS）
+- [ ] `<script>` 段一字未动（编辑/标注/tweaks/保存逻辑完整）
+- [ ] `<aside class="tweaks">` / `<div class="edit-toolbar">` / `<svg class="annot-svg">` / `<div class="annot-layer">` / `<div class="toast">` 都还在
+- [ ] 新屏挂了 `data-screen` + `data-screen-title`
+- [ ] 屏内所有可见文案都挂了 `__edit`（包括 9:41、icons、屏序号、卡片箭头、返回键这些容易漏的小元素）
+- [ ] 没在屏内元素上加 `contenteditable` 或 `onclick`
 
 ### 步骤 4 · 收尾
 

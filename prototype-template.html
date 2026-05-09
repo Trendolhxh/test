@@ -359,74 +359,74 @@
   /* ============ Tweaks panel ============ */
   .tweaks {
     position: fixed;
-    right: 24px;
-    bottom: 24px;
+    right: 20px;
+    bottom: 20px;
     z-index: 9000;
-    width: 240px;
+    width: 208px;
     background: rgba(255,255,255,0.92);
     color: #1a1a1a;
-    border-radius: 14px;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06);
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    font-size: 13px;
+    font-size: 12px;
     overflow: hidden;
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
   }
   .tweaks.collapsed {
-    transform: translateY(calc(100% - 40px));
+    transform: translateY(calc(100% - 32px));
   }
   .tweaks-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
-    height: 40px;
+    padding: 6px 12px;
+    height: 32px;
     cursor: pointer;
     user-select: none;
     border-bottom: 1px solid rgba(0,0,0,0.06);
   }
   .tweaks-head .t {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 9.5px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: rgba(0,0,0,0.5);
     font-weight: 600;
   }
   .tweaks-head .toggle {
-    font-size: 12px;
+    font-size: 11px;
     color: rgba(0,0,0,0.35);
     transition: transform 0.2s ease;
   }
   .tweaks.collapsed .tweaks-head .toggle { transform: rotate(180deg); }
   .tweaks-body {
-    max-height: calc(80vh - 40px);
+    max-height: calc(80vh - 32px);
     overflow-y: auto;
   }
   .tweaks-section {
-    padding: 12px 14px;
+    padding: 8px 12px;
     border-bottom: 1px solid rgba(0,0,0,0.06);
   }
   .tweaks-section:last-child { border-bottom: 0; }
   .tweaks-section .label {
     font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.16em;
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: rgba(0,0,0,0.4);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   .tweaks-modes {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
+    gap: 3px;
   }
   .tweaks-modes button {
-    padding: 6px 4px;
-    font-size: 12px;
+    padding: 4px 2px;
+    font-size: 11.5px;
     font-weight: 500;
-    border-radius: 7px;
+    border-radius: 6px;
     background: rgba(0,0,0,0.04);
     color: rgba(0,0,0,0.7);
     transition: background 0.2s ease, color 0.2s ease;
@@ -439,40 +439,40 @@
   .tweaks-screens {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
   }
   .tweaks-screens button {
     text-align: left;
-    padding: 6px 8px;
-    border-radius: 7px;
+    padding: 4px 6px;
+    border-radius: 6px;
     background: transparent;
     color: rgba(0,0,0,0.75);
-    font-size: 12px;
+    font-size: 11.5px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
   .tweaks-screens button:hover {
     background: rgba(0,0,0,0.05);
   }
   .tweaks-screens button .num {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 9.5px;
     color: rgba(0,0,0,0.4);
-    min-width: 20px;
+    min-width: 18px;
   }
   .tweaks-row {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     flex-wrap: wrap;
   }
   .tweaks-row button {
     flex: 1;
     min-width: 0;
-    padding: 7px 10px;
-    font-size: 12px;
+    padding: 5px 8px;
+    font-size: 11.5px;
     font-weight: 500;
-    border-radius: 7px;
+    border-radius: 6px;
     background: rgba(0,0,0,0.04);
     color: rgba(0,0,0,0.75);
     white-space: nowrap;
@@ -487,14 +487,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 0;
-    font-size: 12px;
+    padding: 2px 0;
+    font-size: 11.5px;
     color: rgba(0,0,0,0.75);
     cursor: pointer;
   }
   .tweaks-toggle .switch {
-    width: 30px;
-    height: 17px;
+    width: 26px;
+    height: 15px;
     border-radius: 999px;
     background: rgba(0,0,0,0.18);
     position: relative;
@@ -505,15 +505,15 @@
     position: absolute;
     top: 2px;
     left: 2px;
-    width: 13px;
-    height: 13px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
     background: #fff;
     box-shadow: 0 1px 3px rgba(0,0,0,0.18);
     transition: transform 0.2s ease;
   }
   .tweaks-toggle.on .switch { background: rgba(0,0,0,0.7); }
-  .tweaks-toggle.on .switch::after { transform: translateX(13px); }
+  .tweaks-toggle.on .switch::after { transform: translateX(11px); }
 
   /* ============ Edit mode ============ */
   html.mode-edit .__edit:not([contenteditable="true"]) {
@@ -614,13 +614,14 @@
     font-size: 12px;
     line-height: 1.5;
     width: max-content;
-    max-width: 240px;
+    max-width: 320px;
     border: 1px solid rgba(0,0,0,0.08);
     box-shadow: 0 4px 14px rgba(0,0,0,0.10);
     cursor: move;
-    white-space: normal;
+    white-space: pre-wrap;
     overflow-wrap: anywhere;
     word-break: normal;
+    user-select: none;
   }
   .annot:empty::before {
     content: "标注…";
@@ -630,6 +631,12 @@
     outline: 2px solid var(--annot-color);
     outline-offset: 2px;
     background: #fff;
+    cursor: text;
+    user-select: text;
+  }
+  .annot.dragging {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+    opacity: 0.92;
   }
   .annot .x {
     position: absolute;
@@ -694,7 +701,7 @@
   <header class="page-header">
     <h1 class="__edit">[原型标题]</h1>
     <p class="sub __edit">[一句话说明这份原型在表达什么 · 用例 / 范围]</p>
-    <div class="meta">iSho · prototype · v0.1</div>
+    <div class="meta __edit">iSho · prototype · v0.1</div>
   </header>
 
   <!-- ============ Stage / board ============ -->
@@ -706,8 +713,8 @@
         <div class="phone">
           <div class="island"></div>
           <div class="status-bar">
-            <span>9:41</span>
-            <span class="icons">●●● ◉ ▮</span>
+            <span class="__edit">9:41</span>
+            <span class="icons __edit">●●● ◉ ▮</span>
           </div>
           <div class="screen-body">
             <div class="scr-title __edit">屏 01 标题</div>
@@ -716,7 +723,7 @@
               <div class="scr-card">
                 <div class="scr-card-h">
                   <span class="scr-card-t __edit">☾ 卡片标题</span>
-                  <span class="scr-card-arrow">›</span>
+                  <span class="scr-card-arrow __edit">›</span>
                 </div>
                 <div class="scr-card-main">
                   <span class="scr-card-num __edit">1.2</span>
@@ -728,7 +735,7 @@
               <div class="scr-card">
                 <div class="scr-card-h">
                   <span class="scr-card-t __edit">☾ 第二张卡</span>
-                  <span class="scr-card-arrow">›</span>
+                  <span class="scr-card-arrow __edit">›</span>
                 </div>
                 <div class="scr-card-main">
                   <span class="scr-card-num __edit">7</span>
@@ -742,7 +749,7 @@
               <div class="scr-card">
                 <div class="scr-card-h">
                   <span class="scr-card-t __edit">☾ 第三张卡</span>
-                  <span class="scr-card-arrow">›</span>
+                  <span class="scr-card-arrow __edit">›</span>
                 </div>
                 <div class="scr-card-main">
                   <span class="scr-card-num __edit">96</span>
@@ -756,7 +763,7 @@
           <div class="home-indicator"></div>
         </div>
         <div class="screen-caption">
-          <div class="st-num">屏 01</div>
+          <div class="st-num __edit">屏 01</div>
           <div class="st-title __edit">主屏 · 列表</div>
           <div class="st-desc __edit">说明这一屏的入口和主要内容。</div>
         </div>
@@ -767,12 +774,12 @@
         <div class="phone">
           <div class="island"></div>
           <div class="status-bar">
-            <span>9:41</span>
-            <span class="icons">●●● ◉ ▮</span>
+            <span class="__edit">9:41</span>
+            <span class="icons __edit">●●● ◉ ▮</span>
           </div>
           <div class="screen-body">
             <div class="scr-detail-h">
-              <div class="scr-back">‹</div>
+              <div class="scr-back __edit">‹</div>
               <div class="scr-detail-title __edit">详情标题</div>
             </div>
             <div class="scr-tabs">
@@ -805,7 +812,7 @@
           <div class="home-indicator"></div>
         </div>
         <div class="screen-caption">
-          <div class="st-num">屏 02</div>
+          <div class="st-num __edit">屏 02</div>
           <div class="st-title __edit">详情 · 日视图</div>
           <div class="st-desc __edit">说明这一屏的来源（从哪里跳进来）和操作。</div>
         </div>
@@ -1243,28 +1250,41 @@
     }
 
     function makeAnnotDraggable(annot) {
-      let dragging = false;
-      let offsetX = 0, offsetY = 0;
       annot.addEventListener('mousedown', (e) => {
-        // 只有在标注本身（非编辑文字）拖动时生效；按住 Alt 键拖动总是生效
         if (e.target.classList.contains('x')) return;
-        if (annot.isContentEditable && !e.altKey) return;
-        dragging = true;
         const r = annot.getBoundingClientRect();
-        offsetX = e.clientX - r.left;
-        offsetY = e.clientY - r.top;
-        e.preventDefault();
+        const offsetX = e.clientX - r.left;
+        const offsetY = e.clientY - r.top;
+        const startX = e.clientX, startY = e.clientY;
+        let dragging = false;
+
+        function onMove(ev) {
+          if (!dragging) {
+            // 4px 阈值后才进入拖动，避免和单击/文本选择冲突
+            if (Math.abs(ev.clientX - startX) < 4 && Math.abs(ev.clientY - startY) < 4) return;
+            dragging = true;
+            // 拖动开始：退出编辑态 + 清选区
+            if (annot.isContentEditable) annot.removeAttribute('contenteditable');
+            const sel = window.getSelection();
+            if (sel) sel.removeAllRanges();
+            annot.classList.add('dragging');
+          }
+          ev.preventDefault();
+          const stageRect = annotLayer.getBoundingClientRect();
+          annot.style.left = (ev.clientX - stageRect.left - offsetX) + 'px';
+          annot.style.top = (ev.clientY - stageRect.top - offsetY) + 'px';
+          updateAnnotLine(annot);
+        }
+
+        function onUp() {
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+          if (dragging) annot.classList.remove('dragging');
+        }
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
       });
-      window.addEventListener('mousemove', (e) => {
-        if (!dragging) return;
-        const stageRect = annotLayer.getBoundingClientRect();
-        const left = e.clientX - stageRect.left - offsetX;
-        const top = e.clientY - stageRect.top - offsetY;
-        annot.style.left = left + 'px';
-        annot.style.top = top + 'px';
-        updateAnnotLine(annot);
-      });
-      window.addEventListener('mouseup', () => { dragging = false; });
     }
 
     // 标注模式下点击 target 创建标注
