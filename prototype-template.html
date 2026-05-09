@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iSho · 原型模板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Reddit+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ Tokens ============ */
+  :root {
+    --page-bg: #ECECEA;
+    --page-ink: #1a1a1a;
+    --page-muted: rgba(0,0,0,0.5);
+    --page-line: rgba(0,0,0,0.08);
+
+    --phone-bg: #0a0a0c;
+    --phone-elev: #1c1c1e;
+    --phone-elev-2: #2c2c2e;
+    --phone-ink: #ffffff;
+    --phone-ink-75: rgba(255,255,255,0.78);
+    --phone-ink-60: rgba(255,255,255,0.62);
+    --phone-ink-45: rgba(255,255,255,0.45);
+    --phone-line: rgba(255,255,255,0.12);
+    --accent: #2e7df6;
+    --accent-soft: rgba(46,125,246,0.18);
+
+    --annot-color: #ff8a3d;
+    --annot-bg: rgba(255,138,61,0.95);
+
+    --r-card: 18px;
+    --r-phone: 44px;
+    --font: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
+    --mono: "Reddit Sans", ui-monospace, monospace;
+  }
+
+  /* ============ Reset & page ============ */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page-bg);
+    color: var(--page-ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  button { font: inherit; border: 0; background: none; cursor: pointer; color: inherit; }
+
+  /* ============ Page header ============ */
+  .page-header {
+    padding: 56px 32px 28px;
+    text-align: center;
+  }
+  .page-header h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .page-header .sub {
+    margin: 0;
+    font-size: 13px;
+    color: var(--page-muted);
+    line-height: 1.7;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+  .page-header .meta {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--page-muted);
+    text-transform: uppercase;
+  }
+
+  /* ============ Stage / board ============ */
+  .stage {
+    position: relative;
+    padding: 12px 28px 160px;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, max-content));
+    justify-content: center;
+    gap: 56px 36px;
+    max-width: 1760px;
+    margin: 0 auto;
+  }
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; }
+  .screen-caption {
+    margin-top: 16px;
+    text-align: center;
+    max-width: 340px;
+  }
+  .screen-caption .st-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--page-muted);
+    text-transform: uppercase;
+  }
+  .screen-caption .st-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--page-ink);
+    margin-top: 4px;
+  }
+  .screen-caption .st-desc {
+    font-size: 12px;
+    color: var(--page-muted);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  /* ============ Phone frame ============ */
+  .phone {
+    width: 360px;
+    height: 780px;
+    border-radius: var(--r-phone);
+    position: relative;
+    overflow: hidden;
+    background: var(--phone-bg);
+    box-shadow: 0 36px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12);
+    color: var(--phone-ink);
+  }
+  .phone .island {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 116px;
+    height: 34px;
+    border-radius: 22px;
+    background: #000;
+    z-index: 50;
+  }
+  .phone .home-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 128px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.6);
+    z-index: 60;
+  }
+  .status-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 28px 12px;
+    color: var(--phone-ink);
+    font-family: -apple-system, "SF Pro", system-ui;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 20px;
+  }
+  .status-bar .icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    letter-spacing: -0.5px;
+  }
+  .screen-body {
+    position: absolute;
+    inset: 0;
+    padding-top: 52px;
+    padding-bottom: 26px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--phone-ink);
+  }
+
+  /* ============ Stub components (深色) ============ */
+  .scr-title {
+    padding: 8px 24px 16px;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .scr-list {
+    padding: 0 12px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .scr-card {
+    background: var(--phone-elev);
+    border-radius: var(--r-card);
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .scr-card-h {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .scr-card-t {
+    font-size: 14px;
+    color: var(--phone-ink-60);
+    font-weight: 500;
+  }
+  .scr-card-arrow {
+    color: var(--phone-ink-45);
+    font-size: 16px;
+  }
+  .scr-card-main {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .scr-card-num {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .scr-card-unit {
+    font-size: 14px;
+    color: var(--phone-ink-60);
+    margin-left: 4px;
+  }
+  .scr-card-label {
+    font-size: 11px;
+    color: var(--phone-ink-60);
+    margin-top: 4px;
+  }
+  .scr-detail-h {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    height: 44px;
+  }
+  .scr-back {
+    width: 32px;
+    height: 32px;
+    background: rgba(255,255,255,0.10);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    line-height: 1;
+  }
+  .scr-detail-title {
+    flex: 1;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    margin-right: 32px;
+  }
+  .scr-tabs {
+    display: flex;
+    background: var(--phone-elev);
+    border-radius: 9px;
+    padding: 3px;
+    margin: 8px 80px 16px;
+  }
+  .scr-tab {
+    flex: 1;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 14px;
+    color: var(--phone-ink-60);
+    border-radius: 7px;
+    font-weight: 500;
+  }
+  .scr-tab.on {
+    background: rgba(255,255,255,0.18);
+    color: var(--phone-ink);
+  }
+  .scr-big-num {
+    padding: 0 24px 12px;
+  }
+  .scr-big-num .v {
+    font-size: 44px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .scr-big-num .v .u {
+    font-size: 16px;
+    color: var(--phone-ink-60);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .scr-big-num .l {
+    font-size: 13px;
+    color: var(--phone-ink-60);
+    margin-top: 6px;
+  }
+  .scr-bars {
+    padding: 24px 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .scr-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .scr-bar-key {
+    font-size: 14px;
+    color: var(--phone-ink-60);
+    width: 64px;
+    flex-shrink: 0;
+  }
+  .scr-bar-track {
+    flex: 1;
+    height: 14px;
+    background: var(--phone-elev-2);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .scr-bar-fill {
+    height: 100%;
+    border-radius: 7px;
+    background: var(--phone-ink-75);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .scr-bar-fill.accent { background: var(--accent); }
+  .scr-bar-val {
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 56px;
+    text-align: right;
+  }
+  .scr-note {
+    padding: 24px;
+    font-size: 12px;
+    color: var(--phone-ink-45);
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  /* ============ Reveal animation ============ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .reveal.in {
+    animation: revealUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes revealUp {
+    to { opacity: 1; transform: none; }
+  }
+
+  /* ============ Tweaks panel ============ */
+  .tweaks {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 9000;
+    width: 240px;
+    background: rgba(255,255,255,0.92);
+    color: #1a1a1a;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    font-size: 13px;
+    overflow: hidden;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  }
+  .tweaks.collapsed {
+    transform: translateY(calc(100% - 40px));
+  }
+  .tweaks-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    height: 40px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .tweaks-head .t {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.5);
+    font-weight: 600;
+  }
+  .tweaks-head .toggle {
+    font-size: 12px;
+    color: rgba(0,0,0,0.35);
+    transition: transform 0.2s ease;
+  }
+  .tweaks.collapsed .tweaks-head .toggle { transform: rotate(180deg); }
+  .tweaks-body {
+    max-height: calc(80vh - 40px);
+    overflow-y: auto;
+  }
+  .tweaks-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .tweaks-section:last-child { border-bottom: 0; }
+  .tweaks-section .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.4);
+    margin-bottom: 8px;
+  }
+  .tweaks-modes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+  .tweaks-modes button {
+    padding: 6px 4px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 7px;
+    background: rgba(0,0,0,0.04);
+    color: rgba(0,0,0,0.7);
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .tweaks-modes button:hover { background: rgba(0,0,0,0.07); }
+  .tweaks-modes button.on {
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+  }
+  .tweaks-screens {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tweaks-screens button {
+    text-align: left;
+    padding: 6px 8px;
+    border-radius: 7px;
+    background: transparent;
+    color: rgba(0,0,0,0.75);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tweaks-screens button:hover {
+    background: rgba(0,0,0,0.05);
+  }
+  .tweaks-screens button .num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(0,0,0,0.4);
+    min-width: 20px;
+  }
+  .tweaks-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .tweaks-row button {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 7px;
+    background: rgba(0,0,0,0.04);
+    color: rgba(0,0,0,0.75);
+    white-space: nowrap;
+  }
+  .tweaks-row button:hover { background: rgba(0,0,0,0.07); }
+  .tweaks-row button.primary {
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+  }
+  .tweaks-row button.primary:hover { background: #000; }
+  .tweaks-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 12px;
+    color: rgba(0,0,0,0.75);
+    cursor: pointer;
+  }
+  .tweaks-toggle .switch {
+    width: 30px;
+    height: 17px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.18);
+    position: relative;
+    transition: background 0.2s ease;
+  }
+  .tweaks-toggle .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+    transition: transform 0.2s ease;
+  }
+  .tweaks-toggle.on .switch { background: rgba(0,0,0,0.7); }
+  .tweaks-toggle.on .switch::after { transform: translateX(13px); }
+
+  /* ============ Edit mode ============ */
+  html.mode-edit .__edit:not([contenteditable="true"]) {
+    cursor: text;
+    outline: 1px dashed transparent;
+    outline-offset: 2px;
+    border-radius: 2px;
+    transition: outline-color 0.15s ease, background 0.15s ease;
+  }
+  html.mode-edit .__edit:not([contenteditable="true"]):hover {
+    outline-color: rgba(46,125,246,0.6);
+    background: rgba(46,125,246,0.08);
+  }
+  html.mode-edit .__edit[contenteditable="true"] {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    background: rgba(46,125,246,0.12);
+  }
+  /* 编辑工具条（字号微调） */
+  .edit-toolbar {
+    position: absolute;
+    z-index: 9500;
+    display: none;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(20,20,22,0.96);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.32), 0 0 0 1px rgba(255,255,255,0.08);
+    backdrop-filter: blur(16px);
+  }
+  .edit-toolbar.show { display: inline-flex; }
+  .edit-toolbar button {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.06);
+  }
+  .edit-toolbar button:hover { background: rgba(255,255,255,0.16); }
+  .edit-toolbar .sep {
+    width: 1px;
+    background: rgba(255,255,255,0.1);
+    margin: 4px 2px;
+  }
+  .edit-toolbar .size-val {
+    padding: 6px 8px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    font-family: var(--mono);
+    align-self: center;
+  }
+
+  /* ============ Annotate mode ============ */
+  html.mode-annot [data-annot-target] {
+    cursor: crosshair;
+  }
+  html.mode-annot [data-annot-target]:hover {
+    outline: 2px dashed var(--annot-color);
+    outline-offset: 3px;
+  }
+  /* 候选目标范围：编辑模式下任意可视组件 */
+  html.mode-annot .phone *,
+  html.mode-annot .screen-wrap * {
+    /* 让所有屏内元素可被点击作为标注 target */
+  }
+  .annot-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 7000;
+    overflow: visible;
+  }
+  .annot-svg path {
+    fill: none;
+    stroke: var(--annot-color);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+  }
+  .annot-svg circle {
+    fill: var(--annot-color);
+  }
+  .annot-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 7100;
+  }
+  .annot {
+    position: absolute;
+    pointer-events: auto;
+    background: rgba(255,255,255,0.98);
+    color: #1a1a1a;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    width: max-content;
+    max-width: 240px;
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+    cursor: move;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .annot:empty::before {
+    content: "标注…";
+    color: rgba(0,0,0,0.3);
+  }
+  .annot[contenteditable="true"] {
+    outline: 2px solid var(--annot-color);
+    outline-offset: 2px;
+    background: #fff;
+  }
+  .annot .x {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    color: rgba(0,0,0,0.55);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.12);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .annot:hover .x,
+  .annot[contenteditable="true"] .x { opacity: 1; }
+  body.hide-annots .annot-svg,
+  body.hide-annots .annot-layer { display: none; }
+
+  /* ============ Save toast ============ */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(40px);
+    z-index: 9999;
+    padding: 12px 22px;
+    background: rgba(20,20,22,0.96);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 13px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.28);
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast.error { background: #c93434; }
+
+  /* ============ Responsive ============ */
+  @media (max-width: 760px) {
+    .tweaks { width: calc(100% - 32px); right: 16px; bottom: 16px; }
+    .page-header { padding: 32px 16px 16px; }
+    .stage { padding: 8px 16px 200px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============ Page header ============ -->
+  <header class="page-header">
+    <h1 class="__edit">[原型标题]</h1>
+    <p class="sub __edit">[一句话说明这份原型在表达什么 · 用例 / 范围]</p>
+    <div class="meta">iSho · prototype · v0.1</div>
+  </header>
+
+  <!-- ============ Stage / board ============ -->
+  <main class="stage">
+    <div class="board" id="board">
+
+      <!-- ===== 屏 01 · 列表（stub，删改/复制） ===== -->
+      <div class="screen-wrap reveal" data-screen="screen-1" data-screen-title="主屏 · 列表">
+        <div class="phone">
+          <div class="island"></div>
+          <div class="status-bar">
+            <span>9:41</span>
+            <span class="icons">●●● ◉ ▮</span>
+          </div>
+          <div class="screen-body">
+            <div class="scr-title __edit">屏 01 标题</div>
+            <div class="scr-list">
+
+              <div class="scr-card">
+                <div class="scr-card-h">
+                  <span class="scr-card-t __edit">☾ 卡片标题</span>
+                  <span class="scr-card-arrow">›</span>
+                </div>
+                <div class="scr-card-main">
+                  <span class="scr-card-num __edit">1.2</span>
+                  <span class="scr-card-unit __edit">小时</span>
+                </div>
+                <div class="scr-card-label __edit">卡片副说明</div>
+              </div>
+
+              <div class="scr-card">
+                <div class="scr-card-h">
+                  <span class="scr-card-t __edit">☾ 第二张卡</span>
+                  <span class="scr-card-arrow">›</span>
+                </div>
+                <div class="scr-card-main">
+                  <span class="scr-card-num __edit">7</span>
+                  <span class="scr-card-unit __edit">小时</span>
+                  <span class="scr-card-num __edit" style="margin-left:8px;">12</span>
+                  <span class="scr-card-unit __edit">分钟</span>
+                </div>
+                <div class="scr-card-label __edit">卡片副说明</div>
+              </div>
+
+              <div class="scr-card">
+                <div class="scr-card-h">
+                  <span class="scr-card-t __edit">☾ 第三张卡</span>
+                  <span class="scr-card-arrow">›</span>
+                </div>
+                <div class="scr-card-main">
+                  <span class="scr-card-num __edit">96</span>
+                  <span class="scr-card-unit __edit">%</span>
+                </div>
+                <div class="scr-card-label __edit">卡片副说明</div>
+              </div>
+
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+        <div class="screen-caption">
+          <div class="st-num">屏 01</div>
+          <div class="st-title __edit">主屏 · 列表</div>
+          <div class="st-desc __edit">说明这一屏的入口和主要内容。</div>
+        </div>
+      </div>
+
+      <!-- ===== 屏 02 · 详情（stub） ===== -->
+      <div class="screen-wrap reveal" data-screen="screen-2" data-screen-title="详情 · 日视图">
+        <div class="phone">
+          <div class="island"></div>
+          <div class="status-bar">
+            <span>9:41</span>
+            <span class="icons">●●● ◉ ▮</span>
+          </div>
+          <div class="screen-body">
+            <div class="scr-detail-h">
+              <div class="scr-back">‹</div>
+              <div class="scr-detail-title __edit">详情标题</div>
+            </div>
+            <div class="scr-tabs">
+              <div class="scr-tab on __edit">日</div>
+              <div class="scr-tab __edit">周</div>
+              <div class="scr-tab __edit">月</div>
+            </div>
+            <div class="scr-big-num">
+              <div class="v"><span class="__edit">1.2</span><span class="u __edit">小时</span></div>
+              <div class="l __edit">当日核心指标说明</div>
+            </div>
+            <div class="scr-bars">
+              <div class="scr-bar-row">
+                <span class="scr-bar-key __edit">指标 A</span>
+                <div class="scr-bar-track">
+                  <div class="scr-bar-fill" style="width: 100%;"></div>
+                </div>
+                <span class="scr-bar-val __edit">8 小时</span>
+              </div>
+              <div class="scr-bar-row">
+                <span class="scr-bar-key __edit">指标 B</span>
+                <div class="scr-bar-track">
+                  <div class="scr-bar-fill accent" style="width: 85%;"></div>
+                </div>
+                <span class="scr-bar-val __edit">6.8 小时</span>
+              </div>
+            </div>
+            <div class="scr-note __edit">底部说明 / 注释 / 数据来源</div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+        <div class="screen-caption">
+          <div class="st-num">屏 02</div>
+          <div class="st-title __edit">详情 · 日视图</div>
+          <div class="st-desc __edit">说明这一屏的来源（从哪里跳进来）和操作。</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 标注层（连线 + 文本框） -->
+    <svg class="annot-svg" id="annot-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="annot-layer" id="annot-layer"></div>
+  </main>
+
+  <!-- ============ Tweaks panel ============ -->
+  <aside class="tweaks" id="tweaks">
+    <div class="tweaks-head" id="tweaks-head">
+      <span class="t">Tweaks</span>
+      <span class="toggle">▾</span>
+    </div>
+    <div class="tweaks-body">
+
+      <div class="tweaks-section">
+        <div class="label">模式</div>
+        <div class="tweaks-modes" id="mode-buttons">
+          <button data-mode="browse" class="on">浏览</button>
+          <button data-mode="edit">编辑</button>
+          <button data-mode="annot">标注</button>
+        </div>
+      </div>
+
+      <div class="tweaks-section">
+        <div class="label">屏 / 跳转</div>
+        <div class="tweaks-screens" id="screen-list"></div>
+      </div>
+
+      <div class="tweaks-section">
+        <div class="label">动效 / 显示</div>
+        <div class="tweaks-row" style="margin-bottom: 10px;">
+          <button id="btn-replay">▶ 重放动效</button>
+        </div>
+        <div class="tweaks-toggle" id="annot-toggle">
+          <span>显示标注</span>
+          <span class="switch"></span>
+        </div>
+      </div>
+
+      <div class="tweaks-section">
+        <div class="label">保存</div>
+        <div class="tweaks-row">
+          <button id="btn-save" class="primary">保存覆盖原文件</button>
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:8px;line-height:1.5;">
+          首次保存需选择本文件以授权；不支持的浏览器会下载为新文件。
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- 浮动编辑工具条 -->
+  <div class="edit-toolbar" id="edit-toolbar">
+    <button data-cmd="size-down" title="字号减小">A−</button>
+    <span class="size-val" id="size-val">—</span>
+    <button data-cmd="size-up" title="字号增大">A+</button>
+    <span class="sep"></span>
+    <button data-cmd="bold" title="加粗"><b>B</b></button>
+    <button data-cmd="size-reset" title="重置字号">↺</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ============ 全局状态 ============ */
+    const state = {
+      mode: 'browse',          // browse | edit | annot
+      annotsHidden: false,
+      fileHandle: null,        // File System Access API handle
+    };
+
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+    const board = $('#board');
+    const annotSvg = $('#annot-svg');
+    const annotLayer = $('#annot-layer');
+    const editToolbar = $('#edit-toolbar');
+    const sizeValEl = $('#size-val');
+    const toastEl = $('#toast');
+
+    /* ============ Toast ============ */
+    let toastTimer = null;
+    function toast(msg, type = 'ok') {
+      toastEl.textContent = msg;
+      toastEl.classList.toggle('error', type === 'error');
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+    }
+
+    /* ============ 模式切换 ============ */
+    function setMode(mode) {
+      state.mode = mode;
+      document.documentElement.classList.remove('mode-browse', 'mode-edit', 'mode-annot');
+      document.documentElement.classList.add('mode-' + mode);
+      $$('#mode-buttons button').forEach(b => {
+        b.classList.toggle('on', b.dataset.mode === mode);
+      });
+      // 退出编辑模式时收起工具条 + 清空 contenteditable
+      if (mode !== 'edit') {
+        editToolbar.classList.remove('show');
+        $$('.__edit[contenteditable="true"]').forEach(el => {
+          el.removeAttribute('contenteditable');
+        });
+      }
+    }
+    $$('#mode-buttons button').forEach(btn => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+
+    /* ============ 屏导航（自动收集 [data-screen]） ============ */
+    function buildScreenList() {
+      const list = $('#screen-list');
+      list.innerHTML = '';
+      $$('[data-screen]', board).forEach((wrap, i) => {
+        const num = String(i + 1).padStart(2, '0');
+        const title = wrap.dataset.screenTitle || wrap.dataset.screen;
+        const btn = document.createElement('button');
+        btn.innerHTML = `<span class="num">${num}</span><span>${title}</span>`;
+        btn.addEventListener('click', () => {
+          wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // 短暂高亮
+          wrap.style.transition = 'transform 0.4s ease';
+          wrap.style.transform = 'scale(1.02)';
+          setTimeout(() => { wrap.style.transform = ''; }, 480);
+        });
+        list.appendChild(btn);
+      });
+    }
+    buildScreenList();
+
+    /* ============ 重放动效 ============ */
+    function replayAnimations() {
+      $$('.reveal').forEach(el => {
+        el.classList.remove('in');
+        // 强制重排
+        void el.offsetWidth;
+      });
+      // 重新触发 IntersectionObserver
+      requestAnimationFrame(() => observeReveal());
+      // 同时触发条形图动画
+      $$('.scr-bar-fill').forEach(el => {
+        const w = el.style.width;
+        el.style.transition = 'none';
+        el.style.width = '0%';
+        void el.offsetWidth;
+        el.style.transition = '';
+        el.style.width = w;
+      });
+    }
+    $('#btn-replay').addEventListener('click', replayAnimations);
+
+    function observeReveal() {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('in');
+            io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      $$('.reveal').forEach(el => io.observe(el));
+    }
+    observeReveal();
+
+    /* ============ 标注显隐 toggle ============ */
+    const annotToggle = $('#annot-toggle');
+    annotToggle.classList.add('on');
+    annotToggle.addEventListener('click', () => {
+      state.annotsHidden = !state.annotsHidden;
+      document.body.classList.toggle('hide-annots', state.annotsHidden);
+      annotToggle.classList.toggle('on', !state.annotsHidden);
+    });
+
+    /* ============ Tweaks 折叠 ============ */
+    $('#tweaks-head').addEventListener('click', () => {
+      $('#tweaks').classList.toggle('collapsed');
+    });
+
+    /* ============ 编辑模式：contenteditable + 字号工具条 ============ */
+    function isEditable(el) {
+      return el && el.classList && el.classList.contains('__edit');
+    }
+
+    function enterEdit(el) {
+      if (state.mode !== 'edit') return;
+      if (el.isContentEditable) return;
+      // 关掉别的 editing 元素
+      $$('.__edit[contenteditable="true"]').forEach(o => {
+        if (o !== el) o.removeAttribute('contenteditable');
+      });
+      el.contentEditable = 'true';
+      el.focus();
+      // 全选当前内容（首次点击直接覆盖输入）
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      sel.addRange(range);
+      showEditToolbar(el);
+    }
+
+    function exitEdit(el) {
+      if (!el || !el.classList) return;
+      el.removeAttribute('contenteditable');
+    }
+
+    function getCurrentFontSize(el) {
+      const inline = el.style.fontSize;
+      if (inline) return parseFloat(inline);
+      return parseFloat(getComputedStyle(el).fontSize) || 14;
+    }
+
+    function setFontSize(el, px) {
+      el.style.fontSize = px + 'px';
+      sizeValEl.textContent = Math.round(px) + 'px';
+      positionEditToolbar(el);
+    }
+
+    function showEditToolbar(el) {
+      editToolbar.dataset.targetSize = getCurrentFontSize(el);
+      sizeValEl.textContent = Math.round(getCurrentFontSize(el)) + 'px';
+      editToolbar.classList.add('show');
+      positionEditToolbar(el);
+    }
+
+    function positionEditToolbar(el) {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const tbRect = editToolbar.getBoundingClientRect();
+      // 默认放在元素右上角；超出视口时切到下方
+      let top = rect.top - tbRect.height - 8 + window.scrollY;
+      let left = rect.left + window.scrollX;
+      if (top < window.scrollY + 4) top = rect.bottom + 8 + window.scrollY;
+      // 限制不超出视口右边
+      const maxLeft = window.scrollX + window.innerWidth - tbRect.width - 8;
+      if (left > maxLeft) left = maxLeft;
+      if (left < window.scrollX + 8) left = window.scrollX + 8;
+      editToolbar.style.top = top + 'px';
+      editToolbar.style.left = left + 'px';
+    }
+
+    document.addEventListener('click', (e) => {
+      if (state.mode !== 'edit') return;
+      const el = e.target.closest('.__edit');
+      if (el) {
+        enterEdit(el);
+      } else if (!e.target.closest('.edit-toolbar')) {
+        // 点空白处退出当前编辑
+        $$('.__edit[contenteditable="true"]').forEach(exitEdit);
+        editToolbar.classList.remove('show');
+      }
+    });
+
+    // 编辑工具条点击
+    editToolbar.addEventListener('mousedown', (e) => {
+      // 不让 toolbar 自身的 mousedown 触发 blur 进而失焦
+      e.preventDefault();
+    });
+    editToolbar.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const cmd = btn.dataset.cmd;
+      const focused = $('.__edit[contenteditable="true"]');
+      if (!focused) return;
+      const cur = getCurrentFontSize(focused);
+      if (cmd === 'size-up') setFontSize(focused, cur + 1);
+      else if (cmd === 'size-down') setFontSize(focused, Math.max(8, cur - 1));
+      else if (cmd === 'size-reset') {
+        focused.style.fontSize = '';
+        sizeValEl.textContent = Math.round(getCurrentFontSize(focused)) + 'px';
+      } else if (cmd === 'bold') {
+        document.execCommand('bold');
+      }
+    });
+
+    // 滚动 / resize 时跟随
+    window.addEventListener('scroll', () => {
+      const focused = $('.__edit[contenteditable="true"]');
+      if (focused && editToolbar.classList.contains('show')) positionEditToolbar(focused);
+      relayoutAnnotations();
+    }, { passive: true });
+    window.addEventListener('resize', () => {
+      const focused = $('.__edit[contenteditable="true"]');
+      if (focused && editToolbar.classList.contains('show')) positionEditToolbar(focused);
+      relayoutAnnotations();
+    });
+
+    /* ============ 标注模式 ============ */
+    let annotSeq = 0;
+    function nextAnnotId() { return 'a' + (++annotSeq); }
+
+    // 把目标元素稳定标记到 data-annot-id（便于序列化）
+    function ensureTargetId(el) {
+      if (!el.dataset.annotKey) {
+        el.dataset.annotKey = 'k' + Math.random().toString(36).slice(2, 9);
+      }
+      return el.dataset.annotKey;
+    }
+
+    function findTargetByKey(key) {
+      return board.querySelector('[data-annot-key="' + key + '"]');
+    }
+
+    function relayoutAnnotations() {
+      $$('.annot', annotLayer).forEach(updateAnnotLine);
+    }
+
+    function updateAnnotLine(annot) {
+      const key = annot.dataset.target;
+      const target = findTargetByKey(key);
+      const path = annotSvg.querySelector('[data-for="' + annot.dataset.id + '"]');
+      const dot = annotSvg.querySelector('[data-for-dot="' + annot.dataset.id + '"]');
+      if (!target || !path) return;
+      const stageRect = annotLayer.getBoundingClientRect();
+      const tRect = target.getBoundingClientRect();
+      const aRect = annot.getBoundingClientRect();
+      // 转成 stage 坐标系
+      const t = {
+        x: tRect.left + tRect.width / 2 - stageRect.left,
+        y: tRect.top + tRect.height / 2 - stageRect.top,
+      };
+      const a = {
+        x: aRect.left - stageRect.left,
+        y: aRect.top + aRect.height / 2 - stageRect.top,
+      };
+      // 从标注左侧 → target 中心
+      const c1x = a.x - 30;
+      const c1y = a.y;
+      const c2x = t.x + 30;
+      const c2y = t.y;
+      path.setAttribute('d', `M ${a.x} ${a.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${t.x} ${t.y}`);
+      if (dot) {
+        dot.setAttribute('cx', t.x);
+        dot.setAttribute('cy', t.y);
+      }
+    }
+
+    function createAnnot(target, opts = {}) {
+      const id = opts.id || nextAnnotId();
+      const key = ensureTargetId(target);
+      const stageRect = annotLayer.getBoundingClientRect();
+      const tRect = target.getBoundingClientRect();
+
+      const annot = document.createElement('div');
+      annot.className = 'annot';
+      annot.dataset.id = id;
+      annot.dataset.target = key;
+      annot.contentEditable = 'true';
+      annot.textContent = opts.text || '';
+
+      const closeBtn = document.createElement('span');
+      closeBtn.className = 'x';
+      closeBtn.textContent = '×';
+      closeBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeAnnot(annot);
+      });
+      annot.appendChild(closeBtn);
+
+      // 临时放屏外，append 后用实际宽高定位（避免被推到屏外被压成竖排）
+      annot.style.left = '-9999px';
+      annot.style.top = '0px';
+      annotLayer.appendChild(annot);
+
+      let left, top;
+      if (opts.left != null && opts.top != null) {
+        left = opts.left;
+        top = opts.top;
+      } else {
+        // 用 max-width 作为最坏估计宽度——空标注 offsetWidth 很小，但用户输入后会撑到 240
+        const aw = Math.max(annot.offsetWidth, 200);
+        const ah = annot.offsetHeight;
+        const stageWidth = annotLayer.offsetWidth;
+        // 默认放右侧
+        left = (tRect.right - stageRect.left) + 24;
+        top = (tRect.top - stageRect.top) + tRect.height / 2 - ah / 2;
+        // 右侧放不下 → 挪到左侧
+        if (left + aw + 8 > stageWidth) {
+          left = (tRect.left - stageRect.left) - aw - 24;
+        }
+        if (left < 8) left = 8;
+        if (top < 8) top = 8;
+      }
+      annot.style.left = left + 'px';
+      annot.style.top = top + 'px';
+
+      // 连线 path + 端点圆
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const path = document.createElementNS(svgNs, 'path');
+      path.dataset.for = id;
+      annotSvg.appendChild(path);
+      const dot = document.createElementNS(svgNs, 'circle');
+      dot.setAttribute('r', '3.5');
+      dot.dataset.forDot = id;
+      annotSvg.appendChild(dot);
+
+      makeAnnotDraggable(annot);
+
+      // 立刻聚焦，方便输入
+      if (!opts.skipFocus) {
+        setTimeout(() => {
+          annot.focus();
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          const r = document.createRange();
+          r.selectNodeContents(annot);
+          sel.addRange(r);
+        }, 0);
+      }
+
+      updateAnnotLine(annot);
+      return annot;
+    }
+
+    function removeAnnot(annot) {
+      const id = annot.dataset.id;
+      const path = annotSvg.querySelector('[data-for="' + id + '"]');
+      const dot = annotSvg.querySelector('[data-for-dot="' + id + '"]');
+      if (path) path.remove();
+      if (dot) dot.remove();
+      annot.remove();
+    }
+
+    function makeAnnotDraggable(annot) {
+      let dragging = false;
+      let offsetX = 0, offsetY = 0;
+      annot.addEventListener('mousedown', (e) => {
+        // 只有在标注本身（非编辑文字）拖动时生效；按住 Alt 键拖动总是生效
+        if (e.target.classList.contains('x')) return;
+        if (annot.isContentEditable && !e.altKey) return;
+        dragging = true;
+        const r = annot.getBoundingClientRect();
+        offsetX = e.clientX - r.left;
+        offsetY = e.clientY - r.top;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const stageRect = annotLayer.getBoundingClientRect();
+        const left = e.clientX - stageRect.left - offsetX;
+        const top = e.clientY - stageRect.top - offsetY;
+        annot.style.left = left + 'px';
+        annot.style.top = top + 'px';
+        updateAnnotLine(annot);
+      });
+      window.addEventListener('mouseup', () => { dragging = false; });
+    }
+
+    // 标注模式下点击 target 创建标注
+    document.addEventListener('click', (e) => {
+      if (state.mode !== 'annot') return;
+      // 忽略 tweaks / 标注本身 / 编辑工具条
+      if (e.target.closest('.tweaks') || e.target.closest('.annot') || e.target.closest('.edit-toolbar')) return;
+      // 只在 board 内创建
+      const target = e.target.closest('.phone, .screen-caption, .screen-wrap');
+      if (!target || !board.contains(target)) return;
+      // 允许把任意 inner 元素作为 target；如果点的是 phone 框本身，仍以最具体的 inner 为准
+      const inner = e.target.closest('.scr-card, .scr-tabs, .scr-tab, .scr-bar-row, .scr-detail-h, .scr-back, .scr-detail-title, .scr-title, .scr-card-t, .scr-card-num, .scr-card-label, .scr-big-num, .scr-note, .island, .home-indicator, .status-bar, .screen-caption, .screen-body');
+      const real = inner && target.contains(inner) ? inner : target;
+      createAnnot(real);
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+
+    /* ============ 保存：File System Access API + 下载兜底 ============ */
+    function cleanCloneForSave() {
+      const clone = document.documentElement.cloneNode(true);
+      // 1. 去掉 mode-* class
+      clone.classList.remove('mode-browse', 'mode-edit', 'mode-annot');
+      // 2. 去掉 reveal in（恢复初始）→ 不动；保留 in 才能让保存后打开看起来一样
+      // 3. 标注层保留（含 SVG / 文本框 contenteditable=false）
+      clone.querySelectorAll('.annot').forEach(el => {
+        el.removeAttribute('contenteditable');
+      });
+      clone.querySelectorAll('.__edit[contenteditable]').forEach(el => {
+        el.removeAttribute('contenteditable');
+      });
+      // 4. tweaks panel 不持久化"折叠"状态
+      const tw = clone.querySelector('.tweaks');
+      if (tw) tw.classList.remove('collapsed');
+      // 5. toast 清空
+      const t = clone.querySelector('.toast');
+      if (t) {
+        t.classList.remove('show', 'error');
+        t.textContent = '';
+      }
+      // 6. 编辑工具条清掉 inline style 与 show class
+      const tb = clone.querySelector('.edit-toolbar');
+      if (tb) {
+        tb.classList.remove('show');
+        tb.style.cssText = '';
+      }
+      // 7. body 上的 hide-annots 保留，让用户的偏好持久化
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+
+    async function saveViaFSA() {
+      const html = cleanCloneForSave();
+      try {
+        if (!state.fileHandle) {
+          if (!window.showSaveFilePicker) throw new Error('NO_FSA');
+          const suggested = (location.pathname.split('/').pop() || 'prototype.html').split('?')[0];
+          state.fileHandle = await window.showSaveFilePicker({
+            suggestedName: suggested,
+            types: [{ description: 'HTML', accept: { 'text/html': ['.html', '.htm'] } }],
+          });
+        }
+        // 写权限验证
+        const perm = await state.fileHandle.queryPermission({ mode: 'readwrite' });
+        if (perm !== 'granted') {
+          const ask = await state.fileHandle.requestPermission({ mode: 'readwrite' });
+          if (ask !== 'granted') throw new Error('PERM_DENIED');
+        }
+        const w = await state.fileHandle.createWritable();
+        await w.write(html);
+        await w.close();
+        toast('已覆盖保存 · ' + state.fileHandle.name);
+      } catch (err) {
+        if (err && err.name === 'AbortError') return; // 用户取消
+        if (err && err.message === 'NO_FSA') {
+          fallbackDownload(html);
+        } else {
+          console.error(err);
+          toast('保存失败：' + (err.message || err), 'error');
+        }
+      }
+    }
+
+    function fallbackDownload(html) {
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (location.pathname.split('/').pop() || 'prototype.html').split('?')[0];
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('当前浏览器不支持原地覆盖 · 已下载新文件');
+    }
+
+    $('#btn-save').addEventListener('click', saveViaFSA);
+
+    // Cmd/Ctrl+S 触发保存
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveViaFSA();
+      }
+      // Esc 退出编辑/标注模式
+      if (e.key === 'Escape' && state.mode !== 'browse') {
+        setMode('browse');
+      }
+    });
+
+    /* ============ 初始化：恢复已存的标注（若文件里已有 .annot DOM） ============ */
+    function rebindExistingAnnots() {
+      $$('.annot', annotLayer).forEach(annot => {
+        // 给目标元素恢复 key 索引
+        const id = annot.dataset.id || nextAnnotId();
+        annot.dataset.id = id;
+        // 恢复 close 按钮（如果序列化丢失）
+        if (!annot.querySelector('.x')) {
+          const closeBtn = document.createElement('span');
+          closeBtn.className = 'x';
+          closeBtn.textContent = '×';
+          closeBtn.addEventListener('click', (e) => { e.stopPropagation(); removeAnnot(annot); });
+          annot.appendChild(closeBtn);
+        } else {
+          annot.querySelector('.x').addEventListener('click', (e) => { e.stopPropagation(); removeAnnot(annot); });
+        }
+        // 标注内容默认非编辑态
+        annot.removeAttribute('contenteditable');
+        // 让标注模式 / 双击进入编辑
+        annot.addEventListener('dblclick', () => {
+          annot.contentEditable = 'true';
+          annot.focus();
+        });
+        annot.addEventListener('blur', () => annot.removeAttribute('contenteditable'));
+        makeAnnotDraggable(annot);
+        updateAnnotLine(annot);
+      });
+      // SVG path/circle 在文件里序列化下来即可，无需重建
+    }
+    rebindExistingAnnots();
+
+    // 也给新创建的标注挂双击进入编辑（createAnnot 内已默认 contentEditable，但 blur 后需要重新进入）
+    document.addEventListener('dblclick', (e) => {
+      const an = e.target.closest('.annot');
+      if (!an) return;
+      an.contentEditable = 'true';
+      an.focus();
+    });
+    document.addEventListener('blur', (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains('annot')) {
+        e.target.removeAttribute('contenteditable');
+      }
+    }, true);
+
+    setMode('browse');
+  })();
+  </script>
+
+</body>
+</html>
