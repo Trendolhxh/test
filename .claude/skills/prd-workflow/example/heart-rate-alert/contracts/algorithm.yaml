@@ -1,0 +1,40 @@
+algorithm:
+  name: hr_anomaly_v1
+  version: v0.1
+  io:
+    input:
+      schema:
+        type: object
+        properties:
+          ppg_samples: {type: array}
+          accel_rms: {type: number}
+      sampling: 1Hz PPG + 50Hz accel
+      calibration: cal-2026-04
+    output:
+      schema:
+        type: object
+        properties:
+          hr_bpm: {type: integer}
+          confidence: {type: number}
+      fallback_signals:
+        low_confidence: 返回 confidence<0.6
+        timeout: 超过 200ms 返回 null
+        model_unavailable: 返回 error_code=MODEL_NA
+  sla:
+    p95_latency_ms: 200
+    memory_mb: 32
+    battery_per_hour_pct: 0.3
+  evaluation:
+    metrics: []
+    slices: []
+  related_ac: [AC-01, AC-03, AC-04]
+  related_screens_for_uncertain_states:
+    low_confidence: SCR-02.low_signal
+    timeout: SCR-02.low_signal
+    model_unavailable: SCR-02.low_signal
+
+signoff:
+  api: {owner: null, signed: true, signed_at: ""}
+  events: {owner: null, signed: true, signed_at: ""}
+  algorithm: {owner: 孙七, signed: true, signed_at: "2026-05-09T14:00:00Z"}
+  hardware: {owner: null, signed: true, signed_at: ""}

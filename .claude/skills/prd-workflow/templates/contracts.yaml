@@ -1,0 +1,125 @@
+# Round 4 · Contracts · 跨职能契约
+# 拆 4 个独立文件落到 specs/{slug}/contracts/ 下：
+#   api.yaml | events.yaml | algorithm.yaml | hardware.yaml
+# 每个文件由对应 owner 签字，不签不许进入 Round 5。
+
+# ====================================================================
+# api.yaml · 给前后端
+# ====================================================================
+openapi: 3.1.0
+info:
+  title: ""                                # 中文功能名
+  version: v0.1
+paths:
+  /endpoint:
+    post:
+      summary: ""                          # 中文一句话
+      x-related-ac: [AC-01, AC-02]         # 至少 1 条
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties: {}
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: ""
+components:
+  schemas: {}
+errors:                                    # 错误码 enum + 中文示例
+  - code: INVALID_INPUT
+    message_zh: ""
+    when: ""
+
+# ====================================================================
+# events.yaml · 给前端 + 数据
+# ====================================================================
+events:
+  - name: ""                               # snake_case，例如 hr_alert_fired
+    description_zh: ""
+    fields:
+      - name: ""                           # snake_case
+        type: string|int|float|bool|enum
+        required: true
+        example: ""
+    related_ac: [AC-01]
+    privacy: low|medium|high               # 高敏感字段需合规审
+
+# ====================================================================
+# algorithm.yaml · 给算法 + 移动端
+# ====================================================================
+algorithm:
+  name: ""                                 # 模型/算法标识
+  version: v0.1
+  io:
+    input:
+      schema: {}                           # JSON Schema
+      sampling: ""                         # 采样率 / 单位 / 量纲
+      calibration: ""                      # 标定参数版本
+    output:
+      schema: {}                           # 含 confidence
+      fallback_signals:                    # 失败语义
+        low_confidence: ""
+        timeout: ""
+        model_unavailable: ""
+  sla:
+    p95_latency_ms: 0
+    memory_mb: 0
+    battery_per_hour_pct: 0
+  evaluation:
+    metrics: []                            # 指标名 + 阈值
+    slices: []                             # 切片维度（人群/场景）
+  related_ac: []
+  related_screens_for_uncertain_states:    # ⚠️ 强制：算法不确定态必须有 UI 状态
+    low_confidence: SCR-02.low_signal
+    timeout: ""
+    model_unavailable: ""
+
+# ====================================================================
+# hardware.yaml · 给固件 + 算法（如涉及硬件）
+# ====================================================================
+hardware:
+  icd_version: v0.1
+  changes_from_previous:                   # diff 表
+    - field: ""
+      type: added|modified|removed|breaking
+      description_zh: ""
+  protocols: []                            # BLE / WiFi / ANT+ / I2C ...
+  sensors: []
+  power_budget:
+    idle_uA: 0
+    active_mA: 0
+  related_ac: []
+
+# ====================================================================
+# Sign-off
+# ====================================================================
+signoff:
+  api:
+    owner: ""
+    signed: false
+    signed_at: ""
+  events:
+    owner: ""
+    signed: false
+    signed_at: ""
+  algorithm:
+    owner: ""
+    signed: false
+    signed_at: ""
+  hardware:
+    owner: ""
+    signed: false
+    signed_at: ""
+
+# Advance Check：
+#  - 每条 AC 至少映射到一个 contract 字段
+#  - 算法不确定态全部有 UI 状态对应
+#  - signoff 中所有 signed: true（无关字段可设 owner: null）

@@ -1,0 +1,47 @@
+# Round 3 · Acceptance Criteria · 验收标准
+# 分批生成，每批 ≤ 7 条，按主题切（happy_path / suppression / performance / edge）
+# 每条 AC 必须可量化（数字 + 单位），禁止"差不多"、"较合理"。
+# 每条 AC 至少关联一条 metric 或 DEC。
+
+version: v0.1
+
+acceptance_criteria:
+
+  - id: AC-01
+    theme: happy_path                       # happy_path | suppression | degradation | performance | edge | error
+    title: ""                               # 中文标题
+    given: ""                               # 中文前置条件
+    when: ""                                # 中文触发条件
+    then:                                   # 中文结果数组（必发生）
+      - ""
+    test_hint: ""                           # 给 QA / Agent 写测试的提示
+    related_decisions: [DEC-01]             # 关联 DEC
+    related_metrics: []                     # 关联 metric 名（来自 TL;DR.metrics.name）
+    priority: P0                            # P0 必须 / P1 应该 / P2 可选
+    coverage_required: true                 # 是否必须有自动化测试覆盖
+
+  # — 抑制 / 降级 主题样例 —
+  - id: AC-02
+    theme: suppression
+    title: ""
+    given: ""
+    when: ""
+    then:
+      - ""
+    test_hint: ""
+    related_decisions: []
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+# AI 自查（每批结束追问用户）：
+#  - 我可能漏了哪些边界？给 3 个候选：
+#    1. ?
+#    2. ?
+#    3. ?
+
+# Advance Check（整轮）：
+#  - 所有 metric 至少被一条 AC 覆盖
+#  - 所有 DEC 至少被一条 AC 引用
+#  - 总数 ≥ 6 条且分布在 ≥ 2 个 theme
+#  - 每条 AC 都有 test_hint
