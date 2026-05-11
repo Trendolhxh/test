@@ -2,9 +2,14 @@
 # 拆 4 个独立文件落到 specs/{slug}/contracts/ 下：
 #   api.yaml | events.yaml | algorithm.yaml | hardware.yaml
 # 每个文件由对应 owner 签字，不签不许进入 Round 5。
+#
+# ⚠️ 边界提醒（参见 SKILL.md ## PM vs Engineering Boundary）：
+#   - PM 只写"用户感知层"：字段语义/单位/枚举、用户期望、错误的中文文案、SLA 边界
+#   - PM 不写"实现选型层"：存储介质、TTL 数字、observer/polling 选型、内存/CPU 数字
+#   - 若实现细节关键到必须固定，写在同 spec 下的 implementation-notes/ 里（不在 contracts/）
 
 # ====================================================================
-# api.yaml · 给前后端
+# api.yaml · 给前后端（产品视角）
 # ====================================================================
 openapi: 3.1.0
 info:
@@ -33,10 +38,20 @@ paths:
           description: ""
 components:
   schemas: {}
-errors:                                    # 错误码 enum + 中文示例
-  - code: INVALID_INPUT
+errors:                                    # 错误码 enum + 中文文案（PM 给）
+  - code: INVALID_INPUT                    # 英文 ID 可与后端协商，但中文 message 必须 PM 定
     message_zh: ""
-    when: ""
+    when: ""                               # 中文：什么场景下出现
+
+# —— 产品视角的非功能约束（PM 必给；实现方式归研发） ——
+freshness_expectation:                     # 用户对数据新鲜度的容忍度
+  offline_readable: false                  # 离线场景是否要能读到上次缓存
+  staleness_tolerance: ""                  # 例："24h 内可接受"、"必须实时"、"切回前台即更新"
+                                           # ⚠️ 不写"TTL=24h"或"local DB" 这种实现选型
+
+refresh_trigger:                           # 用户期望何时看到最新数据（不写实现机制）
+  - ""                                     # 例："App 从后台切回前台"、"用户下拉"、"切换日期"
+                                           # ⚠️ 不写"复用 HealthKit observer"、"WebSocket 推送"
 
 # ====================================================================
 # events.yaml · 给前端 + 数据
@@ -58,21 +73,24 @@ events:
 algorithm:
   name: ""                                 # 模型/算法标识
   version: v0.1
-  io:
+  io:                                      # 语义层（PM 给）；精确 JSON Schema 归算法工程师
     input:
-      schema: {}                           # JSON Schema
-      sampling: ""                         # 采样率 / 单位 / 量纲
-      calibration: ""                      # 标定参数版本
+      semantic_schema:                     # 字段名 + 含义 + 单位 + 量纲（PM 视角）
+        - {field: "", meaning: "", unit: ""}
+      sampling: ""                         # 采样率（影响数据契约，PM/数据科学共同定）
+      calibration: ""                      # 标定参数版本（共同定）
     output:
-      schema: {}                           # 含 confidence
-      fallback_signals:                    # 失败语义
-        low_confidence: ""
+      semantic_schema:                     # 包含 confidence 字段（PM 给字段语义即可）
+        - {field: "", meaning: "", unit: ""}
+      fallback_signals:                    # 失败语义（PM 必给，用户能感知）
+        low_confidence: ""                 # 何种用户可见信号代表此状态
         timeout: ""
         model_unavailable: ""
-  sla:
-    p95_latency_ms: 0
-    memory_mb: 0
-    battery_per_hour_pct: 0
+  nfr:                                     # 用户感知 NFR（PM 给）；具体数字归算法工程师拍
+    perceived_latency_p95_ms: 0            # 用户能感知的响应时延上限
+    device_constraint: ""                  # 例："必须端侧（Watch v1+）"
+    perceived_battery_impact: ""           # 例："用户无明显感知"、"日均增 ≤ 0.3%"
+                                           # ⚠️ 不写 memory_mb / cpu_pct 这类实现层数字
   evaluation:
     metrics: []                            # 指标名 + 阈值
     slices: []                             # 切片维度（人群/场景）
@@ -87,15 +105,15 @@ algorithm:
 # ====================================================================
 hardware:
   icd_version: v0.1
-  changes_from_previous:                   # diff 表
+  changes_from_previous:                   # diff 表（PM 视角：行为/字段变化）
     - field: ""
       type: added|modified|removed|breaking
-      description_zh: ""
-  protocols: []                            # BLE / WiFi / ANT+ / I2C ...
-  sensors: []
-  power_budget:
-    idle_uA: 0
-    active_mA: 0
+      description_zh: ""                   # 中文：变化对用户的影响
+  protocols: []                            # BLE / WiFi / I2C ...（PM 通常不定，固件给）
+  sensors: []                              # 所需传感器清单（PM 给"需要什么数据"）
+  power_envelope:                          # 产品对功耗的预期（不写 uA/mA 精确值）
+    user_perceived: ""                     # 例："用户无感"、"日续航 ≥ X 天"
+                                           # ⚠️ 具体 uA/mA 数字由硬件工程师定
   related_ac: []
 
 # ====================================================================
@@ -123,3 +141,5 @@ signoff:
 #  - 每条 AC 至少映射到一个 contract 字段
 #  - 算法不确定态全部有 UI 状态对应
 #  - signoff 中所有 signed: true（无关字段可设 owner: null）
+#  - 无"实现选型词"（lint 会 warn）：复用 X observer / slot-based / virtual scroll /
+#                                    local DB / Redux / Zustand / 写死 TTL 数字 / observer 选型

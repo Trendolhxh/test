@@ -4,15 +4,14 @@ prd-workflow lint
 按 mode 校验产物：
   - patch:    校验 patches/{slug}.md 单文件
   - standard: 校验 specs/{slug}/ 但跳过 ui/ HTML
-  - full:     校验 specs/{slug}/ 完整规则
+  - full:     校验 specs/{slug}/ 完整规则（含 prd.md 叙事化、UI 平铺）
 
 用法:
   python scripts/lint.py specs/heart-rate-alert/        # 自动从 status.yaml 读 mode
-  python scripts/lint.py patches/button-radius.md       # patch 模式（直接传文件路径）
+  python scripts/lint.py patches/button-radius.md       # patch 模式
   python scripts/lint.py specs/{slug}/ --round 3        # 只跑该轮规则
 
-退出码:
-  0 通过 ｜ 1 fail ｜ 2 仅 warn（放行）
+退出码: 0 通过 ｜ 1 fail ｜ 2 仅 warn（放行）
 """
 from __future__ import annotations
 import argparse, re, sys
@@ -21,16 +20,45 @@ from pathlib import Path
 try:
     import yaml  # type: ignore
 except ImportError:
-    print("需要 PyYAML：pip install pyyaml")
-    sys.exit(2)
+    print("需要 PyYAML：pip install pyyaml"); sys.exit(2)
 
 # ---------- 常量 ----------
 ID_RE = re.compile(r"^[A-Z]+-\d+(\.[a-z_]+)?$")
-HEX_RE = re.compile(r"#[0-9a-fA-F]{3,8}\b")
+# 颜色字面量：hex / rgba / hsl / 常见 named color
+COLOR_LITERAL_RE = re.compile(
+    r"#[0-9a-fA-F]{3,8}\b"
+    r"|rgba?\s*\([^)]*\)"
+    r"|hsla?\s*\([^)]*\)"
+    r"|\b(?:red|blue|green|yellow|black|white|orange|purple|pink|gray|grey|cyan|magenta)\b"
+)
 DECISION_TAG_RE = re.compile(r"\[DECISION-NEEDED[^\]]*\]")
 TLDR_BLOCK_RE = re.compile(r"#\s*TL;DR\s*\n+```ya?ml\n(.*?)```", re.S)
 CN_RE = re.compile(r"[一-鿿]")
 VAGUE_WORDS = ["差不多","较合理","尽量","可能","较快","稍后"]
+SECTION_RE = lambda h: re.compile(rf"#\s*{re.escape(h)}\s*\n(.*?)(?=\n#\s|\Z)", re.S)
+
+# 实现选型词（仅 warn，不 fail）—— 提示 PM 越界
+IMPL_SMELL_PATTERNS = [
+    (re.compile(r"复用[^。\n]{0,15}(observer|监听|订阅)", re.I), "复用 X observer/监听 是实现选型"),
+    (re.compile(r"\bslot[-_ ]?based\b", re.I), "slot-based 是 UI 实现"),
+    (re.compile(r"\bvirtual[- ]?scroll\b|虚拟滚动", re.I), "virtual scroll 是 UI 实现"),
+    (re.compile(r"\blazy[- ]?load\b|懒加载", re.I), "lazy load 是 UI 实现"),
+    (re.compile(r"local\s*DB\b|本地\s*DB|本地缓存层", re.I), "存储介质是研发选型"),
+    (re.compile(r"\b(Redux|Zustand|MobX|Recoil|Pinia)\b"), "状态管理库是研发选型"),
+    (re.compile(r"TTL\s*[:=]?\s*\d+\s*(h|hr|hour|小时|min|秒|s)", re.I), "TTL 具体数字是研发选型（应给 staleness_tolerance）"),
+    (re.compile(r"轮询|polling|WebSocket\s*推送|long\s*poll", re.I), "刷新机制选型归研发（应给 refresh_trigger 用户期望）"),
+    (re.compile(r"\bSingleton\b|单例", re.I), "Singleton 是实现选型"),
+    (re.compile(r"\b(useEffect|useState|useReducer)\b"), "React hook 选型是研发"),
+    (re.compile(r"memory_mb\s*:\s*[1-9]"), "内存数字是研发"),
+    (re.compile(r"cpu_pct|cpu_percent|cpu_%"), "CPU 数字是研发"),
+]
+
+def check_impl_smell(report: Report, text: str, where: str):
+    """扫实现选型味的关键词，软警告"""
+    for pat, msg in IMPL_SMELL_PATTERNS:
+        m = pat.search(text)
+        if m:
+            report.warn(f"[boundary] {where} 出现实现选型词 `{m.group(0)}`：{msg}")
 
 # ---------- 报告 ----------
 class Report:
@@ -50,72 +78,151 @@ def load_yaml(p: Path):
     try: return yaml.safe_load(p.read_text(encoding="utf-8"))
     except Exception as e: return {"_error": str(e)}
 
+def cn_len(s: str) -> int:
+    return len("".join(CN_RE.findall(s)))
+
 # ============================================================
 # Patch 模式
 # ============================================================
 def lint_patch(report: Report, path: Path):
-    if not path.exists():
-        report.fail(f"找不到 {path}"); return
+    if not path.exists(): report.fail(f"找不到 {path}"); return
     text = path.read_text(encoding="utf-8")
-    # 必填字段
-    required = ["## TL;DR", "## Why", "## Change", "## Acceptance Criteria", "## Test hint", "## Affects"]
-    for r in required:
-        if r not in text:
-            report.fail(f"[patch] 缺段落 `{r}`")
-    # TL;DR ≤ 100 中文字
+    for r in ["## TL;DR","## Why","## Change","## Acceptance Criteria","## Test hint","## Affects"]:
+        if r not in text: report.fail(f"[patch] 缺段落 `{r}`")
     m = re.search(r"## TL;DR\s*\n+(.+?)(?=\n##|\Z)", text, re.S)
     if m:
-        cn = "".join(CN_RE.findall(m.group(1)))
-        if len(cn) > 100:
-            report.fail(f"[patch] TL;DR 中文 {len(cn)} 字 > 100")
-        else:
-            print(f"  TL;DR 中文 {len(cn)} 字 ✓")
-    # AC 数量 ∈ [1, 3]
+        n = cn_len(m.group(1))
+        if n > 100: report.fail(f"[patch] TL;DR 中文 {n} 字 > 100")
+        else: print(f"  TL;DR 中文 {n} 字 ✓")
     ac_lines = re.findall(r"^\s*-\s*AC-\d+", text, re.M)
-    if not (1 <= len(ac_lines) <= 3):
-        report.fail(f"[patch] AC 数量 {len(ac_lines)}，应在 [1, 3]")
-    # 模糊词
+    if not (1 <= len(ac_lines) <= 3): report.fail(f"[patch] AC 数量 {len(ac_lines)}，应 ∈ [1,3]")
     for v in VAGUE_WORDS:
-        if v in text:
-            report.fail(f"[patch] 含模糊词 `{v}`，请量化")
-    # 升级触发关键字（warn 即可，不强制）
-    if any(k in text.lower() for k in ["医疗","付款","合规","payment","medical","compliance"]):
-        report.warn("[patch] 检测到合规/付款/医疗相关词，建议升级到 standard")
+        if v in text: report.fail(f"[patch] 含模糊词 `{v}`")
+    if any(k in text for k in ["医疗","付款","合规"]):
+        report.warn("[patch] 检测到合规/付款/医疗相关词，建议升级 standard")
 
 # ============================================================
-# Standard / Full 模式：现有规则
+# Standard / Full 模式
 # ============================================================
-def extract_metrics_decisions(prd_path: Path):
-    if not prd_path.exists(): return [], {}
+def parse_tldr(prd_path: Path):
+    """返回 (tldr_dict, decisions_dict)。兼容旧/新 decisions_made 格式。"""
+    if not prd_path.exists(): return None, {}
     text = prd_path.read_text(encoding="utf-8", errors="ignore")
     m = TLDR_BLOCK_RE.search(text)
-    if not m: return [], {}
+    if not m: return None, {}
     try: data = yaml.safe_load(m.group(1)) or {}
-    except Exception: return [], {}
-    metrics = [x.get("name") for x in (data.get("metrics") or []) if x.get("name")]
+    except Exception: return None, {}
+    # decisions_made：兼容 dict（旧）和 list[{id, tag}]（新）
+    dm = data.get("decisions_made") or []
     decs = {}
+    if isinstance(dm, dict):
+        for k, v in dm.items(): decs[k] = v
+    elif isinstance(dm, list):
+        for x in dm:
+            if isinstance(x, dict) and x.get("id"): decs[x["id"]] = x.get("tag","")
     for d in (data.get("candidate_decisions") or []):
-        if d.get("id"): decs[d["id"]] = d
-    for k, v in (data.get("decisions_made") or {}).items(): decs[k] = v
-    return metrics, decs
+        if isinstance(d, dict) and d.get("id") and d["id"] not in decs: decs[d["id"]] = ""
+    return data, decs
 
-def check_tldr_length(report: Report, prd_path: Path):
-    if not prd_path.exists():
-        report.fail(f"[setup] 找不到 {prd_path}"); return
+def check_prd_narrative(report: Report, prd_path: Path):
+    """检查 prd.md 的叙事段、决议表、AC 概览、屏幕清单。返回 §4 SCR 列表"""
+    if not prd_path.exists(): report.fail(f"[setup] 找不到 prd.md"); return []
     text = prd_path.read_text(encoding="utf-8")
-    m = TLDR_BLOCK_RE.search(text)
-    if not m: report.fail("[round-1] prd.md 中未找到 # TL;DR YAML 段"); return
-    cn = "".join(CN_RE.findall(m.group(1)))
-    if len(cn) > 200: report.fail(f"[round-1] TL;DR 中文 {len(cn)} 字 > 200")
-    else: print(f"  TL;DR 中文 {len(cn)} 字 ✓")
 
-def check_ac(report: Report, root: Path, decisions: dict, metrics: list[str]):
+    # TL;DR 字数
+    m = TLDR_BLOCK_RE.search(text)
+    if not m: report.fail("[round-1] 未找到 # TL;DR YAML 段"); return []
+    tl_cn = cn_len(m.group(1))
+    if tl_cn > 200: report.fail(f"[round-1] TL;DR 中文 {tl_cn} 字 > 200")
+    else: print(f"  TL;DR 中文 {tl_cn} 字 ✓")
+
+    # product_shape 必填
+    try: tldr_data = yaml.safe_load(m.group(1)) or {}
+    except Exception: tldr_data = {}
+    if not (tldr_data.get("product_shape") or "").strip():
+        report.fail("[round-1] TL;DR 缺 `product_shape`（形态锚点必填）")
+
+    # §1 叙事段 ≥150 字
+    s1 = SECTION_RE("1. 背景与用户故事").search(text) or SECTION_RE("1.背景与用户故事").search(text)
+    if not s1: report.fail("[round-1] 缺 `# 1. 背景与用户故事` 段")
+    else:
+        body = s1.group(1).strip()
+        n = cn_len(body)
+        if n < 150:
+            report.fail(f"[round-1] §1 叙事段 {n} 字 < 150；禁止只写'见 problem-card.md'")
+        else:
+            print(f"  §1 叙事 {n} 字 ✓")
+
+    # §2 决议表必须有'决议'列且每条 ≥4 中文字
+    s2 = SECTION_RE("2. 决策记录").search(text) or SECTION_RE("2.决策记录").search(text)
+    if not s2: report.fail("[round-2] 缺 `# 2. 决策记录` 段")
+    else:
+        body = s2.group(1)
+        if "决议" not in body:
+            report.fail("[round-2] §2 决议表必须有'决议'列（一句话结论）")
+        rows = re.findall(r"\|\s*(DEC-\d+)\s*\|([^\n]+)\|", body)
+        for did, row_rest in rows:
+            # row_rest 含中间列；测中文字数
+            cn = cn_len(row_rest)
+            if cn < 4:
+                report.fail(f"[round-2] §2 决议表 {did} 的'决议'列过短（中文 {cn} 字），疑似纯链接")
+
+    # §3 AC 概览 ≥30 字叙述
+    s3 = SECTION_RE("3. AC 概览").search(text) or SECTION_RE("3. AC概览").search(text) \
+         or SECTION_RE("3. AC 索引").search(text)
+    if not s3:
+        report.warn("[round-3] 缺 `# 3. AC 概览` 段")
+    else:
+        body = s3.group(1).strip()
+        # 排除纯链接行
+        narrative = "\n".join([ln for ln in body.split("\n")
+                              if not ln.strip().startswith("[")
+                              and not ln.strip().startswith("见")
+                              and "见 [" not in ln])
+        n = cn_len(narrative)
+        if n < 30:
+            report.fail(f"[round-3] §3 AC 概览叙述 {n} 字 < 30；禁止只写'见 acceptance-criteria.yaml'")
+
+    # §4 屏幕清单表
+    s4 = SECTION_RE("4. UI 屏幕清单").search(text) or SECTION_RE("4. UI规格").search(text) \
+         or SECTION_RE("4. UI 规格").search(text)
+    scr_list = []
+    if not s4:
+        report.warn("[round-3.5] 缺 `# 4. UI 屏幕清单` 段")
+    else:
+        body = s4.group(1)
+        scr_list = re.findall(r"\|\s*(SCR-\d+)\s*\|", body)
+        if not scr_list:
+            report.fail("[round-3.5] §4 屏幕清单缺 SCR-XX 行")
+        else:
+            print(f"  §4 屏幕清单 {len(scr_list)} 屏 ✓")
+
+    # prd.md 全文扫实现选型词（warn）
+    check_impl_smell(report, text, "prd.md")
+
+    return scr_list
+
+def check_problem_card(report: Report, root: Path):
+    p = root / "problem-card.md"
+    if not p.exists(): report.warn("[round-0] 缺 problem-card.md"); return
+    text = p.read_text(encoding="utf-8")
+    # advance check 全勾
+    if re.search(r"-\s*\[\s*\]\s*用户显式回复.*?进入 Round 1", text):
+        report.fail("[round-0] problem-card.md '用户显式回复进入 Round 1' 未勾")
+
+def check_deviations(report: Report, root: Path, tldr: dict):
+    """status.yaml.deviations 非空时 prd.md TL;DR 须列出"""
+    status = load_yaml(root / "status.yaml") or {}
+    devs = status.get("deviations") or []
+    tldr_devs = (tldr or {}).get("deviations")
+    if devs and not tldr_devs:
+        report.warn("[round-1] status.yaml 有 deviations，但 prd.md TL;DR 未列出 deviations")
+
+def check_ac(report: Report, root: Path, decisions: dict):
     p = root / "acceptance-criteria.yaml"
     data = load_yaml(p)
-    if not data:
-        report.warn(f"[round-3] 缺 acceptance-criteria.yaml"); return {}
-    if "_error" in data:
-        report.fail(f"[round-3] yaml 解析失败：{data['_error']}"); return {}
+    if not data: report.warn("[round-3] 缺 acceptance-criteria.yaml"); return {}
+    if "_error" in data: report.fail(f"[round-3] yaml 解析失败：{data['_error']}"); return {}
     acs = data.get("acceptance_criteria", [])
     seen: set[str] = set()
     for ac in acs:
@@ -126,64 +233,81 @@ def check_ac(report: Report, root: Path, decisions: dict, metrics: list[str]):
         seen.add(i)
         for k in ("title","given","when","then","test_hint"):
             if not ac.get(k): report.fail(f"[round-3] {i} 缺字段 `{k}`")
-        related = (ac.get("related_metrics") or []) + (ac.get("related_decisions") or [])
-        if not related: report.fail(f"[round-3] {i} 未关联任何 metric 或 DEC")
-        for d in (ac.get("related_decisions") or []):
-            if d not in decisions: report.fail(f"[round-3] {i} 关联了未知的 {d}")
-        for m in (ac.get("related_metrics") or []):
-            if m not in metrics: report.warn(f"[round-3] {i} 关联了未声明的 metric `{m}`")
+        # 必须关联 ≥1 DEC（metric 可选）
+        rds = ac.get("related_decisions")
+        if rds is None:
+            report.fail(f"[round-3] {i} 缺 related_decisions 字段")
+        elif rds:
+            for d in rds:
+                if d not in decisions:
+                    report.fail(f"[round-3] {i} 关联了未知的 {d}")
+        # rds 为空列表是允许的（独立 AC），不再 fail
+        # 模糊词
         text = " ".join([str(x) for x in (ac.get("then") or [])])
         for v in VAGUE_WORDS:
             if v in text: report.fail(f"[round-3] {i} then 含模糊词 `{v}`")
-    cov = {m for ac in acs for m in (ac.get("related_metrics") or [])}
-    for m in metrics:
-        if m not in cov: report.warn(f"[round-3] metric `{m}` 未被任何 AC 覆盖")
+        # 实现选型词（warn）
+        check_impl_smell(report, text, f"AC {i} then")
+    # DEC 至少被 1 条 AC 引用（warn）
     ref = {d for ac in acs for d in (ac.get("related_decisions") or [])}
     for d in decisions:
-        if d not in ref: report.warn(f"[round-3] {d} 未被任何 AC 引用")
+        if d not in ref:
+            report.warn(f"[round-3] {d} 未被任何 AC 引用")
     return {ac.get("id"): ac for ac in acs}
 
-def check_ui_html(report: Report, root: Path, ac_index: dict):
-    """仅 full 模式调用"""
+def check_ui_html(report: Report, root: Path, ac_index: dict, scr_list: list[str]):
+    """full 模式：检查 ui/screens.html 平铺（或兼容 round-3.5*.html）"""
     ui = root / "ui"
     if not ui.exists():
-        report.fail("[round-3.5] full 模式必须有 ui/ 目录与 HTML"); return
-    html_files = list(ui.glob("round-3.5-*.html"))
-    if not html_files:
-        report.fail("[round-3.5] full 模式缺 round-3.5-*.html"); return
-    for p in html_files:
-        text = p.read_text(encoding="utf-8", errors="ignore")
-        body = text.split(":root", 1)[-1] if ":root" in text else text
-        body = body.split("</style>", 1)[-1]
-        if HEX_RE.search(body):
-            report.fail(f"[round-3.5] {p.name} 在 design token 之外用了 hex")
-        ac_refs = re.findall(r"AC-\d+(?:-[a-z]+)?", text)
-        if not ac_refs: report.fail(f"[round-3.5] {p.name} 没有任何 AC 引用")
-        for a in set(ac_refs):
-            base = a.split("-followup")[0]
-            if ac_index and base not in ac_index:
-                report.warn(f"[round-3.5] {p.name} 引用了未知 AC {a}")
+        report.fail("[round-3.5] full 模式必须有 ui/ 目录与 screens.html"); return
+    screens = ui / "screens.html"
+    if not screens.exists():
+        alt = list(ui.glob("round-3.5*.html"))
+        if not alt:
+            report.fail("[round-3.5] full 模式缺 ui/screens.html"); return
+        if len(alt) > 1:
+            report.warn(f"[round-3.5] ui/ 含 {len(alt)} 份 round-3.5*.html；推荐合并为单文件 screens.html 平铺")
+        screens = alt[0]
+    text = screens.read_text(encoding="utf-8", errors="ignore")
+    # 颜色字面量：剥离 :root token 定义区
+    style_match = re.search(r"<style[^>]*>(.*?)</style>", text, re.S)
+    css = style_match.group(1) if style_match else ""
+    css_outside_root = re.sub(r":root\s*\{[^}]*\}", "", css, flags=re.S)
+    hits = COLOR_LITERAL_RE.findall(css_outside_root)
+    hits = [h for h in hits if h.lower() not in ("none","transparent","currentcolor","inherit")]
+    if hits:
+        report.fail(f"[round-3.5] {screens.name} 在 :root 之外用了颜色字面量：{set(hits[:5])}")
+    # 必须 ≥1 SCR、≥1 AC 引用
+    ac_refs = set(re.findall(r"AC-\d+", text))
+    if not ac_refs: report.fail(f"[round-3.5] {screens.name} 无任何 AC 引用")
+    scr_refs = set(re.findall(r"SCR-\d+", text))
+    if not scr_refs: report.fail(f"[round-3.5] {screens.name} 无任何 SCR 引用")
+    # prd.md §4 与 HTML SCR 一致
+    if scr_list:
+        missing = set(scr_list) - scr_refs
+        if missing:
+            report.fail(f"[round-3.5] prd.md §4 列出但 HTML 中缺：{sorted(missing)}")
+        extra = scr_refs - set(scr_list)
+        if extra:
+            report.warn(f"[round-3.5] HTML 含但 prd.md §4 未列出：{sorted(extra)}")
+    # Round 1.5 草图必须粗糙
     for p in ui.glob("round-1.5-*.html"):
-        text = p.read_text(encoding="utf-8", errors="ignore")
-        if "var(--color-accent" in text or "tokens.json" in text:
+        t = p.read_text(encoding="utf-8", errors="ignore")
+        if "var(--color-accent" in t or "tokens.json" in t:
             report.warn(f"[round-1.5] {p.name} 不应使用 design token，草图必须粗糙")
 
-def check_ui_table(report: Report, prd_path: Path, ac_index: dict):
-    """standard 模式调用：检查 prd.md 含 ui 表格段"""
-    if not prd_path.exists(): return
-    text = prd_path.read_text(encoding="utf-8")
-    if "ui:" not in text and "UI 规格" not in text:
-        report.warn("[round-3.5] standard 模式建议在 prd.md 含 `ui:` 屏幕表格")
-    # 简单引用检查
-    ac_refs = re.findall(r"AC-\d+", text)
-    for a in set(ac_refs):
-        if ac_index and a not in ac_index:
-            report.warn(f"[round-3.5] prd.md 引用了未知 AC {a}")
+def check_ui_table(report: Report, prd_path: Path):
+    """standard 模式：检查 prd.md §4 含屏幕清单"""
+    # check_prd_narrative 已查过；此处保留为占位以保持调用对称性
+    pass
 
 def check_contracts(report: Report, root: Path, mode: str):
     cdir = root / "contracts"
-    if not cdir.exists():
-        report.warn("[round-4] 没有 contracts/ 目录"); return
+    if not cdir.exists(): report.warn("[round-4] 没有 contracts/ 目录"); return
+    # 扫所有 contract yaml 的实现选型味
+    for yfile in cdir.glob("*.yaml"):
+        text = yfile.read_text(encoding="utf-8", errors="ignore")
+        check_impl_smell(report, text, f"contracts/{yfile.name}")
     if mode == "full":
         algo = load_yaml(cdir / "algorithm.yaml")
         if algo and isinstance(algo, dict):
@@ -191,7 +315,8 @@ def check_contracts(report: Report, root: Path, mode: str):
             if isinstance(node, dict):
                 u = node.get("related_screens_for_uncertain_states") or {}
                 for k in ("low_confidence","timeout","model_unavailable"):
-                    if not u.get(k): report.fail(f"[round-4] algorithm.yaml 不确定态 `{k}` 未关联 UI 状态")
+                    if not u.get(k):
+                        report.fail(f"[round-4] algorithm.yaml 不确定态 `{k}` 未关联 UI 状态")
 
 def check_decision_resolved(report: Report, root: Path, state: str):
     if state != "frozen": return
@@ -209,24 +334,18 @@ def check_status(report: Report, p: Path):
     return s, mode
 
 # ============================================================
-# 入口
-# ============================================================
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("path", help="specs/{slug}/ 或 patches/{slug}.md")
     ap.add_argument("--round", help="只跑指定轮次")
     args = ap.parse_args()
 
-    p = Path(args.path)
-    rep = Report()
+    p = Path(args.path); rep = Report()
 
-    # patch 模式：直接传文件路径
     if p.is_file() and p.suffix == ".md":
-        print(f"lint patch {p}")
-        lint_patch(rep, p); rep.exit()
+        print(f"lint patch {p}"); lint_patch(rep, p); rep.exit()
 
-    if not p.is_dir():
-        print(f"找不到 {p}"); sys.exit(2)
+    if not p.is_dir(): print(f"找不到 {p}"); sys.exit(2)
 
     print(f"lint {p}")
     status, mode = check_status(rep, p / "status.yaml")
@@ -234,10 +353,17 @@ def main():
 
     state = (status or {}).get("state","drafting")
     prd = p / "prd.md"
-    metrics, decisions = extract_metrics_decisions(prd)
+    tldr_data, decisions = parse_tldr(prd)
+
+    if not args.round or args.round in ("0","all"):
+        check_problem_card(rep, p)
+
+    scr_list = []
+    if not args.round or args.round in ("1","2","3","3.5","all"):
+        scr_list = check_prd_narrative(rep, prd) or []
 
     if not args.round or args.round in ("1","all"):
-        check_tldr_length(rep, prd)
+        check_deviations(rep, p, tldr_data or {})
 
     if not args.round or args.round in ("2","all"):
         adir = p / "adr"
@@ -248,11 +374,11 @@ def main():
 
     ac_idx = {}
     if not args.round or args.round in ("3","all"):
-        ac_idx = check_ac(rep, p, decisions, metrics)
+        ac_idx = check_ac(rep, p, decisions)
 
     if not args.round or args.round in ("3.5","all"):
-        if mode == "full": check_ui_html(rep, p, ac_idx)
-        elif mode == "standard": check_ui_table(rep, prd, ac_idx)
+        if mode == "full": check_ui_html(rep, p, ac_idx, scr_list)
+        elif mode == "standard": check_ui_table(rep, prd)
 
     if not args.round or args.round in ("4","all"):
         check_contracts(rep, p, mode)

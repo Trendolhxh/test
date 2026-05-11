@@ -14,12 +14,58 @@ license: Internal
 
 1. **先选模式**：进入任何轮次前，**必须先做 Mode Picker**。
 2. **小批次**：AC 一次 ≤ 7 条，决策一次 ≤ 5 个，候选问题一次 ≤ 8 个。
-3. **双读**：人读中文，机器读英文 ID/字段名。
+3. **双读**：人读中文（叙事 + 表格的"结论列"），机器读英文 ID/字段名。**禁止把长中文（>30 字）塞进 yaml 字段值**——长内容归独立 md 文件。
 4. **决策点显式化**：`[DECISION-NEEDED id=DEC-XX]` 标签，未消解禁止进入实现。
 5. **状态机**：`drafting → reviewing → frozen`。
 6. **AI 主动暴露盲点**：每轮收尾追问"我可能漏了什么？给 3 个候选"。
 7. **Round 5 必须开新会话**（仅 Full 模式强制；Standard 推荐；Patch 跳过）。
 8. **禁止一次性写完整份 PRD**。
+9. **prd.md 必须叙事化**：§1 必须有 ≥150 字中文叙事段；§2 决议表必须含"决议"列（一句话结论）；§3 AC 概览必须 2–3 句叙述；§4 必须有屏幕清单表。**禁止把章节做成纯链接索引。**
+10. **PRD 和 ADR 只写最终结论，不写取舍过程**。Round 2 的 options/pros/cons 只在对话内出现，不落任何文件。
+
+## Metric 政策
+
+**Metric 不是必需流程项**。是否设 metric 由产品判断：
+
+- **建议设置**：增长功能、数据驱动改造、A/B 实验
+- **可省略**：基础功能页面、UI 改造、合规修复、单纯能力补齐
+
+若省略，需在 `status.yaml.deviations` 留痕（`{item: "metric", reason: "基础功能页面无独立指标"}`），并在 `prd.md` TL;DR 显式标注 `metrics: []  # 故意省略，见 deviations`。
+
+AC 不强制关联 metric。**AC 必须关联 ≥1 个 DEC**；如真无相关 DEC，显式写 `related_decisions: []  # 独立 AC，无关联决策`。
+
+## PM vs Engineering Boundary（强制）
+
+PRD 只写**用户感知层**的事，不写**实现选型层**。冲突时 PM 写"用户期望/行为/边界"，研发写"实现方式"。
+
+**PM 该给的（写进 PRD/AC/契约）**：
+
+- 用户故事、入口/出口
+- AC 行为（given/when/then）
+- UI 形态、状态枚举、文案变体
+- 错误码的中文 message + "什么场景出现"
+- 数据契约的**字段语义、单位、量纲、枚举**
+- 用户能感知的 SLA：P95 响应时延、电量影响、新鲜度容忍度
+- 离线/降级/缓存的**用户预期**（是否离线可读、多久算"旧"）
+- 算法不确定态 → UI 状态映射
+- non-goals + deviations
+
+**PM 不该给的（实现选型，归研发）**：
+
+- 缓存层存储介质、TTL 具体数字（应给"离线可读 + 容忍度"）
+- 刷新机制选型（observer / polling / push，应给"刷新触发时机"）
+- UI 实现技术（slot-based / virtual scroll / lazy load，应给"行为预期"）
+- 算法内存/CPU 具体数字（应给"必须端侧"等 NFR）
+- 数据库 schema、ORM、网络库、状态管理库
+- 错误码英文 ID（后端约定）
+- API 路径具体命名（路径前缀风格归后端）
+
+**典型反例**（这些字眼出现在 AC/contracts 里就是越界，lint 会 warn）：
+
+- "复用现有 X observer"、"复用 X middleware"
+- "slot-based 方案"、"virtual scroll"、"lazy load"
+- "local DB"、"本地缓存层"、"Redux"、"Zustand"
+- 缓存 TTL 写死具体小时数（应给"容忍度"）
 
 ---
 
@@ -73,7 +119,8 @@ risk: low | medium | high   # 合规/付款/医疗/不可回滚 = high
 
 | 区域 | 语言 |
 |---|---|
-| 文档标题、正文、TL;DR 字段值、文案变体、AC 描述 | **中文** |
+| 文档标题、正文、TL;DR 字段值（**短**）、文案变体、AC 描述 | **中文** |
+| 长中文（≥30 字的论述/背景/决议详情） | **写在独立 md 文件，yaml 字段只放一句话标签** |
 | ID（REQ/AC/DEC/SCR/state） | **英文**（`AC-01`、`SCR-02.low_signal`） |
 | YAML/JSON 字段名、文件名、目录名、代码标识符 | **英文** |
 | Glossary | 中英对照 |
@@ -107,7 +154,7 @@ specs/{slug}/
 └── reviews/{self-review-*.md, signoff.md}          # Round 5/6
 ```
 
-`prd.md` 顶部固定结构：
+`prd.md` 顶部固定结构（**章节正文不能为空或纯链接，否则 lint 失败**）：
 
 ```markdown
 ---
@@ -121,16 +168,55 @@ status: drafting
 
 # TL;DR
 \`\`\`yaml
-# (从 templates/tldr-card.md 拷贝)
+# 从 templates/tldr-card.md 拷贝
+# 必含字段：intent, product_shape（形态锚点）, non_goals, user_value, risk
+# 可选字段：metrics（省略时 deviations 留痕）, deviations
+# decisions_made 只允许 [{id, tag}]，禁止塞长描述
 \`\`\`
 
 # 1. 背景与用户故事
-# 2. 决策记录（指向 adr/）
-# 3. AC 索引（指向 acceptance-criteria.yaml）
-# 4. UI 规格（standard: 表格嵌入；full: 指向 ui/）
-# 5. 跨职能契约（指向 contracts/）
-# 6. Glossary
-# 7. 自洽审查与签字（指向 reviews/）
+{**强制中文叙事段，≥150 字 ≤500 字**。融合 problem-card 的三件事：
+ - 用户痛点（含 2–3 条用户原话引用）
+ - 这个页面承担什么角色
+ - 与现有功能/历史的关系
+**禁止只写"见 problem-card.md"。**}
+
+# 2. 决策记录
+
+| ID | 议题 | **决议** | 详情 |
+|---|---|---|---|
+| DEC-01 | 评价阈值 | 4 档（完美/良好/需注意/严重影响） | [ADR-01](adr/ADR-01.md) |
+| DEC-02 | 睡眠行 | 默认展开 | [ADR-02](adr/ADR-02.md) |
+
+**只写最终结论，禁止写取舍过程**（取舍归 ADR 内部，且 ADR 也只在"背景"段简述）。
+
+# 3. AC 概览
+{**2–3 句中文叙述**，例如："这页承诺 N 件事：核心是 A（AC-XX）+ B（AC-YY）；边界覆盖 C/D（AC-ZZ）；交互覆盖 E/F（AC-NN）。"}
+
+完整列表见 [acceptance-criteria.yaml](acceptance-criteria.yaml)。
+
+# 4. UI 屏幕清单
+
+| SCR | 中文名 | 状态数 | 关键状态 | 关联 AC |
+|---|---|---|---|---|
+| SCR-01 | 日视图 | 7 | 正常/欠佳/无数据/骨架/缓存/缺失/降级 | AC-01,02,03,06,12,13 |
+
+完整 UI 平铺：[screens.html](ui/screens.html)（full 模式）
+
+# 5. 跨职能契约
+- [API](contracts/api.yaml)
+- [埋点](contracts/events.yaml)
+- 算法：{不适用 / 见 algorithm.yaml}
+- 硬件：{不适用 / 见 hardware.yaml}
+
+# 6. Glossary（中英对照）
+
+| 中文 | 英文 ID | 说明 |
+|---|---|---|
+
+# 7. 审查与签字
+- Round 5 自审：[reviews/](reviews/)
+- Round 6 签字：[reviews/signoff.md](reviews/signoff.md)
 ```
 
 `status.yaml` 最小内容：
@@ -165,13 +251,19 @@ frozen_at: ''
 
 **做**：基于用户需求反问 5–8 个澄清问题（用户/场景/痛点/历史竞品/合规/已有能力）。渲染 `templates/problem-card.md` → `specs/{slug}/problem-card.md`。
 
-**Advance**：所有字段非空，无"待定/TBD"，用户确认。
+**Advance**：所有字段非空，无"待定/TBD"，**所有 advance check checkbox 全部勾完**（包括"用户显式回复进入 Round 1"）。
 
 #### Round 1 · 意图骨架 ` [standard ✅ | full ✅]`
 
-**做**：渲染 `templates/tldr-card.md` 嵌入 `prd.md` 的 `# TL;DR` 段。`candidate_decisions` 由 AI 列出"会卡住的所有点"，**禁止自己拍板**。`metrics` 待 DEC 的留 `?`。
+**做**：渲染 `templates/tldr-card.md` 嵌入 `prd.md` 的 `# TL;DR` 段。
+- `candidate_decisions` 由 AI 列出"会卡住的所有点"，**禁止自己拍板**
+- `product_shape` **必填**——一句话形态锚点（"参考 X 的 Y 结构 / 在 App 哪个位置 / 类比 Z"），让评审 5 秒能脑补出形态
+- `metrics` 可选；若省略须在 `deviations` 留痕
+- `decisions_made` 仅允许 `[{id, tag}]`，禁止塞长描述
 
-**Advance**：TL;DR ≤ 200 中文字；`candidate_decisions` ∈ \[3, 8]；用户确认。
+**同时写 §1 背景叙事**：≥150 字，融合 problem-card 的痛点/角色/历史。
+
+**Advance**：TL;DR ≤ 200 中文字；`product_shape` 非空；`candidate_decisions` ∈ \[3, 8]；§1 ≥150 字；用户确认。
 
 #### Round 1.5 · 概念草图 HTML ` [standard ⏭️ skip | full ✅ 按需]`
 
@@ -188,19 +280,24 @@ frozen_at: ''
 
 #### Round 2 · 决策澄清 ` [standard ✅ | full ✅]`
 
-**做**：每条 candidate decision 给标准化对比（question/options/pros&cons/impact/recommendation/needs_input_from）。用户拍板后回填 `prd.md` TL;DR、生成 `adr/ADR-XX.md`、写入 `status.yaml.decisions`。
+**做**：在**对话中**给每条 candidate 展示 question/options/pros&cons/impact/recommendation——这一段**只在对话里出现，不落任何文件**。用户拍板后：
 
-**约束**：一次 ≤ 5 条决策。
+1. 回填 `prd.md` §2 决议表（"决议"列写一句话结论）
+2. 同时回填 TL;DR `decisions_made` 字段：`[{id: DEC-01, tag: "4 档评价"}]`（仅一句话 tag）
+3. 写一份**极简 ADR**：`adr/ADR-XX.md`（用 `templates/adr.md`，只含决议；背景 ≤3 行；无辩论段）
+4. 写入 `status.yaml.decisions`
 
-**Advance**：所有 candidate 都有对应 ADR；`prd.md` 无 `?`；用户确认。
+**约束**：一次 ≤ 5 条决策。取舍过程**不进入任何持久化文件**。
+
+**Advance**：所有 candidate 都有 ADR；`prd.md` §2 决议表的"决议"列全部非空（≥4 中文字）；用户确认。
 
 #### Round 3 · AC 切片 ` [standard ✅ | full ✅]`
 
 **做**：用 `templates/acceptance-criteria.yaml` 分批生成，**每批 ≤ 7 条按主题切**：happy_path / suppression / degradation / performance / edge / error。
 
-**约束**：可量化、有 test_hint、关联 ≥1 metric 或 DEC、禁模糊词。
+**约束**：可量化、有 test_hint、**关联 ≥1 DEC**（metric 可选）、禁模糊词。如真无相关 DEC，显式写 `related_decisions: []  # 独立 AC`。
 
-**Advance**：所有 metric 至少被 1 条 AC 覆盖；所有 DEC 至少被 1 条引用；总数 ≥ 6 且分布在 ≥ 2 个主题。
+**Advance**：所有 DEC 至少被 1 条 AC 引用；总数 ≥ 6 且分布在 ≥ 2 个主题；**§3 AC 概览段已写**（2–3 句叙述）。
 
 #### Round 3.5 · UI 规格 ` [standard 📋 表格 | full 🖼️ HTML]`
 
@@ -220,18 +317,19 @@ ui:
 
 如果 ≥3 屏 或 ≥3 状态/屏，提议升级到 full。
 
-**Full 模式**：每屏一份 `ui/round-3.5-{SCR-ID}.html`，**一次只发一份给用户 review**。
+**Full 模式**：**一份 `ui/screens.html` 把所有 SCR × 所有 state 平铺**（不再每屏拆文件）。
 
 HTML 结构：
 - 单文件、自包含
-- `:root` 绑 design tokens；样式区外严禁 hex
-- 移动真机视口（iPhone 393×852 / 表盘比例）
-- 三栏：屏幕清单 / phone mockup + 状态 tabs / 注释面板（触发条件、关联 AC、文案变体、动效、异常处理、用到的 token）
-- 全状态网格折叠面板
+- `:root` 绑 design tokens；样式区**禁止任何颜色字面量**（含 hex / rgba / hsl / named color 如 `red`/`blue`）；所有颜色必须 `var(--token)`
+- 移动真机视口（iPhone 393×852 或表盘比例）
+- **平铺布局**：横向多列或瀑布流，每列一个 SCR；列顶 caption 写 SCR-ID + 中文名 + 关联 AC；列内是该 SCR 所有 state 的 phone mockup 子卡片，每个子卡片标注：state 英文 ID + 中文名 + 关联 AC 标签 + 简要文案
+- 顶部可选 SCR/state filter（不强制）
+- 每个 state 区域有 `data-scr` `data-state` `data-ac` 属性，方便 lint 抓取
 
-**约束**：每个 state 必须 ≥ 1 条 AC；算法不确定态（low_confidence / timeout / model_unavailable）必须有显式 UI 状态。
+**约束**：每个 state 必须显式标 ≥ 1 条 AC；**prd.md §4 屏幕清单中的 SCR 列表必须与 HTML 中的 SCR 一致**；算法不确定态（low_confidence / timeout / model_unavailable）必须出现为显式 state。
 
-**Advance**：每屏 review 通过；每条交互类 AC 至少被一个 state 覆盖。
+**Advance**：每屏在 HTML 中已平铺；prd.md §4 表格填好；每条交互类 AC 至少被一个 state 覆盖。
 
 #### Round 4 · 契约对齐 ` [standard ✅ 缩减 | full ✅ 完整]`
 
@@ -268,8 +366,10 @@ HTML 结构：
 
 lint 自动从 `status.yaml.mode` 读模式调整规则：
 - patch：只检查 patch.md 必填字段（TL;DR ≤100 中文字、≥1 条 AC、test_hint）
-- standard：跳过 ui/ 目录检查，但检查 `prd.md` 含屏幕表格段
-- full：完整规则（含 HTML hex 检查、算法不确定态↔UI 映射）
+- standard：跳过 ui/ 目录检查，但检查 `prd.md` 含屏幕清单表
+- full：完整规则（含 HTML 颜色字面量检查、算法不确定态↔UI 映射、prd.md 叙事化）
+
+详见 `scripts/lint.py`。
 
 ---
 
@@ -281,9 +381,12 @@ lint 自动从 `status.yaml.mode` 读模式调整规则：
 - 一次给用户 > 7 条 AC
 - Full 模式 Round 5 在同会话执行
 - frozen 后改不 bump 版本
-- HTML 中用 hex 字面量
+- HTML 中用颜色字面量（含 hex / rgba / hsl / named）
 - AC 不可量化
 - 用户偏离流程时强行执行（应记录 deviation 并继续）
+- **prd.md §1/§2/§3/§4 写成纯链接索引**
+- **取舍过程写进 prd.md 或 ADR**（PRD 和 ADR 只看结论）
+- **yaml 字段值塞长中文（>30 字）**——长内容应去独立文件
 
 ## 节奏礼仪
 
@@ -298,7 +401,7 @@ lint 自动从 `status.yaml.mode` 读模式调整规则：
 | `templates/patch.md` | Patch 模式单文件 |
 | `templates/problem-card.md` | Round 0 |
 | `templates/tldr-card.md` | Round 1（嵌入 prd.md） |
-| `templates/adr.md` | Round 2 |
+| `templates/adr.md` | Round 2（**极简**，仅决议） |
 | `templates/acceptance-criteria.yaml` | Round 3 |
 | `templates/contracts.yaml` | Round 4（含 4 子段） |
 | `templates/self-review.md` | Round 5 启动 prompt + 骨架 |
