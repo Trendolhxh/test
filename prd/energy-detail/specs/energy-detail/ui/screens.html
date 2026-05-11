@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>精力详情页 · screens.html · SCR-01 / SCR-02 / SCR-03</title>
+<style>
+  :root {
+    --page-bg: #ECECEA;
+    --page-ink: #1a1a1a;
+    --page-muted: rgba(0,0,0,0.5);
+    --phone-bg: #0a0a0c;
+    --phone-elev: #1c1c1e;
+    --phone-elev-2: #2c2c2e;
+    --phone-shadow-1: rgba(0,0,0,0.18);
+    --phone-shadow-2: rgba(0,0,0,0.12);
+    --phone-island: #000;
+    --phone-home-indicator: rgba(255,255,255,0.6);
+    --phone-ink: #ffffff;
+    --phone-ink-75: rgba(255,255,255,0.78);
+    --phone-ink-60: rgba(255,255,255,0.62);
+    --phone-ink-45: rgba(255,255,255,0.45);
+    --phone-ink-30: rgba(255,255,255,0.30);
+    --phone-ink-25: rgba(255,255,255,0.25);
+    --phone-ink-18: rgba(255,255,255,0.18);
+    --phone-ink-10: rgba(255,255,255,0.10);
+    --phone-ink-03: rgba(255,255,255,0.03);
+    --phone-line: rgba(255,255,255,0.12);
+    --accent: #2e7df6;
+    --rating-perfect: #34c759;
+    --rating-perfect-bg: rgba(52,199,89,0.15);
+    --rating-good: #5ac8fa;
+    --rating-good-bg: rgba(90,200,250,0.15);
+    --rating-warn: #ff9f0a;
+    --rating-warn-bg: rgba(255,159,10,0.15);
+    --rating-bad: #ff453a;
+    --rating-bad-bg: rgba(255,69,58,0.15);
+    --tweaks-bg: rgba(255,255,255,0.92);
+    --tweaks-ink: #1a1a1a;
+    --tweaks-shadow-1: rgba(0,0,0,0.10);
+    --tweaks-shadow-2: rgba(0,0,0,0.06);
+    --tweaks-line: rgba(0,0,0,0.06);
+    --tweaks-label-strong: rgba(0,0,0,0.5);
+    --tweaks-label: rgba(0,0,0,0.4);
+    --tweaks-label-muted: rgba(0,0,0,0.35);
+    --tweaks-btn-bg: rgba(0,0,0,0.04);
+    --tweaks-btn-ink: rgba(0,0,0,0.7);
+    --tweaks-btn-hover: rgba(0,0,0,0.07);
+    --tweaks-btn-on-bg: rgba(0,0,0,0.85);
+    --tweaks-btn-on-ink: #fff;
+    --r-card: 18px;
+    --r-phone: 44px;
+    --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page-bg); color: var(--page-ink);
+    font-family: var(--font); -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  button { font: inherit; border: 0; background: none; cursor: pointer; color: inherit; }
+
+  .page-header { padding: 56px 32px 28px; text-align: center; }
+  .page-header h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; }
+  .page-header .sub { margin: 0; font-size: 13px; color: var(--page-muted); line-height: 1.7; max-width: 720px; margin-inline: auto; }
+  .page-header .meta { margin-top: 14px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; color: var(--page-muted); text-transform: uppercase; }
+
+  .stage { padding: 12px 28px 120px; }
+  .board { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, max-content)); justify-content: center; gap: 56px 48px; max-width: 1760px; margin: 0 auto; }
+  .screen-wrap { display: flex; flex-direction: column; align-items: center; }
+  .screen-caption { margin-top: 16px; text-align: center; max-width: 340px; }
+  .screen-caption .st-num { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; color: var(--page-muted); text-transform: uppercase; }
+  .screen-caption .st-title { font-size: 15px; font-weight: 600; margin-top: 4px; }
+  .screen-caption .st-desc { font-size: 12px; color: var(--page-muted); margin-top: 6px; line-height: 1.6; }
+
+  /* Phone */
+  .phone { width: 360px; height: 780px; border-radius: var(--r-phone); position: relative; overflow: hidden; background: var(--phone-bg); box-shadow: 0 36px 80px var(--phone-shadow-1), 0 0 0 1px var(--phone-shadow-2); color: var(--phone-ink); }
+  .phone .island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 116px; height: 34px; border-radius: 22px; background: var(--phone-island); z-index: 50; }
+  .phone .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 128px; height: 5px; border-radius: 999px; background: var(--phone-home-indicator); z-index: 60; }
+  .status-bar { position: absolute; top: 0; left: 0; right: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: 18px 28px 12px; font-family: -apple-system, "SF Pro", system-ui; font-size: 15px; font-weight: 600; }
+  .status-bar .icons { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+  .screen-body { position: absolute; inset: 0; padding-top: 52px; padding-bottom: 26px; display: flex; flex-direction: column; overflow: hidden; }
+
+  .nav-bar { display: flex; align-items: center; padding: 8px 16px; height: 44px; flex-shrink: 0; }
+  .nav-back { width: 32px; height: 32px; background: var(--phone-ink-10); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; }
+  .nav-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin-right: 32px; }
+
+  .seg-tabs { display: flex; background: var(--phone-elev); border-radius: 9px; padding: 3px; margin: 8px 80px 0; flex-shrink: 0; }
+  .seg-tab { flex: 1; text-align: center; padding: 6px 0; font-size: 14px; color: var(--phone-ink-60); border-radius: 7px; font-weight: 500; }
+  .seg-tab.on { background: var(--phone-ink-18); color: var(--phone-ink); }
+
+  .date-row { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 14px 0 8px; flex-shrink: 0; font-size: 15px; color: var(--phone-ink-75); }
+  .date-arrow { color: var(--phone-ink-45); font-size: 14px; }
+  .date-arrow.disabled { opacity: 0.3; }
+
+  .content-scroll { flex: 1; overflow-y: auto; padding: 0 0 16px; }
+
+  .hero { text-align: center; padding: 20px 24px 24px; }
+  .hero-score { font-size: 64px; font-weight: 700; line-height: 1; letter-spacing: -2px; }
+  .hero-rating { margin-top: 8px; font-size: 15px; font-weight: 500; }
+
+  .hero-left { padding: 12px 24px 12px; display: flex; align-items: baseline; gap: 10px; }
+  .hero-left .hl-score { font-size: 44px; font-weight: 700; line-height: 1; letter-spacing: -1px; }
+  .hero-left .hl-rating { font-size: 14px; font-weight: 500; }
+
+  /* Contributors */
+  .contributors { padding: 0 16px; }
+  .contrib-section { background: var(--phone-elev); border-radius: var(--r-card); margin-bottom: 10px; overflow: hidden; }
+  .contrib-row { display: flex; align-items: center; padding: 15px 18px; gap: 8px; position: relative; }
+  .contrib-row + .contrib-row { border-top: 1px solid var(--phone-line); }
+  .contrib-name { flex: 1; font-size: 15px; font-weight: 500; }
+  .contrib-score { font-size: 15px; font-weight: 600; margin-right: 8px; }
+  .contrib-score.pos { color: var(--rating-perfect); }
+  .contrib-score.zero { color: var(--phone-ink-45); }
+  .contrib-score.neg { color: var(--rating-warn); }
+  .contrib-rating { font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 4px; margin-right: 4px; }
+  .contrib-rating.perfect { color: var(--rating-perfect); background: var(--rating-perfect-bg); }
+  .contrib-rating.good { color: var(--rating-good); background: var(--rating-good-bg); }
+  .contrib-rating.warn { color: var(--rating-warn); background: var(--rating-warn-bg); }
+  .contrib-rating.bad { color: var(--rating-bad); background: var(--rating-bad-bg); }
+  .contrib-arrow { color: var(--phone-ink-30); font-size: 14px; }
+
+  .sub-rows { background: var(--phone-ink-03); }
+  .sub-row { display: flex; align-items: center; padding: 13px 18px 13px 36px; gap: 8px; border-top: 1px solid var(--phone-line); }
+  .sub-name { flex: 1; font-size: 14px; color: var(--phone-ink-75); min-width: 0; }
+  .sub-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .sub-value { font-size: 14px; color: var(--phone-ink-60); word-break: keep-all; overflow-wrap: normal; }
+
+  .contrib-row.no-click { cursor: default; }
+  .contrib-row.no-click .contrib-arrow { display: none; }
+  .no-data-text { font-size: 13px; color: var(--phone-ink-45); }
+
+  .sub-row.null-dim .contrib-arrow { display: none; }
+  .sub-row.null-dim .sub-value { color: var(--phone-ink-30); }
+  .sub-row.null-dim { cursor: default; }
+  .accum-tag { font-size: 11px; color: var(--phone-ink-45); font-style: italic; }
+
+  /* ===== Gauge (4-tier meter) ===== */
+  .gauge { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
+  .gauge i { display: block; width: 14px; height: 4px; border-radius: 2px; background: var(--phone-ink-30); font-style: normal; }
+  .gauge i.bad { background: var(--rating-bad); }
+  .gauge i.warn { background: var(--rating-warn); }
+  .gauge i.good { background: var(--rating-good); }
+  .gauge i.perfect { background: var(--rating-perfect); }
+
+  .gauge-legend {
+    display: flex; gap: 10px; padding: 10px 18px 14px 36px;
+    border-top: 1px solid var(--phone-line);
+  }
+  .gauge-legend span {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--phone-ink-45);
+  }
+  .gauge-legend i { display: block; width: 8px; height: 4px; border-radius: 2px; font-style: normal; }
+
+  /* Bar chart */
+  .chart-area { padding: 8px 16px 0; }
+  .bar-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 100px; gap: 2px; border-bottom: 1px solid var(--phone-line); }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; cursor: pointer; position: relative; }
+  .bar-col.empty { cursor: default; }
+  .bar-fill { width: 100%; max-width: 24px; border-radius: 3px 3px 0 0; background: var(--phone-ink-25); transition: background 0.2s; }
+  .bar-col.selected .bar-fill { background: var(--accent); }
+  .bar-col.empty .bar-fill { background: transparent; }
+  .bar-labels { display: flex; justify-content: space-between; padding: 6px 0 0; font-size: 10px; color: var(--phone-ink-45); }
+  .bar-label { flex: 1; text-align: center; }
+  .bar-label.selected { color: var(--phone-ink); font-weight: 600; }
+
+  .bar-chart.month-chart { gap: 1px; }
+  .bar-chart.month-chart .bar-fill { max-width: 8px; border-radius: 2px 2px 0 0; }
+
+  /* Week bar value label */
+  .bar-val { font-size: 9px; color: var(--phone-ink-45); font-weight: 500; margin-bottom: 2px; font-family: var(--mono); }
+  .bar-col.selected .bar-val { color: var(--phone-ink); font-weight: 600; }
+  .bar-col.empty .bar-val { display: none; }
+
+  /* Shimmer skeleton (AC-13) */
+  @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+  .skel-block { background: linear-gradient(90deg, var(--phone-elev) 25%, var(--phone-elev-2) 50%, var(--phone-elev) 75%); background-size: 400px 100%; animation: shimmer 1.4s ease infinite; border-radius: 8px; }
+  .skel-hero { width: 100px; height: 64px; margin: 28px auto 12px; border-radius: 12px; }
+  .skel-rating { width: 80px; height: 18px; margin: 0 auto 24px; }
+  .skel-card { margin: 0 16px 10px; border-radius: var(--r-card); overflow: hidden; }
+
+  /* Cache banner (AC-12) */
+  .cache-banner { background: var(--rating-warn-bg); color: var(--rating-warn); font-size: 12px; font-weight: 500; text-align: center; padding: 8px 16px; flex-shrink: 0; }
+
+  /* Fallback box (AC-15) */
+  .fallback-box { margin: 0 16px; padding: 32px 24px; background: var(--phone-elev); border-radius: var(--r-card); text-align: center; }
+  .fallback-box .fb-icon { font-size: 28px; margin-bottom: 8px; }
+  .fallback-box .fb-text { font-size: 14px; color: var(--phone-ink-60); }
+
+  /* Tweaks */
+  .tweaks { position: fixed; right: 24px; bottom: 24px; z-index: 9000; width: 240px; background: var(--tweaks-bg); color: var(--tweaks-ink); border-radius: 14px; box-shadow: 0 12px 32px var(--tweaks-shadow-1), 0 0 0 1px var(--tweaks-shadow-2); backdrop-filter: blur(20px); font-size: 13px; overflow: hidden; transition: transform 0.28s cubic-bezier(0.16,1,0.3,1), opacity 0.2s ease; }
+  .tweaks.collapsed { transform: translateY(calc(100% - 40px)); }
+  .tweaks-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; height: 40px; cursor: pointer; user-select: none; border-bottom: 1px solid var(--tweaks-line); }
+  .tweaks-head .t { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tweaks-label-strong); font-weight: 600; }
+  .tweaks-head .toggle { font-size: 12px; color: var(--tweaks-label-muted); transition: transform 0.2s ease; }
+  .tweaks.collapsed .tweaks-head .toggle { transform: rotate(180deg); }
+  .tweaks-body { max-height: calc(80vh - 40px); overflow-y: auto; }
+  .tweaks-section { padding: 12px 14px; border-bottom: 1px solid var(--tweaks-line); }
+  .tweaks-section:last-child { border-bottom: 0; }
+  .tweaks-section .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--tweaks-label); margin-bottom: 8px; }
+  .tweaks-modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .tweaks-modes button { padding: 6px 4px; font-size: 11px; font-weight: 500; border-radius: 7px; background: var(--tweaks-btn-bg); color: var(--tweaks-btn-ink); transition: background 0.2s, color 0.2s; line-height: 1.3; }
+  .tweaks-modes button:hover { background: var(--tweaks-btn-hover); }
+  .tweaks-modes button.on { background: var(--tweaks-btn-on-bg); color: var(--tweaks-btn-on-ink); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>精力详情页</h1>
+  <p class="sub">SCR-01 日视图（AC-01 / AC-02 / AC-03 / AC-04 / AC-06 / AC-07 / AC-12 / AC-13 / AC-15） · SCR-02 周视图（AC-05 / AC-08 / AC-09 / AC-10 / AC-14 / AC-15） · SCR-03 月视图（AC-05 / AC-08 / AC-09 / AC-10 / AC-14）<br>右下角 Tweaks 切换数据状态</p>
+  <p class="meta">energy-detail · round 3.5 · v0.5</p>
+</div>
+
+<div class="stage">
+<div class="board">
+<div class="screen-wrap">
+<div class="phone" id="phone1">
+  <div class="island"></div>
+  <div class="home-indicator"></div>
+  <div class="status-bar"><span>9:41</span><span class="icons">&#x25C0; &#x25B6; &#x25AA;</span></div>
+  <div class="screen-body">
+    <div class="nav-bar"><button class="nav-back">‹</button><div class="nav-title">精力</div></div>
+    <div class="seg-tabs">
+      <button class="seg-tab on" data-view="day">日</button>
+      <button class="seg-tab" data-view="week">周</button>
+      <button class="seg-tab" data-view="month">月</button>
+    </div>
+
+    <!-- ====== DAY VIEW ====== -->
+    <div class="view-panel" id="view-day" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+      <div class="date-row"><span class="date-arrow">‹</span><span>05-11</span><span class="date-arrow disabled">›</span></div>
+      <div class="content-scroll">
+
+        <!-- Normal -->
+        <div class="state-panel" data-scr="SCR-01" data-state="normal" data-ac="AC-01,AC-02,AC-03,AC-04">
+          <div class="hero"><div class="hero-score">92</div><div class="hero-rating" style="color:var(--rating-perfect);">精力完美</div></div>
+          <div class="contributors">
+            <div class="contrib-section">
+              <div class="contrib-row"><span class="contrib-name">昨夜睡眠</span><span class="contrib-score pos">+85</span><span class="contrib-arrow">›</span></div>
+              <div class="sub-rows">
+                <div class="sub-row"><span class="sub-name">睡眠时长</span><div class="sub-right"><span class="sub-value">7h 28m</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠债</span><div class="sub-right"><span class="sub-value">0h</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">静息心率</span><div class="sub-right"><span class="sub-value">52 bpm</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠效率</span><div class="sub-right"><span class="sub-value">92%</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠一致性</span><div class="sub-right"><span class="sub-value">偏差 12min</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="gauge-legend"><span><i style="background:var(--rating-bad)"></i>严重影响</span><span><i style="background:var(--rating-warn)"></i>需注意</span><span><i style="background:var(--rating-good)"></i>良好</span><span><i style="background:var(--rating-perfect)"></i>完美</span></div>
+              </div>
+            </div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">小睡</span><span class="contrib-score pos">+8</span></div></div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">运动</span><span class="contrib-score neg">-15</span></div></div>
+          </div>
+        </div>
+
+        <!-- Low -->
+        <div class="state-panel" data-scr="SCR-01" data-state="low" data-ac="AC-01,AC-02,AC-03" style="display:none;">
+          <div class="hero"><div class="hero-score" style="color:var(--rating-bad);">45</div><div class="hero-rating" style="color:var(--rating-bad);">精力欠佳</div></div>
+          <div class="contributors">
+            <div class="contrib-section">
+              <div class="contrib-row"><span class="contrib-name">昨夜睡眠</span><span class="contrib-score pos">+48</span><span class="contrib-arrow">›</span></div>
+              <div class="sub-rows">
+                <div class="sub-row"><span class="sub-name">睡眠时长</span><div class="sub-right"><span class="sub-value">5h 12m</span><div class="gauge"><i></i><i class="warn"></i><i></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠债</span><div class="sub-right"><span class="sub-value">4.8h</span><div class="gauge"><i></i><i class="warn"></i><i></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">静息心率</span><div class="sub-right"><span class="sub-value">68 bpm</span><div class="gauge"><i class="bad"></i><i></i><i></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠效率</span><div class="sub-right"><span class="sub-value">74%</span><div class="gauge"><i></i><i class="warn"></i><i></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠一致性</span><div class="sub-right"><span class="sub-value">偏差 48min</span><div class="gauge"><i></i><i class="warn"></i><i></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="gauge-legend"><span><i style="background:var(--rating-bad)"></i>严重影响</span><span><i style="background:var(--rating-warn)"></i>需注意</span><span><i style="background:var(--rating-good)"></i>良好</span><span><i style="background:var(--rating-perfect)"></i>完美</span></div>
+              </div>
+            </div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">小睡</span><span class="contrib-score zero">0</span></div></div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">运动</span><span class="contrib-score neg">-3</span></div></div>
+          </div>
+        </div>
+
+        <!-- Empty -->
+        <div class="state-panel" data-scr="SCR-01" data-state="empty" data-ac="AC-06" style="display:none;">
+          <div class="hero"><div class="hero-score" style="color:var(--phone-ink-30);">—</div></div>
+          <div class="contributors">
+            <div class="contrib-section">
+              <div class="contrib-row"><span class="contrib-name">昨夜睡眠</span><span class="no-data-text">缺少昨夜睡眠数据</span></div>
+              <div class="sub-rows">
+                <div class="sub-row null-dim"><span class="sub-name">睡眠时长</span><div class="sub-right"><span class="sub-value">—</span><div class="gauge"><i></i><i></i><i></i><i></i></div></div></div>
+                <div class="sub-row null-dim"><span class="sub-name">睡眠债</span><div class="sub-right"><span class="sub-value">—</span><div class="gauge"><i></i><i></i><i></i><i></i></div></div></div>
+                <div class="sub-row null-dim"><span class="sub-name">静息心率</span><div class="sub-right"><span class="sub-value">—</span><div class="gauge"><i></i><i></i><i></i><i></i></div></div></div>
+                <div class="sub-row null-dim"><span class="sub-name">睡眠效率</span><div class="sub-right"><span class="sub-value">—</span><div class="gauge"><i></i><i></i><i></i><i></i></div></div></div>
+                <div class="sub-row null-dim"><span class="sub-name">睡眠一致性</span><div class="sub-right"><span class="sub-value">—</span><div class="gauge"><i></i><i></i><i></i><i></i></div></div></div>
+                <div class="gauge-legend"><span><i style="background:var(--rating-bad)"></i>严重影响</span><span><i style="background:var(--rating-warn)"></i>需注意</span><span><i style="background:var(--rating-good)"></i>良好</span><span><i style="background:var(--rating-perfect)"></i>完美</span></div>
+              </div>
+            </div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">小睡</span><span class="contrib-score zero">0</span></div></div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">运动</span><span class="contrib-score zero">0</span></div></div>
+          </div>
+        </div>
+
+        <!-- Skeleton -->
+        <div class="state-panel" data-scr="SCR-01" data-state="skeleton" data-ac="AC-13" style="display:none;">
+          <div class="skel-hero skel-block"></div>
+          <div class="skel-rating skel-block"></div>
+          <div class="skel-card skel-block" style="height:180px;"></div>
+          <div class="skel-card skel-block" style="height:52px;"></div>
+          <div class="skel-card skel-block" style="height:52px;"></div>
+        </div>
+
+        <!-- Cached -->
+        <div class="state-panel" data-scr="SCR-01" data-state="cached" data-ac="AC-12" style="display:none;">
+          <div class="cache-banner">数据未实时更新</div>
+          <div class="hero"><div class="hero-score">78</div><div class="hero-rating" style="color:var(--rating-good);">精力正常</div></div>
+          <div class="contributors">
+            <div class="contrib-section">
+              <div class="contrib-row"><span class="contrib-name">昨夜睡眠</span><span class="contrib-score pos">+72</span><span class="contrib-arrow">›</span></div>
+              <div class="sub-rows">
+                <div class="sub-row"><span class="sub-name">睡眠时长</span><div class="sub-right"><span class="sub-value">6h 45m</span><div class="gauge"><i></i><i class="warn"></i><i></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠债</span><div class="sub-right"><span class="sub-value">2.1h</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">静息心率</span><div class="sub-right"><span class="sub-value">54 bpm</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠效率</span><div class="sub-right"><span class="sub-value">88%</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠一致性</span><div class="sub-right"><span class="sub-value">偏差 22min</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="gauge-legend"><span><i style="background:var(--rating-bad)"></i>严重影响</span><span><i style="background:var(--rating-warn)"></i>需注意</span><span><i style="background:var(--rating-good)"></i>良好</span><span><i style="background:var(--rating-perfect)"></i>完美</span></div>
+              </div>
+            </div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">小睡</span><span class="contrib-score pos">+12</span></div></div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">运动</span><span class="contrib-score neg">-6</span></div></div>
+          </div>
+        </div>
+
+        <!-- Null subdim -->
+        <div class="state-panel" data-scr="SCR-01" data-state="null-subdim" data-ac="AC-03,AC-04,AC-07" style="display:none;">
+          <div class="hero"><div class="hero-score">68</div><div class="hero-rating" style="color:var(--rating-good);">精力正常</div></div>
+          <div class="contributors">
+            <div class="contrib-section">
+              <div class="contrib-row"><span class="contrib-name">昨夜睡眠</span><span class="contrib-score pos">+62</span><span class="contrib-arrow">›</span></div>
+              <div class="sub-rows">
+                <div class="sub-row"><span class="sub-name">睡眠时长</span><div class="sub-right"><span class="sub-value">7h 02m</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row null-dim"><span class="sub-name">睡眠债</span><div class="sub-right"><span class="sub-value">—</span><div class="gauge"><i></i><i></i><i></i><i></i></div></div></div>
+                <div class="sub-row null-dim"><span class="sub-name">静息心率</span><div class="sub-right"><span class="accum-tag">数据积累中</span><div class="gauge"><i></i><i></i><i></i><i></i></div></div></div>
+                <div class="sub-row"><span class="sub-name">睡眠效率</span><div class="sub-right"><span class="sub-value">85%</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠一致性</span><div class="sub-right"><span class="sub-value">偏差 18min</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="gauge-legend"><span><i style="background:var(--rating-bad)"></i>严重影响</span><span><i style="background:var(--rating-warn)"></i>需注意</span><span><i style="background:var(--rating-good)"></i>良好</span><span><i style="background:var(--rating-perfect)"></i>完美</span></div>
+              </div>
+            </div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">小睡</span><span class="contrib-score zero">0</span></div></div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">运动</span><span class="contrib-score pos">+6</span></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ====== WEEK VIEW ====== -->
+    <div class="view-panel" id="view-week" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+      <div class="date-row"><span class="date-arrow">‹</span><span>05-05 至 05-11</span><span class="date-arrow disabled">›</span></div>
+      <div class="content-scroll">
+        <!-- Normal week -->
+        <div class="state-panel week-state" data-scr="SCR-02" data-state="normal" data-ac="AC-05,AC-08,AC-09,AC-10,AC-14">
+          <div class="chart-area">
+            <div class="bar-chart" id="week-chart">
+              <div class="bar-col" data-val="78"><span class="bar-val">78</span><div class="bar-fill" style="height:78%;"></div></div>
+              <div class="bar-col" data-val="82"><span class="bar-val">82</span><div class="bar-fill" style="height:82%;"></div></div>
+              <div class="bar-col empty" data-val="0"><span class="bar-val"></span><div class="bar-fill" style="height:0%;"></div></div>
+              <div class="bar-col" data-val="45"><span class="bar-val">45</span><div class="bar-fill" style="height:45%;"></div></div>
+              <div class="bar-col" data-val="71"><span class="bar-val">71</span><div class="bar-fill" style="height:71%;"></div></div>
+              <div class="bar-col" data-val="88"><span class="bar-val">88</span><div class="bar-fill" style="height:88%;"></div></div>
+              <div class="bar-col selected" data-val="92"><span class="bar-val">92</span><div class="bar-fill" style="height:92%;"></div></div>
+            </div>
+            <div class="bar-labels">
+              <span class="bar-label">一</span><span class="bar-label">二</span><span class="bar-label">三</span>
+              <span class="bar-label">四</span><span class="bar-label">五</span><span class="bar-label">六</span>
+              <span class="bar-label selected">日</span>
+            </div>
+          </div>
+          <div class="hero-left"><span class="hl-score">92</span><span class="hl-rating" style="color:var(--rating-perfect);">精力完美</span></div>
+          <div class="contributors">
+            <div class="contrib-section">
+              <div class="contrib-row"><span class="contrib-name">昨夜睡眠</span><span class="contrib-score pos">+85</span><span class="contrib-arrow">›</span></div>
+              <div class="sub-rows">
+                <div class="sub-row"><span class="sub-name">睡眠时长</span><div class="sub-right"><span class="sub-value">7h 28m</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠债</span><div class="sub-right"><span class="sub-value">0h</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">静息心率</span><div class="sub-right"><span class="sub-value">52 bpm</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠效率</span><div class="sub-right"><span class="sub-value">92%</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="sub-row"><span class="sub-name">睡眠一致性</span><div class="sub-right"><span class="sub-value">偏差 12min</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+                <div class="gauge-legend"><span><i style="background:var(--rating-bad)"></i>严重影响</span><span><i style="background:var(--rating-warn)"></i>需注意</span><span><i style="background:var(--rating-good)"></i>良好</span><span><i style="background:var(--rating-perfect)"></i>完美</span></div>
+              </div>
+            </div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">小睡</span><span class="contrib-score pos">+8</span></div></div>
+            <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">运动</span><span class="contrib-score neg">-15</span></div></div>
+          </div>
+        </div>
+        <!-- Partial fail -->
+        <div class="state-panel week-state" data-scr="SCR-02" data-state="partial-fail" data-ac="AC-15" style="display:none;">
+          <div class="chart-area">
+            <div class="bar-chart" id="week-chart-pf">
+              <div class="bar-col" data-val="78"><span class="bar-val">78</span><div class="bar-fill" style="height:78%;"></div></div>
+              <div class="bar-col" data-val="82"><span class="bar-val">82</span><div class="bar-fill" style="height:82%;"></div></div>
+              <div class="bar-col empty" data-val="0"><span class="bar-val"></span><div class="bar-fill" style="height:0%;"></div></div>
+              <div class="bar-col" data-val="45"><span class="bar-val">45</span><div class="bar-fill" style="height:45%;"></div></div>
+              <div class="bar-col" data-val="71"><span class="bar-val">71</span><div class="bar-fill" style="height:71%;"></div></div>
+              <div class="bar-col" data-val="88"><span class="bar-val">88</span><div class="bar-fill" style="height:88%;"></div></div>
+              <div class="bar-col selected" data-val="92"><span class="bar-val">92</span><div class="bar-fill" style="height:92%;"></div></div>
+            </div>
+            <div class="bar-labels">
+              <span class="bar-label">一</span><span class="bar-label">二</span><span class="bar-label">三</span>
+              <span class="bar-label">四</span><span class="bar-label">五</span><span class="bar-label">六</span>
+              <span class="bar-label selected">日</span>
+            </div>
+          </div>
+          <div class="fallback-box" style="margin-top:16px;"><div class="fb-icon">⚠</div><div class="fb-text">缺少昨夜睡眠数据</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== MONTH VIEW ====== -->
+    <div class="view-panel" id="view-month" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+      <div class="date-row"><span class="date-arrow">‹</span><span>2026 年 5 月</span><span class="date-arrow disabled">›</span></div>
+      <div class="content-scroll">
+        <div class="state-panel month-state" data-scr="SCR-03" data-state="normal" data-ac="AC-05,AC-08,AC-09,AC-10,AC-14">
+        <div class="chart-area">
+          <div class="bar-chart month-chart" id="month-chart"></div>
+          <div class="bar-labels" id="month-labels" style="font-size:9px;"></div>
+        </div>
+        <div class="hero-left"><span class="hl-score">92</span><span class="hl-rating" style="color:var(--rating-perfect);">精力完美</span></div>
+        <div class="contributors">
+          <div class="contrib-section">
+            <div class="contrib-row"><span class="contrib-name">昨夜睡眠</span><span class="contrib-score pos">+85</span><span class="contrib-arrow">›</span></div>
+            <div class="sub-rows">
+              <div class="sub-row"><span class="sub-name">睡眠时长</span><div class="sub-right"><span class="sub-value">7h 28m</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+              <div class="sub-row"><span class="sub-name">睡眠债</span><div class="sub-right"><span class="sub-value">0h</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+              <div class="sub-row"><span class="sub-name">静息心率</span><div class="sub-right"><span class="sub-value">52 bpm</span><div class="gauge"><i></i><i></i><i class="good"></i><i></i></div></div><span class="contrib-arrow">›</span></div>
+              <div class="sub-row"><span class="sub-name">睡眠效率</span><div class="sub-right"><span class="sub-value">92%</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+              <div class="sub-row"><span class="sub-name">睡眠一致性</span><div class="sub-right"><span class="sub-value">偏差 12min</span><div class="gauge"><i></i><i></i><i></i><i class="perfect"></i></div></div><span class="contrib-arrow">›</span></div>
+              <div class="gauge-legend"><span><i style="background:var(--rating-bad)"></i>严重影响</span><span><i style="background:var(--rating-warn)"></i>需注意</span><span><i style="background:var(--rating-good)"></i>良好</span><span><i style="background:var(--rating-perfect)"></i>完美</span></div>
+            </div>
+          </div>
+          <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">小睡</span><span class="contrib-score pos">+8</span></div></div>
+          <div class="contrib-section"><div class="contrib-row no-click"><span class="contrib-name">运动</span><span class="contrib-score neg">-15</span></div></div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="screen-caption">
+  <div class="st-num">SCR-01 · SCR-02 · SCR-03</div>
+  <div class="st-title">精力详情页 · 日 / 周 / 月</div>
+  <div class="st-desc">
+    SCR-01 日视图 7 态：normal / low / empty / skeleton / cached / null-subdim / partial-fail<br>
+    SCR-02 周视图 2 态：normal / partial-fail；SCR-03 月视图 1 态<br>
+    子维度用 4 档量程条 + 底部图例代替评价标签
+  </div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Tweaks -->
+<div class="tweaks" id="tweaks">
+  <div class="tweaks-head" onclick="document.getElementById('tweaks').classList.toggle('collapsed')">
+    <span class="t">Tweaks</span><span class="toggle">▾</span>
+  </div>
+  <div class="tweaks-body">
+    <div class="tweaks-section">
+      <div class="label">日视图 · 数据状态</div>
+      <div class="tweaks-modes" id="state-switcher">
+        <button class="on" data-state="normal">正常 (92)</button>
+        <button data-state="low">欠佳 (45)</button>
+        <button data-state="empty">无数据</button>
+        <button data-state="skeleton">加载骨架</button>
+        <button data-state="cached">缓存态</button>
+        <button data-state="null-subdim">子维度缺失</button>
+      </div>
+    </div>
+    <div class="tweaks-section">
+      <div class="label">周视图 · 降级状态</div>
+      <div class="tweaks-modes" id="week-state-switcher">
+        <button class="on" data-state="normal">正常</button>
+        <button data-state="partial-fail">Detail 失败</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.seg-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('on'));
+    tab.classList.add('on');
+    document.querySelectorAll('.view-panel').forEach(p => p.style.display = 'none');
+    document.getElementById('view-' + tab.dataset.view).style.display = 'flex';
+  });
+});
+document.querySelectorAll('#state-switcher button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#state-switcher button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    document.querySelectorAll('#view-day .state-panel').forEach(p => {
+      p.style.display = p.dataset.state === btn.dataset.state ? 'block' : 'none';
+    });
+  });
+});
+document.querySelectorAll('#week-state-switcher button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#week-state-switcher button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    document.querySelectorAll('#view-week .week-state').forEach(p => {
+      p.style.display = p.dataset.state === btn.dataset.state ? 'block' : 'none';
+    });
+  });
+});
+
+function initBarClick(chartId) {
+  document.querySelectorAll('#' + chartId + ' .bar-col:not(.empty)').forEach(col => {
+    col.addEventListener('click', () => {
+      const chart = col.closest('.bar-chart');
+      const area = col.closest('.chart-area');
+      chart.querySelectorAll('.bar-col').forEach(c => c.classList.remove('selected'));
+      col.classList.add('selected');
+      const idx = Array.from(chart.children).indexOf(col);
+      const labels = area.querySelectorAll('.bar-label');
+      labels.forEach(l => l.classList.remove('selected'));
+      if (labels[idx]) labels[idx].classList.add('selected');
+    });
+  });
+}
+initBarClick('week-chart');
+initBarClick('week-chart-pf');
+
+const mc = document.getElementById('month-chart');
+const ml = document.getElementById('month-labels');
+if (mc) {
+  const vals = [82,78,91,85,0,73,88,92,45,71,88,0,65,78,82,90,85,73,68,82,91,78,0,85,73,88,92,85,92,78];
+  const sel = 9;
+  vals.forEach((v, i) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col' + (v === 0 ? ' empty' : '') + (i === sel ? ' selected' : '');
+    col.dataset.val = v;
+    const fill = document.createElement('div');
+    fill.className = 'bar-fill';
+    fill.style.height = v + '%';
+    col.appendChild(fill);
+    mc.appendChild(col);
+    const span = document.createElement('span');
+    span.className = 'bar-label' + (i === sel ? ' selected' : '');
+    span.textContent = (i + 1) % 5 === 0 || i === 0 ? (i + 1) : '';
+    ml.appendChild(span);
+  });
+  initBarClick('month-chart');
+}
+</script>
+</body>
+</html>

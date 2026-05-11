@@ -1,0 +1,248 @@
+# Round 3 · Acceptance Criteria · 精力详情页
+version: v0.2
+
+acceptance_criteria:
+
+  # ——— 第 1 批：happy_path + edge ———
+
+  - id: AC-01
+    theme: happy_path
+    title: "日视图展示精力值与评价"
+    given: "用户当日有精力数据"
+    when: "从首页精力卡点击进入详情页"
+    then:
+      - "顶部显示精力值（0-100 整数）"
+      - "精力值下方显示评价标签，直接使用 API 返回的 energy_rating（前端不自行计算）：poor=精力欠佳 / normal=精力正常 / good=精力充沛 / perfect=精力完美"
+      - "默认停留在日视图，日期为今日"
+    test_hint: "分别构造精力值 40/65/85/95，验证 4 档评价文案"
+    related_decisions: [DEC-01]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-02
+    theme: happy_path
+    title: "归因列表展示三大因子"
+    given: "用户当日有精力数据"
+    when: "进入日视图"
+    then:
+      - "归因区展示昨夜睡眠（显示加分值如 +85）、小睡（如 +8）、运动（如 -15）三行"
+      - "睡眠行默认展开，显示 5 个子维度"
+      - "小睡、运动行不可点击，无跳转箭头"
+    test_hint: "验证三行均显示且加减分值与接口一致；验证睡眠行默认展开"
+    related_decisions: [DEC-02]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-03
+    theme: happy_path
+    title: "睡眠子维度展示偏差值与 4 档评价"
+    given: "睡眠行展开"
+    when: "查看 5 个子维度"
+    then:
+      - "每行显示：子维度名 + 实际值（上）+ 4 档量程条（下）右对齐排列；量程条从左到右为严重影响红/需注意橙/良好蓝/完美绿，仅点亮当前评价对应的一格，其余灰色；睡眠子维度区底部显示量程图例"
+      - "睡眠时长：7-9h 完美 / <7h或>9h 需注意"
+      - "睡眠债：0h 完美 / (0,4h] 良好 / (4h,6h] 需注意 / >6h 严重影响"
+      - "静息心率：<基线 完美 / [基线, 基线+3) 良好 / [基线+3, 基线+10) 需注意 / ≥基线+10 严重影响；新用户无基线时显示'数据积累中'"
+      - "睡眠效率：≥90% 完美 / 80-90% 良好 / <80% 需注意"
+      - "睡眠一致性：≤15min 完美 / 15-30min 良好 / >30min 需注意"
+    test_hint: "为每个子维度构造边界值，验证量程条填充档位正确且颜色对应；验证图例显示"
+    related_decisions: [DEC-01]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-04
+    theme: happy_path
+    title: "睡眠子维度点击跳转"
+    given: "睡眠行展开"
+    when: "点击子维度行"
+    then:
+      - "睡眠时长 → 跳转睡眠详情页 /sleep/detail"
+      - "睡眠债 → 跳转睡眠详情页 /sleep/detail（临时，后续替换）"
+      - "静息心率 → 跳转 /today/resting-heart-rate-detail"
+      - "睡眠效率 → 跳转 /sleep/efficiency-detail"
+      - "睡眠一致性 → 跳转 /sleep/consistency-detail"
+      - "每行显示 > 箭头"
+      - "当子维度值为 null 时（如睡眠债无数据），该行显示「—」，不可点击，不显示 >"
+    test_hint: "逐一点击 5 个子维度，验证路由跳转正确"
+    related_decisions: [DEC-03]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-05
+    theme: happy_path
+    title: "周/月视图柱状图与选中日归因"
+    given: "切换到周或月视图"
+    when: "进入视图"
+    then:
+      - "顶部显示柱状图（周 7 柱 / 月 28-31 柱），Y 轴 0-100"
+      - "柱体统一单色，选中柱高亮"
+      - "默认选中今日"
+      - "柱状图下方显示选中日的归因列表，结构与日视图一致"
+      - "周视图每柱顶部显示当天精力值数字，月视图不显示数字"
+      - "月视图柱子点击需准确命中所点日；整月可见，无需横向滚动"
+    test_hint: "验证柱数与当周/月天数一致；验证默认选中今日且归因匹配；验证周视图柱顶有精力值数字、月视图无；月视图任选一日点击需命中正确柱体"
+    related_decisions: [DEC-05]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-06
+    theme: edge
+    title: "无精力数据兜底"
+    given: "用户当日无精力数据（未佩戴/断连）"
+    when: "进入日视图"
+    then:
+      - "精力值区域显示「—」"
+      - "归因区显示「缺少昨夜睡眠数据」"
+      - "不显示评价标签"
+    test_hint: "mock 无数据状态，验证兜底文案和—显示"
+    related_decisions: [DEC-04]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-07
+    theme: edge
+    title: "部分数据缺失与周月空日"
+    given: "部分因子无数据或周/月视图含无数据日"
+    when: "查看归因或点击柱状图"
+    then:
+      - "有睡眠无小睡 → 小睡行显示 0"
+      - "有睡眠无运动 → 运动行显示 0"
+      - "周/月视图无数据日柱子空缺，点击无响应"
+      - "不可选中无数据日"
+    test_hint: "构造周视图含 2 天无数据，验证空缺柱不可选中；构造无小睡/无运动分别验证显示 0"
+    related_decisions: [DEC-04]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  # ——— 第 2 批：interaction + degradation ———
+
+  - id: AC-08
+    theme: happy_path
+    title: "日期切换"
+    given: "处于任意视图"
+    when: "点击左右箭头切换日期"
+    then:
+      - "日视图：前后切换 1 天"
+      - "周视图：前后切换 1 周"
+      - "月视图：前后切换 1 月"
+      - "不可切换到未来日期（右箭头在今日时禁用）"
+      - "数据跟随刷新"
+    test_hint: "在今日点右箭头验证禁用；点左箭头验证日期-1 且数据刷新"
+    related_decisions: []  # 独立 AC，无关联决策
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-09
+    theme: happy_path
+    title: "视图切换"
+    given: "处于任意视图"
+    when: "点击日/周/月 tab"
+    then:
+      - "切换到对应视图"
+      - "日视图保持当前选中日期"
+      - "从日视图切到周视图，选中当前日所在周，柱状图选中该日"
+      - "从日视图切到月视图，选中当前日所在月，柱状图选中该日"
+    test_hint: "从 3 月 15 日日视图切到周视图，验证选中 3.10-3.16 周且柱状图高亮 15 日"
+    related_decisions: []  # 独立 AC，无关联决策
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-10
+    theme: happy_path
+    title: "周/月柱状图点击切换选中日"
+    given: "处于周或月视图"
+    when: "点击某日柱体"
+    then:
+      - "该柱高亮，前一选中柱取消高亮"
+      - "柱状图下方归因区切换到该日数据，带动画过渡"
+    test_hint: "点击周视图非今日柱体，验证高亮切换+归因区数据更新+过渡动画存在"
+    related_decisions: [DEC-05]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-11
+    theme: happy_path
+    title: "精力数据前台刷新"
+    given: "详情页已打开，App 从后台切回前台"
+    when: "Apple Health 在后台期间有新的睡眠/小睡/运动数据写入"
+    then:
+      - "App 从后台切回前台时，归因数据应反映最新可用值"
+      - "精力值、归因列表、评价档位与颜色同步刷新"
+      - "用户预期：不承诺实时推送（受 iOS HealthKit 后台更新延迟限制），但切回 App 即应看到最新"
+    test_hint: "后台写入新小睡数据，切回 App，验证分值和归因刷新"
+    related_decisions: []  # 独立 AC，无关联决策
+    related_metrics: []
+    priority: P1
+    coverage_required: false
+
+  - id: AC-12
+    theme: degradation
+    title: "网络异常降级"
+    given: "用户打开详情页时网络不可用"
+    when: "进入详情页"
+    then:
+      - "若本地有 72h 内的缓存数据，展示该数据，顶部显示「数据未实时更新」提示条"
+      - "若本地缓存超过 72h，视为过期，回退到 AC-06 无数据兜底（不展示陈旧数据）"
+      - "若无缓存，展示兜底状态（同 AC-06）"
+    test_hint: "断网后进入详情页：①有 1h 缓存→验证缓存数据 + 提示条；②有 80h 缓存→验证回退到 AC-06 兜底；③无缓存→验证 AC-06 兜底"
+    related_decisions: [DEC-04]
+    related_metrics: []
+    priority: P1
+    coverage_required: false
+
+  # ——— 第 3 批：loading ———
+
+  - id: AC-13
+    theme: happy_path
+    title: "页面加载态"
+    given: "用户从首页点击精力卡进入详情页"
+    when: "数据请求尚未返回"
+    then:
+      - "首屏 P95 内可见数据（用户感知 SLA：≤2s）；未返回前显示骨架屏（shimmer），布局与数据态一致"
+      - "请求超过 10s 视为超时，降级到 AC-12 缓存/兜底逻辑"
+    test_hint: "mock 接口延迟 3s 验证骨架屏显示；mock 超时 10s 验证降级"
+    related_decisions: []  # 独立 AC，无关联决策
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  # ——— 第 4 批：pull-to-refresh + partial failure ———
+
+  - id: AC-14
+    theme: happy_path
+    title: "下拉刷新"
+    given: "处于任意视图"
+    when: "用户下拉页面"
+    then:
+      - "触发 /detail + /trend 重新请求"
+      - "刷新完成后数据更新，下拉指示器消失"
+    test_hint: "下拉刷新后 mock 接口返回新数据，验证页面更新"
+    related_decisions: []  # 独立 AC，无关联决策
+    related_metrics: []
+    priority: P1
+    coverage_required: false
+
+  - id: AC-15
+    theme: degradation
+    title: "部分接口失败降级"
+    given: "进入周/月视图"
+    when: "/detail 和 /trend 其中一个请求失败"
+    then:
+      - "trend 成功 + detail 失败 → 柱状图正常显示，归因区显示兜底（同 AC-06 文案）"
+      - "trend 失败 + detail 成功 → 不显示柱状图，仅展示当日归因"
+      - "两个都失败 → 降级到 AC-12 缓存/兜底逻辑"
+    test_hint: "分别 mock 三种失败组合，验证各降级路径"
+    related_decisions: [DEC-04]
+    related_metrics: []
+    priority: P1
+    coverage_required: false

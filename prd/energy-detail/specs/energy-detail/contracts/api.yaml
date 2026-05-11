@@ -1,0 +1,202 @@
+# Round 4 · API Contract · 精力详情页
+openapi: 3.1.0
+info:
+  title: 精力详情页
+  version: v0.2
+
+paths:
+  /api/energy/detail:
+    get:
+      summary: 获取指定日期的精力归因详情
+      x-related-ac: [AC-01, AC-02, AC-03, AC-04, AC-06, AC-07, AC-11]
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2026-05-10"
+      responses:
+        "200":
+          description: 成功返回精力归因数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnergyDetail'
+        "404":
+          description: 该日无精力数据
+
+  /api/energy/trend:
+    get:
+      summary: 获取日期范围内的精力值趋势（周/月视图柱状图）
+      x-related-ac: [AC-05, AC-07, AC-08, AC-09, AC-10]
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: 每日精力值数组
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnergyTrend'
+
+components:
+  schemas:
+    EnergyDetail:
+      type: object
+      required: [date, has_data]
+      properties:
+        date:
+          type: string
+          format: date
+        has_data:
+          type: boolean
+          description: "false 时仅返回 date + has_data，前端渲染兜底态"
+        energy_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: "精力总分"
+        energy_rating:
+          type: string
+          enum: [poor, normal, good, perfect]
+          description: "poor=0-50 / normal=50-80 / good=80-90 / perfect=>90"
+        contributors:
+          type: object
+          properties:
+            sleep:
+              type: object
+              properties:
+                score:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+                  description: "睡眠加分值 [0,100]"
+                rating:
+                  $ref: '#/components/schemas/RatingTier'
+                sub_dimensions:
+                  type: object
+                  properties:
+                    duration:
+                      $ref: '#/components/schemas/SubDimension'
+                    sleep_debt:
+                      $ref: '#/components/schemas/SubDimension'
+                    resting_hr:
+                      $ref: '#/components/schemas/SubDimension'
+                    efficiency:
+                      $ref: '#/components/schemas/SubDimension'
+                    consistency:
+                      $ref: '#/components/schemas/SubDimension'
+            nap:
+              type: object
+              properties:
+                score:
+                  type: integer
+                  minimum: 0
+                  maximum: 30
+                  description: "小睡加分值；无小睡=0"
+            exercise:
+              type: object
+              properties:
+                score:
+                  type: integer
+                  minimum: -20
+                  maximum: 20
+                  description: "运动加减分值；无运动=0"
+
+    SubDimension:
+      type: object
+      required: [value, unit, rating]
+      properties:
+        value:
+          type: number
+          description: "实际数值"
+        unit:
+          type: string
+          description: "单位：h / bpm / % / min"
+        display:
+          type: string
+          description: "格式化后的展示文本，如 7h 28m / 52 bpm / 92% / 偏差 12min"
+        rating:
+          $ref: '#/components/schemas/RatingTier'
+
+    RatingTier:
+      type: string
+      enum: [perfect, good, warn, bad]
+      description: "perfect=完美 / good=良好 / warn=需注意 / bad=严重影响"
+
+    EnergyTrend:
+      type: object
+      required: [start_date, end_date, days]
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        days:
+          type: array
+          items:
+            type: object
+            required: [date, has_data]
+            properties:
+              date:
+                type: string
+                format: date
+              has_data:
+                type: boolean
+              energy_score:
+                type: integer
+                minimum: 0
+                maximum: 100
+
+errors:
+  - code: NO_DATA
+    message_zh: "该日无精力数据"
+    when: "用户查询未佩戴/断连的日期"
+  - code: FUTURE_DATE
+    message_zh: "不支持查询未来日期"
+    when: "date 参数大于今日"
+  - code: RANGE_TOO_LARGE
+    message_zh: "查询范围过大"
+    when: "trend 接口 start_date 与 end_date 跨度超过 31 天"
+  - code: UNAUTHORIZED
+    message_zh: "未授权"
+    when: "token 失效或未登录"
+  - code: SERVER_ERROR
+    message_zh: "服务异常，请稍后重试"
+    when: "服务端 5xx 错误"
+  - code: TIMEOUT
+    message_zh: "请求超时"
+    when: "接口响应超过 10s"
+
+cache_policy:
+  # PRD 只描述用户感知层；具体存储介质、TTL 实现归研发设计
+  user_expectation: "进入详情页后应可离线读到最近一次成功获取的数据"
+  freshness_tolerance: "24h 内的数据可直接展示；超过 24h 仍在用缓存时，须在顶部显示『数据未实时更新』提示条（见 AC-12）"
+  staleness_cutoff: "超过 72h 视为过期，不再展示，回退到无数据兜底（见 AC-12）"
+  invalidation_trigger:
+    - "用户下拉刷新（见 AC-14）"
+    - "App 检测到当日 Apple Health 数据有更新"
+
+refresh_mechanism:
+  # PRD 只描述用户预期；具体刷新机制选型归研发
+  user_expectation: "App 从后台切回前台时，归因数据应反映最新可用值"
+  not_promised: "不承诺实时；iOS HealthKit 后台更新存在延迟，PRD 不约束其时延"
+
+signoff:
+  owner: backend
+  signed: false

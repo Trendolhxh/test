@@ -1,0 +1,22 @@
+feature: energy-detail
+mode: full
+state: reviewing
+current_round: 6
+prd_version: v0.5
+owners: {pm: '', design: '', frontend: '', backend: '', algo: 'N/A', qa: '', hardware: 'N/A'}
+candidate_decisions: []
+decisions:
+  DEC-01: "4 档评价（完美/良好/需注意/严重影响），阈值见 ADR-01"
+  DEC-02: "睡眠行默认展开"
+  DEC-03: "睡眠债先跳睡眠详情页，后续替换"
+  DEC-04: "无数据显示—+缺少昨夜睡眠数据；无小睡/运动显示0；周月空日不可选；缓存>72h 视为过期"
+  DEC-05: "柱状图统一单色，与现有一致"
+deviations:
+  - {item: "metric", reason: "基础功能页面无独立指标，PM 确认 2026-05-10"}
+  - {item: "i18n", reason: "第一版仅中文，PM 确认 2026-05-11"}
+  - {item: "onboarding", reason: "第一版无引导，依赖页面文案自解释，PM 确认 2026-05-11"}
+changelog:
+  - {version: v0.5, date: '2026-05-11', summary: "补齐 prd-workflow lint 强制项：§1 叙事 / §2 决议表 / §4 屏幕表 / TL;DR product_shape & metrics & decisions_made 规范化 / AC related_decisions 显式注释 / api.yaml cache_policy & refresh_mechanism 改用户感知措辞 / HTML 重构为 screens.html + 颜色 token 化"}
+  - {version: v0.4, date: '2026-05-10', summary: "Round 6 起草签字清单"}
+  - {version: v0.3, date: '2026-05-10', summary: "Round 5 自审接受 13 条修复"}
+frozen_at: ''

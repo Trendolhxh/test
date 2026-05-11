@@ -1,0 +1,71 @@
+# Round 4 · Events Contract · 精力详情页埋点
+events:
+
+  - name: energy_detail_viewed
+    description_zh: 进入精力详情页
+    fields:
+      - name: view_type
+        type: enum
+        enum: [day, week, month]
+        required: true
+        example: "day"
+      - name: date
+        type: string
+        required: true
+        example: "2026-05-10"
+      - name: energy_score
+        type: int
+        required: false
+        example: 92
+        description: "无数据时不传"
+    related_ac: [AC-01, AC-05]
+    privacy: low
+
+  - name: energy_detail_view_switched
+    description_zh: 切换日/周/月视图
+    fields:
+      - name: from_view
+        type: enum
+        enum: [day, week, month]
+        required: true
+      - name: to_view
+        type: enum
+        enum: [day, week, month]
+        required: true
+    related_ac: [AC-09]
+    privacy: low
+
+  - name: energy_detail_date_changed
+    description_zh: 切换日期（左右箭头或点击柱状图）
+    fields:
+      - name: view_type
+        type: enum
+        enum: [day, week, month]
+        required: true
+      - name: date
+        type: string
+        required: true
+      - name: source
+        type: enum
+        enum: [arrow, bar_tap]
+        required: true
+    related_ac: [AC-08, AC-10]
+    privacy: low
+
+  - name: energy_detail_subdim_tapped
+    description_zh: 点击睡眠子维度跳转详情
+    fields:
+      - name: dimension
+        type: enum
+        enum: [duration, sleep_debt, resting_hr, efficiency, consistency]
+        required: true
+      - name: target_route
+        type: string
+        required: true
+        example: "/sleep/detail"
+    related_ac: [AC-04]
+    privacy: low
+
+signoff:
+  owner: frontend
+  signed: false
