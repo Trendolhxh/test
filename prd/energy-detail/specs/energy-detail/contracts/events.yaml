@@ -57,7 +57,7 @@ events:
     fields:
       - name: dimension
         type: enum
-        enum: [duration, sleep_debt, resting_hr, efficiency, consistency]
+        enum: [duration, sleep_debt, resting_hr, consistency]
         required: true
       - name: target_route
         type: string

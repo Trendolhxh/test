@@ -1,24 +1,25 @@
-# Round 6 · 签字 · 精力详情页 ｜ v0.5
+# Round 6 · 签字 · 精力详情页 ｜ v0.6
 
 > 各角色 owner 在自己的 checklist 上打勾。任何一项未勾，spec 不能进入 frozen 状态。
 
 ```yaml
-prd_version: v0.5
+prd_version: v0.6
 frozen_at:
 status_before: reviewing
 status_after: frozen
 ```
 
-> v0.5 较 v0.4 变更：补齐 §1/§2/§3/§4 叙事化、TL;DR 字段规范、AC related_decisions 显式注释、api.yaml 边界改写为用户感知措辞、HTML 重构为 screens.html 并 token 化。设计 / 前端 / 后端 / QA 需重新过一遍并签字。
+> v0.6 较 v0.5 变更：PM 移除睡眠效率子维度，睡眠子维度从 5 个改为 4 个（睡眠时长 / 睡眠债 / 静息心率 / 睡眠一致性）。影响 AC-02/03/04、ADR-01、api.yaml、events.yaml、HTML 7 处 sub-row。**PM 之前对 v0.5 的签字作废，本版需全员重签。**
 
 ## 产品 PM
 
-- [x] 我已确认 TL;DR Card 的 intent / non_goals / risk
-- [x] 我已确认所有 DEC 决议（DEC-01~05，见 `../adr/`）
-- [x] Round 5 自审清单中接受的 13 条问题已全部修复（v0.1→v0.3）
-- [x] metric 已明确跳过（PM 决定：基础功能页面不设独立指标，记入 deviations）
+- [ ] 我已确认 TL;DR Card 的 intent / non_goals / risk
+- [ ] 我已确认所有 DEC 决议（DEC-01~05，见 `../adr/`）
+- [ ] Round 5 自审清单中接受的 13 条问题已全部修复（v0.1→v0.3）
+- [ ] metric 已明确跳过（PM 决定：基础功能页面不设独立指标，记入 deviations）
+- [ ] v0.6 移除睡眠效率子维度（睡眠子维度 5→4）
 
-签字：PM 日期：2026-05-10
+签字：____________ 日期：____________
 
 ## 设计
 
@@ -62,7 +63,7 @@ status_after: frozen
 ## 测试 QA
 
 - [ ] 15 条 AC 均可被测试覆盖（含 test_hint）
-- [ ] AC-03 阈值边界值测试矩阵（5 子维度 × 最多 4 档）已识别
+- [ ] AC-03 阈值边界值测试矩阵（4 子维度 × 最多 4 档）已识别
 - [ ] AC-07 缺失组合矩阵（有睡眠无小睡/有小睡无睡眠/全无/周视图混合）已识别
 - [ ] AC-13/14/15 降级路径需 mock 网络/接口场景
 - [ ] 灰区：AC-11 前台刷新依赖 HealthKit observer 时序，需探索性测试
@@ -81,6 +82,6 @@ status_after: frozen
 
 - [ ] PM、设计、前端、后端、QA 五个角色已签字
 - [ ] `status.yaml.state` 已切换为 `frozen`
-- [ ] 已打 git tag `spec-frozen-energy-detail-v0.5`
+- [ ] 已打 git tag `spec-frozen-energy-detail-v0.6`
 
 完成后，spec 进入实现阶段。任何修改必须 bump 主版本号并重新走 Round 5。

@@ -1,5 +1,5 @@
 # Round 3 · Acceptance Criteria · 精力详情页
-version: v0.2
+version: v0.3
 
 acceptance_criteria:
 
@@ -27,7 +27,7 @@ acceptance_criteria:
     when: "进入日视图"
     then:
       - "归因区展示昨夜睡眠（显示加分值如 +85）、小睡（如 +8）、运动（如 -15）三行"
-      - "睡眠行默认展开，显示 5 个子维度"
+      - "睡眠行默认展开，显示 4 个子维度（睡眠时长 / 睡眠债 / 静息心率 / 睡眠一致性）"
       - "小睡、运动行不可点击，无跳转箭头"
     test_hint: "验证三行均显示且加减分值与接口一致；验证睡眠行默认展开"
     related_decisions: [DEC-02]
@@ -39,13 +39,12 @@ acceptance_criteria:
     theme: happy_path
     title: "睡眠子维度展示偏差值与 4 档评价"
     given: "睡眠行展开"
-    when: "查看 5 个子维度"
+    when: "查看 4 个子维度"
     then:
       - "每行显示：子维度名 + 实际值（上）+ 4 档量程条（下）右对齐排列；量程条从左到右为严重影响红/需注意橙/良好蓝/完美绿，仅点亮当前评价对应的一格，其余灰色；睡眠子维度区底部显示量程图例"
       - "睡眠时长：7-9h 完美 / <7h或>9h 需注意"
       - "睡眠债：0h 完美 / (0,4h] 良好 / (4h,6h] 需注意 / >6h 严重影响"
       - "静息心率：<基线 完美 / [基线, 基线+3) 良好 / [基线+3, 基线+10) 需注意 / ≥基线+10 严重影响；新用户无基线时显示'数据积累中'"
-      - "睡眠效率：≥90% 完美 / 80-90% 良好 / <80% 需注意"
       - "睡眠一致性：≤15min 完美 / 15-30min 良好 / >30min 需注意"
     test_hint: "为每个子维度构造边界值，验证量程条填充档位正确且颜色对应；验证图例显示"
     related_decisions: [DEC-01]
@@ -62,11 +61,10 @@ acceptance_criteria:
       - "睡眠时长 → 跳转睡眠详情页 /sleep/detail"
       - "睡眠债 → 跳转睡眠详情页 /sleep/detail（临时，后续替换）"
       - "静息心率 → 跳转 /today/resting-heart-rate-detail"
-      - "睡眠效率 → 跳转 /sleep/efficiency-detail"
       - "睡眠一致性 → 跳转 /sleep/consistency-detail"
       - "每行显示 > 箭头"
       - "当子维度值为 null 时（如睡眠债无数据），该行显示「—」，不可点击，不显示 >"
-    test_hint: "逐一点击 5 个子维度，验证路由跳转正确"
+    test_hint: "逐一点击 4 个子维度，验证路由跳转正确"
     related_decisions: [DEC-03]
     related_metrics: []
     priority: P0
