@@ -1,0 +1,87 @@
+version: v0.2
+
+acceptance_criteria:
+
+  - id: AC-01
+    theme: happy_path
+    title: 静息状态高心率触发通知
+    given: 用户已戴表 ≥ 5 分钟，且加速度计判定为静息
+    when: 心率持续 >120 bpm 超过 5 分钟
+    then:
+      - 推送本地通知
+      - 写入事件 hr_alert_fired
+    test_hint: 注入 mock 心率数据流持续 6 分钟
+    related_decisions: [DEC-01, DEC-02]
+    related_metrics: [通知点击率, 误报率]
+    priority: P0
+    coverage_required: true
+
+  - id: AC-02
+    theme: suppression
+    title: 剧烈运动场景必须抑制
+    given: 加速度计 RMS ≥ T_motion
+    when: 任意心率读数
+    then:
+      - 不弹通知
+      - 写入事件 hr_alert_suppressed reason=motion
+    test_hint: 注入跑步加速度数据 + 心率 150
+    related_decisions: [DEC-01]
+    related_metrics: [误报率]
+    priority: P0
+    coverage_required: true
+
+  - id: AC-03
+    theme: degradation
+    title: 算法置信度低降级
+    given: 算法返回 confidence < 0.6
+    when: 任意心率读数
+    then:
+      - 不弹通知
+      - UI 显示信号弱小图标
+    test_hint: 模拟低光场景 PPG 信号
+    related_decisions: [DEC-01]
+    related_metrics: [误报率]
+    priority: P0
+    coverage_required: true
+
+  - id: AC-04
+    theme: performance
+    title: 端侧推理性能预算
+    given: 设备型号 ∈ Watch v1 Watch v2
+    when: 单次推理调用
+    then:
+      - P95 latency <= 200 ms
+      - 单次推理新增功耗 <= 0.3% 电量每小时
+    test_hint: 在真机上跑 1000 次推理统计 P95
+    related_decisions: [DEC-01]
+    related_metrics: []
+    priority: P0
+    coverage_required: true
+
+  - id: AC-05
+    theme: edge
+    title: 不戴表时不弹通知
+    given: 设备 off-wrist 检测为 true
+    when: 任何心率信号
+    then:
+      - 不弹通知
+      - 不写告警事件
+    test_hint: mock off-wrist 状态
+    related_decisions: [DEC-02]
+    related_metrics: [误报率]
+    priority: P0
+    coverage_required: true
+
+  - id: AC-06
+    theme: edge
+    title: 通知频次上限
+    given: 24 小时内已弹 1 次
+    when: 再次满足 AC-01 条件
+    then:
+      - 不弹通知
+      - 写入事件 hr_alert_throttled
+    test_hint: 时间快进 mock
+    related_decisions: [DEC-01]
+    related_metrics: [误报率]
+    priority: P1
+    coverage_required: true

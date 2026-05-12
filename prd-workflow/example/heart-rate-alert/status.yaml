@@ -1,0 +1,21 @@
+candidate_decisions:
+- DEC-01
+- DEC-02
+created_at: '2026-05-09T10:00:00Z'
+current_round: 4
+decisions:
+  DEC-01: A
+  DEC-02: B
+deviations: []
+feature: heart-rate-alert
+last_updated: '2026-05-09T15:00:00Z'
+mode: standard
+owners:
+  algo: 孙七
+  backend: 赵六
+  design: 李四
+  frontend: 王五
+  hardware: null
+  pm: 张三
+  qa: 周八
+state: drafting

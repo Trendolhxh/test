@@ -1,0 +1,33 @@
+# Round 3 · Acceptance Criteria · 验收标准
+# 分批生成，每批 ≤ 7 条，按 theme 切：
+#   happy_path / suppression / degradation / performance / edge / error
+# 规则：
+#   - 必须可量化（数字 + 单位）；禁止"差不多/较合理/尽量/可能/较快/稍后"
+#   - 必须关联 ≥1 个 DEC（无相关时 related_decisions: []  # 独立 AC）
+#   - metric 可选；不强制关联
+
+version: v0.1
+
+acceptance_criteria:
+
+  - id: AC-01
+    theme: happy_path                       # happy_path | suppression | degradation | performance | edge | error
+    title: ""                               # 中文标题
+    given: ""                               # 中文前置条件
+    when: ""                                # 中文触发
+    then:                                   # 中文结果数组（必发生）
+      - ""
+    test_hint: ""                           # 给 QA / Agent 写测试的提示
+    related_decisions: [DEC-01]             # 必填 ≥1；如真无相关 DEC，写 [] 并加注释
+    related_metrics: []                     # 可选；按需关联 TL;DR.metrics.name
+    priority: P0                            # P0 必须 / P1 应该 / P2 可选
+    coverage_required: true                 # 是否要求自动化覆盖
+
+# AI 每批结束追问用户：
+#  - 我可能漏了哪些边界？给 3 个候选：1. ? 2. ? 3. ?
+
+# Advance Check（整轮）：
+#  - 所有 DEC 至少被 1 条 AC 引用
+#  - 总数 ≥ 6 条且分布在 ≥ 2 个 theme
+#  - 每条 AC 都有 test_hint
+#  - prd.md §3 AC 概览段已写（2-3 句叙述）
